@@ -1,0 +1,82 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<TITLE>Kurucz/Stars</TITLE>
+<link href="/css/file.css" rel="stylesheet" type="text/css">
+</HEAD>
+ 
+<BODY BGCOLOR="#F7F7F7">
+<H2><A>Kurucz/Stars</A></H2>
+<PRE><B>
+Will include atlases and computed spectra
+
+
+This is just my list of directories with star names.
+Not all of these will end up on the web.
+Others will be added.
+
+109995
+51PEG
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/ALPHACEN/">ALPHACEN</A> 
+ALTAIR
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/ARCTURUS/">ARCTURUS</A> 
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/ASTAR/">ASTAR</A> 
+BD75325
+BETAPIC
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/BETELGEUSE/">BETELGEUSE</A> 
+BSTAR
+CANOPUS
+CAPELLA
+CHILUPI
+DELTASCO
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/GL411/">GL411</A> 
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/HD189733/">HD189733</A> 
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/HD209458/">HD209458</A> 
+HD72660
+HR152
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/K0V/">K0V</A> 
+LAMBDABOO
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/M5V/">M5V</A> 
+MUCAS
+MUGEM
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/POPIIMDWARF/">POPIIMDWARF</A> 
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/PROCYON/">PROCYON</A> 
+SAKURAI
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/SIRIUS/">SIRIUS</A> 
+SPICA
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/SUN/">SUN</A> 
+TAUSCO
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/VEGA/">VEGA</A> 
+<A HREF="HTTP://KURUCZ.HARVARD.EDU/stars/XO1/">XO-1 = GSC 02041-01657</A> 
+
+     I have started copying the test spectrum calculations 
+that are extant to the web directory.  These spectra require 
+considerable improvement before they can be considered 
+realistic.  They were calculated either at resolving power 
+of 500000 or 2000000 in Doppler space so that a shift in 
+point number is a Doppler shift.  The wavelengths were 
+generated from the expression
+
+      WL=WLFIRST*(1.D0+1.D0/RESOLUTION)**(IWL-1).
+
+Some of the spectra have been instrumentally broadened with a 
+gaussian to smaller resolving powers at the same wavelengths 
+using program BROADEN. The broadened spectra were then resampled 
+at the center of an odd number of points using program RESAMPLE.  
+The new points are uniformly spaced in doppler space.
+
+     The spectra are presented in wavelength (nm), Hlambda
+(ergs/s/cm**2/ster/nm), and continuum Hlambda (ergs/s/cm**2/
+ster/nm) triplets.  The model atmosphere and a sample .COM 
+file are also given.  The programs are changing rapidly, as
+are the line data, so the same spectrum computed today might 
+be different, hopefully improved.  Also the model atmosphere
+probably does not have the correct parameters for the star.
+In the detailed study of each star it is necessary to compute
+many models and many spectra, varying the parameters.
+
+ 
+</B></PRE>
+</BODY>
+</HTML>
+ 

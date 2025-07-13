@@ -1,0 +1,72 @@
+
+<pre>
+
+<font size=+2>
+
+
+
+Source codes that can be compiled with the INTEL Fortran for Linux.
+This compiler needs a licence from the INTEL organization. 
+The licence is free from charge only for students.
+
+
+
+<font COLOR="#436EEE">THE SYNTHE PACKAGE for the INTEL fortran </font>
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/xnfpelsyn.for"> xnfpelsyn.for </a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/atlas7v.for"> atlas7v.for </a> 
+compile:
+ifort -double-size 64 -save -c xnfpelsyn.for
+ifort -double-size 64 -save -c atlas7v.for
+ifort -double-sixe 64 -save -o xnfpelsyn.exe xnfpelsyn.o atlas7v.o
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/synbeg.for"> synbeg.for </a> 
+compile: ifort -double-size 64 -save -o synbeg.exe synbeg.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rgfalllinesnew.for"> rgfalllinesnew.for </a> 
+compile: ifort -double-size 64 -save -o rgfalllinesnew.exe rgfalllinesnew.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rmolecasc.for"> rmolecasc.for </a> 
+compile: ifort -double-size 64 -save -o rmolecasc.exe rmolecasc.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rschwenk.for"> rschwenk.for </a> 
+compile: ifort -double-size 64 -save -o rschwenk.exe rschwenk.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rh2ofast.for"> rh2ofast.for </a> 
+compile: ifort -double-size 64 -save -o rh2ofast.exe rh2ofast.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rpredict.for"> rpredict.for </a> 
+compile: ifort -double-size 64 -save -o rpredict.exe rpredict.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/synthe.for"> synthe.for </a> 
+compile: ifort -double-size 64 -save -o synthe.exe synthe.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/spectrv.for"> spectrv.for </a> 
+compile:
+ifort -double-size 64 -save -c spectrv.for
+ifort -double-size 64 -save -o spectrv.exe spectrv.o atlas7v.o
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/rotate.for"> rotate.for </a> 
+compile: ifort -double-size 64 -save -o rotate.exe rotate.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/broaden.for"> broaden.for </a> 
+compile: ifort -double-size 64 -save -o broaden.exe broaden.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/converfsynnmtoa.for"> converfsynnmtoa.for </a> 
+compile: ifort -double-size 64 -save -o converfsynnmtoa.exe converfsynnmtoa.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/fluxaverage1a_nmtoa.for"> fluxaverage1a_nmtoa.for </a> 
+compile: ifort -double-size 64 -save -o fluxaverage1a_nmtoa.exe fluxaverage1a_nmtoa.for
+
+
+
+</pre>
+
+
+</font>
+
+
+
+
+
+</html>

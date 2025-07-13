@@ -1,0 +1,18 @@
+      PROGRAM KPKCARD
+C     CONVERTS AVERAGE SPECTRUM CARDS TO BINARY
+      DIMENSION Q(8)
+      DO 9 I=1,47763
+      READ(1,2)Q
+    2 FORMAT(8F10.0)
+      IF(MOD(I,1000).EQ.1)PRINT 3,I,Q
+    3 FORMAT(I10,8F10.0)
+      WRITE(9)Q(1)
+      WRITE(9)Q(2)
+      IF(I.EQ.47763)CALL EXIT
+      WRITE(9)Q(3)
+      WRITE(9)Q(4)
+      WRITE(9)Q(5)
+      WRITE(9)Q(6)
+      WRITE(9)Q(7)
+    9 WRITE(9)Q(8)
+      END

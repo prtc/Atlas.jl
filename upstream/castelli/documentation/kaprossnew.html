@@ -1,0 +1,122 @@
+
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type"CONTENT="text/html;charset=iso-8859-1">
+<TITLE>KAPROSSNEW</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#F7F7F7">
+<H2><A>New Kappa Rosseland coefficients </A></H2>
+
+<font size=+1>
+
+<pre>
+
+9 feb 2012 : A few kapp*.ros were recomputed from ODFs recomputed with a new 
+             release made by Bob Kurucz of the H2O line list taken from Partridge 
+             and Schwenke.It is available at:
+             <a HREF="http://kurucz.harvard.edu/molecules/H2O/h2ofastfix.bin">http://kurucz.harvard.edu/molecules/H2O/h2ofastfix.bin</a>
+             Recomputation of k_ross for other metallicities is work in progress.
+            
+
+To interpolate Rosseland opacities for metallicity use kaprossinterp.for and kaprossinterp.com
+
+The interpolation formula for x0< x_int < x1  is:
+
+f(x_int)=[(x1-x_int)/(x1-x0)]f(x0)+ [(x_int-x0)/(x1-x0)]f(x1)
+f(x_int)=          w1        f(x0)+           w2        f(x1)
+
+
+<A HREF="kaprossnew/kaprossinterp.for">kaprossinterp.for</A>  <A HREF="kaprossnew/kaprossinterp.com">kaprossinterp.com</A><br>
+
+w1 and w2 are input data for kaprossinterp.com 
+
+
+
+
+<A HREF="kaprossnew/kapp15.ros">kapp15.ros</A><br>
+
+<A HREF="kaprossnew/kapp10.ros">kapp10.ros</A> RECOMPUTED feb 2016<br>
+
+<A HREF="kaprossnew/kapp075.ros">kapp075.ros</A><br>
+
+<A HREF="kaprossnew/kapp05.ros">kapp05.ros</A> RECOMPUTED apr 2012 <br>
+
+<A HREF="kaprossnew/kapp05a.ros">kapp05a.ros</A><br>
+
+<A HREF="kaprossnew/kapp04.ros">kapp04.ros</A> RECOMPUTED Aug. 2015<br>
+
+<A HREF="kaprossnew/kapp03.ros">kapp03.ros</A> RECOMPUTED March 2016<br>
+
+<A HREF="kaprossnew/kapp02.ros">kapp02.ros</A> RECOMPUTED Jun 2012 <br>
+
+<A HREF="kaprossnew/kapp02a.ros">kapp02a.ros</A><br>
+
+<A HREF="kaprossnew/kapp01.ros">kapp01.ros</A><br>
+
+<A HREF="kaprossnew/kapp00.ros">kapp00.ros</A> RECOMPUTED feb 2012 <br>
+
+<A HREF="kaprossnew/kapp00a.ros">kapp00a.ros</A><br>
+
+<A HREF="kaprossnew/kapm01.ros">kapm01.ros</A> RECOMPUTED apr 2014<br>
+
+<A HREF="kaprossnew/kapm02.ros">kapm02.ros</A> RECOMPUTED apr 2014<br>
+
+<A HREF="kaprossnew/kapm03.ros">kapm03.ros</A> RECOMPUTED apr 2014<br>
+
+<A HREF="kaprossnew/kapm04.ros">kapm04.ros</A> RECOMPUTED apr 2014<br>
+
+<A HREF="kaprossnew/kapm05.ros">kapm05.ros</A> RECOMPUTED march 2012 <br>
+
+<A HREF="kaprossnew/kapm05a.ros">kapm05a.ros</A> RECOMPUTED july 2015 <br>
+
+<A HREF="kaprossnew/kapm05a2.ros">kapm05a2.ros</A> <br>
+
+<A HREF="kaprossnew/kapm075.ros">kapm075.ros</A><br>
+
+<A HREF="kaprossnew/kapm10.ros">kapm10.ros</A> RECOMPUTED march 2012 <br>
+
+<A HREF="kaprossnew/kapm10a.ros">kapm10a.ros</A>  <br>
+
+<A HREF="kaprossnew/kapm15.ros">kapm15.ros</A> RECOMPUTED apr 2012 <br>
+
+<A HREF="kaprossnew/kapm15a.ros">kapm15a.ros</A> RECOMPUTED july 2015<br>
+
+<A HREF="kaprossnew/kapm20.ros">kapm20.ros</A> RECOMPUTED apr 2012<br>
+
+<A HREF="kaprossnew/kapm20a.ros">kapm20a.ros</A> RECOMPUTED nov 2014<br>
+
+<A HREF="kaprossnew/kapm25.ros">kapm25.ros</A> RECOMPUTED apr 2012<br>
+
+<A HREF="kaprossnew/kapm25a.ros">kapm25a.ros</A> RECOMPUTED july 2015<br>
+
+<A HREF="kaprossnew/kapm30.ros">kapm30.ros</A> RECOMPUTED march 2015<br>
+
+<A HREF="kaprossnew/kapm30a.ros">kapm30a.ros</A> RECOMPUTED march 2015<br>
+
+<A HREF="kaprossnew/kapm35.ros">kapm35.ros</A> RECOMPUTED july 2015 <br>
+
+<A HREF="kaprossnew/kapm35a.ros">kapm35a.ros</A> RECOMPUTED july 2015 <br>
+
+<A HREF="kaprossnew/kapm40.ros">kapm40.ros</A> RECOMPUTED july 2015<br>
+
+<A HREF="kaprossnew/kapm40a.ros">kapm40a.ros</A> RECOMPUTED july 2015<br>
+
+<A HREF="kaprossnew/kapm45a.ros">kapm45a.ros</A> RECOMPUTED july 2015<br>
+
+<A HREF="kaprossnew/kapm50.ros">kapm50.ros</A> COMPUTED oct 2015<br>
+
+<A HREF="kaprossnew/kapm55a.ros">kapm55a.ros</A> RECOMPUTED July 2015<br>
+
+<A HREF="kaprossnew/kapm60.ros">kapm60.ros</A> COMPUTED oct 2015<br>
+
+<A HREF="kaprossnew/kapm70.ros">kapm70.ros</A> COMPUTED oct 2015<br>
+
+<A HREF="kaprossnew/kapm80.ros">kapm80.ros</A> COMPUTED oct 2015<br>
+
+<A HREF="kaprossnew/kapm90.ros">kapm90.ros</A> COMPUTED oct 2015<br>
+
+</pre>
+
+</BODY>
+</HTML>

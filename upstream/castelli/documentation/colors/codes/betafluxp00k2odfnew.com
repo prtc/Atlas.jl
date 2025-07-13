@@ -1,0 +1,966 @@
+ln -s /home/castelli/diskcl/atlas9/molecules.dat fort.2
+ln -s /home/castelli/diskal/colors/hbeta/hbetaodf/odfp00beta.bin fort.9
+ln -s /home/castelli/wwwuser/grids/gridp00k2odfnew/ap00k2odfnew.dat fort.3
+/home/castelli/diskal/colors/hbeta/betaflux/beta9k2.exe<<EOF>betafluxp00k2odfnew.out
+ITERATIONS 1 PRINT 1 PUNCH 2
+WAVELENGTH 600 1 700
+READ MOLECULES
+MOLECULES ON
+PRESSURE ON
+SURFACE FLUX
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  3500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  3750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  4000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  4250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  4500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  4750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  5000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  5250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  5500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  5750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10
+BEGIN
+READ PUNCH          11  6000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  6250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  6500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  6750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  7000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  7250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9
+BEGIN
+READ PUNCH          10  7500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9   7750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9   8000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8
+BEGIN
+READ PUNCH          9   8250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8   8500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8   8750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7
+BEGIN
+READ PUNCH          8     9000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7    9250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     9500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     9750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6   
+BEGIN
+READ PUNCH          7   10000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     10250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     10500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     10750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     11000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     11250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     11500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6
+BEGIN
+READ PUNCH          7     11750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    12000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    12250
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    12500
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    12750
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    13000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    
+BEGIN
+READ PUNCH          7    14000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    15000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    16000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    17000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    18000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5
+BEGIN
+READ PUNCH          6    19000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   20000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   21000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   22000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   23000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   24000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   25000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4
+BEGIN
+READ PUNCH          5   26000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4   27000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4   28000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4   29000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4   30000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3
+BEGIN
+READ PUNCH          4   31000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   32000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   33000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   34000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   35000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   36000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   37000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   38000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2
+BEGIN
+READ PUNCH          3   39000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   40000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   41000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   42000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   43000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   44000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   45000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   46000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   47000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   48000
+BEGIN
+READ PUNCH          1
+BEGIN
+READ PUNCH          2   49000
+BEGIN
+READ PUNCH          1   50000
+BEGIN
+END
+EOF
+mv fort.7 betafluxp00k2odfnew.dat
+rm fort.*

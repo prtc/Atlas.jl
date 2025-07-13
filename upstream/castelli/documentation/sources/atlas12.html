@@ -1,0 +1,203 @@
+<html>
+<head>
+<title>ATLAS12</title>
+</head>
+<body BGCOLOR="white" TEXT="000000">
+
+
+<pre>
+
+<font SIZE= +2>
+
+
+
+                                 ATLAS12 for LINUX 
+ 
+The KURUCZ original code for VMS works also in unix with intel fortran.
+<a HREF="http://kurucz.harvard.edu/programs/atlas12">http://kurucz.harvard.edu/programs/atlas12</a> 
+
+
+ATLAS12 for Linux for g_fortran:-- NOVEMBER 2017--
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/atlas12.for">atlas12.for</a> 
+
+compile: gfortran -fno-automatic -w -o atlas12.exe atlas12.for
+
+To run  ATLAS12  type:
+
+<b>source asunkat12tot.com</b>
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/asunkat12tot.com">asunkat12tot.com</a>
+
+fclowlines.bin and fchilines.bin are available at:
+<a HREF="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelists/linescd/</a>
+
+tioschwenke.bin is available at:
+<a HREF="http://kurucz.harvard.edu/molecules/tio">http://kurucz.harvard.edu/molecules/tio</a> 
+
+h2ofasfix.bin is available at:
+<a HREF="http://kurucz.harvard.edu/molecules/h2o">http://kurucz.harvard.edu/molecules/h2o</a> 
+
+
+The file diatomics.pck is the binary of diatomics.asc which is available in:
+<a HREF="http://kurucz.harvard.edu/molecules/OLDandNEW">http://kurucz.harvard.edu/molecules/OLDandNEW</a> 
+
+To convert diatomics.asc in binary form:
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/diatomicspack.for">diatomicspack.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/diatomicspack.com">diatomicspack.com</a> 
+diatomicspack does not convert AlO and NaH in binary form. Work in progress. 
+
+The file nltelines.bin is the binary of the file nltelines.asc which is available in:
+<a HREF="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelists/linescd/</a>
+To convert nltelines.asc in binary form:
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/nltelinesasctobin.for">nltelinesasctobin.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/nltelinesasctobin.com">nltelinesasctobin.com</a> 
+
+------------------------------------------------------------------------------
+
+
+ATLAS12 for Linux for INTEL fortran:--MARCH 2012:
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/atlas12_mar12.for">atlas12_mar12.for</a> intel fortran version
+compile: ifort -double-size 64 -save -o atlas12_mar12.exe atlas12_mar12.for
+
+       
+MORE DETAILS:
+
+This example shows how to compute an ATLAS12 model with parameters:
+SCALED SOLAR abundance [M/H]=-1.0, but with Mg=[-1.0+0.3], Teff=5500K, logg=4.6, vturb=1.23 km/s
+The ATLAS12 model assumes Anders & Grevesse (1989) solar abundances,
+while the ATLAS9 input model was computed using the Grevesse & Sauval (1998)
+solar abundances.This implies that in addition to the Mg abundance also 
+several abundances of the ATLAS9 input model have to be changed by means of 
+ABUNDANCE CHANGE cards.
+
+To run the ATLAS12 model type:
+
+<b>source am10t5500g46k123MgP03_linux.com</b>
+
+where <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/am10t5500g46k123MgP03_linux.com">am10t5500g46k123MgP03_linux.com</a> is:
+
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9/molecules.dat">molecules.dat</a> fort.2
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/am10t5500g45k1odfnew.dat">am10t5500g45k1odfnew.dat</a> fort.3        !!!  ATLAS9 (or ATLAS12) input model 
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelists/linescd</a> fclowlines.bin fort.11   !!fclowlinws.bin runs under linux--lowlines.bin does not
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelists/linescd</a> fchighlines.bin fort.11  !!fchighlines.bin runs under linux--highlines.bin does not
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/diatomicsiwl.bin">diatomicsiwl.bin </a> fort.31
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/tio/">http://kurucz.harvard.edu/molecules/tio/</a> tiosschwenke.bin fort.41
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/h2o/">http://kurucz.harvard.edu/molecules/h2o/</a> h2ofastfix.bin fort.51
+./atlas12.exe<<EOF>am10t5500g46k123at12a.out
+MOLECULES ON
+READ MOLECULES
+READ PUNCH
+READ LINES
+CONVECTION OVER 1.25 0 36
+ITERATIONS 1 PRINT 1 PUNCH 0
+ABUNDANCE CHANGE 3 -10.88
+ABUNDANCE CHANGE 4 -10.89
+ABUNDANCE CHANGE 5 -9.44
+ABUNDANCE CHANGE 6 -3.48
+ABUNDANCE CHANGE 7 -3.99
+ABUNDANCE CHANGE 8 -3.11
+ABUNDANCE CHANGE 10 -3.95
+ABUNDANCE CHANGE 12 -4.16
+ABUNDANCE CHANGE 16 -4.83
+ABUNDANCE CHANGE 18 -5.48
+ABUNDANCE CHANGE 19 -6.82
+ABUNDANCE CHANGE 21 -8.94
+ABUNDANCE CHANGE 22 -7.05
+ABUNDANCE CHANGE 26 -4.53
+ABUNDANCE CHANGE 36 -8.81
+ABUNDANCE CHANGE 38 -9.14
+ABUNDANCE CHANGE 40 -9.54
+ABUNDANCE CHANGE 48 -10.18
+ABUNDANCE CHANGE 49 -10.58
+ABUNDANCE CHANGE 54 -9.81
+ABUNDANCE CHANGE 55 -10.92
+ABUNDANCE CHANGE 57 -10.82
+ABUNDANCE CHANGE 58 -10.49
+ABUNDANCE CHANGE 62 -11.04
+ABUNDANCE CHANGE 65 -11.94
+ABUNDANCE CHANGE 66 -10.94
+ABUNDANCE CHANGE 71 -11.28
+ABUNDANCE CHANGE 73 -11.91
+ABUNDANCE CHANGE 75 -11.77
+ABUNDANCE CHANGE 80 -10.85
+ABUNDANCE CHANGE 82 -10.19
+ABUNDANCE CHANGE 90 -11.92
+ABUNDANCE CHANGE 92 -12.51
+BEGIN
+END
+EOF
+mv fort.12 sellinm10t5500g46k123.bin
+rm fort.*
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12/am10t5500g45k1odfnew.dat">am10t5500g45k1odfnew.dat</a> fort.3        !!!  The same ATLAS9 (or ATLAS12) input model as before 
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9/molecules.dat">molecules.dat</a> fort.2
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/nltelines.bin">nltelines.bin</a> fort.19
+ln -s sellinm10t5500g46k123.bin fort.12
+./atlas12.exe<<EOF>am10t5500g46k123at12b.out
+MOLECULES ON
+READ MOLECULES
+READ PUNCH
+TITLE ATLAS12 
+OPACITY ON LINES
+OPACITY ON XLINES
+CONVECTION OVER 1.25 0 36
+ITERATIONS 45
+PRINT 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 
+PUNCH 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+SCALE MODEL 72 -6.875 0.125 5500. 4.6
+VTURB 1.23E+05
+ABUNDANCE CHANGE 3 -10.88
+ABUNDANCE CHANGE 4 -10.89
+ABUNDANCE CHANGE 5 -9.44
+ABUNDANCE CHANGE 6 -3.48
+ABUNDANCE CHANGE 7 -3.99
+ABUNDANCE CHANGE 8 -3.11
+ABUNDANCE CHANGE 10 -3.95
+ABUNDANCE CHANGE 12 -4.16
+ABUNDANCE CHANGE 16 -4.83
+ABUNDANCE CHANGE 18 -5.48
+ABUNDANCE CHANGE 19 -6.82
+ABUNDANCE CHANGE 21 -8.94
+ABUNDANCE CHANGE 22 -7.05
+ABUNDANCE CHANGE 26 -4.53
+ABUNDANCE CHANGE 36 -8.81
+ABUNDANCE CHANGE 38 -9.14
+ABUNDANCE CHANGE 40 -9.54
+ABUNDANCE CHANGE 48 -10.18
+ABUNDANCE CHANGE 49 -10.58
+ABUNDANCE CHANGE 54 -9.81
+ABUNDANCE CHANGE 55 -10.92
+ABUNDANCE CHANGE 57 -10.82
+ABUNDANCE CHANGE 58 -10.49
+ABUNDANCE CHANGE 62 -11.04
+ABUNDANCE CHANGE 65 -11.94
+ABUNDANCE CHANGE 66 -10.94
+ABUNDANCE CHANGE 71 -11.28
+ABUNDANCE CHANGE 73 -11.91
+ABUNDANCE CHANGE 75 -11.77
+ABUNDANCE CHANGE 80 -10.85
+ABUNDANCE CHANGE 82 -10.19
+ABUNDANCE CHANGE 90 -11.92
+ABUNDANCE CHANGE 92 -12.51
+BEGIN 
+END
+EOF
+mv fort.7  am10t5500g46k123at12MgP03.dat 
+rm fort.*
+
+
+
+In the above command file:
+
+"molecules.dat" are molecular data for computing molecular populations
+"fclowlines.bin" are lines of all elements from first 5 stages of ionization, with exception for the lines of 
+HI, HeI, HeII, CI, CII, OI, NaI, MgI, MgII, AlI, SiI, SiII, KI, CaI, CaII, which are collected in "nltelines.bin"
+"fchighlines.bi" are lines of elements with ionization stages higher than 5.
+"diatomicsiwl.bin" are lines from diatomic molecules ordered by increasing wavelength
+"tioschwenke.bin" are TiO lines from Schwenke
+"h2ofastfix.bin" are H2O lines from Partridge & Schwenke
+
+
+</pre>
+</body>
+</html>

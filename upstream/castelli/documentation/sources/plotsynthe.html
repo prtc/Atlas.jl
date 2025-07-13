@@ -1,0 +1,137 @@
+<html>
+<head>
+<title>PLOTSYNTHE</title>
+</head>
+<body BGCOLOR="lemonchiffon" TEXT="000000">
+
+<pre>
+
+This example shows how to plot a synthetic spectrum with the Kurucz plotting
+package PLOTPACK.
+
+
+To produce a  plot for the range 7160-7166 type:
+
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/p7110-7116.com"><b>p7110-7116.com</b></a>
+
+<br>
+p7110-7116.com is:
+
+ln -s /home/castelli/diskbl/sun/synspect/f7000-7210vr2br325br523000.bin fort.7
+/home/castelli/diskal/synthe/plotsynimcol.exe<<EOF>plotsynimcol.out
+       1       0       0       0       0       0       0       0       0
+  IFLABL  IFABSO  IFCONT  IFGRID  IFDLIN   IFLOG   JUST1  NOWAVE  NOCALC
+       0       0       2       0       0       0       0       0       0
+  IFNOAX    IFMU  NOPRNT  IFKPNO   IFKPK  IFSACP  IFHAWA   IFNRL  IFPROC
+       0       0       0       0       0       0       0       0       0
+   IFSIR   IFARC  IFSUNF  IFSOIR  IFHALL  IFENGV  IFOPAC   IFFTS  IFDUM5
+1.26      1.5732     .01       90.       0.       1.        0.8       0.
+YSCALE    XSCALE    WEAK      PANEL     CYCLES    OFFSET    RMIN      RMAX
+ 0.       711.0     711.6     0.        0.        0.        0.        0.
+TOP       WNEW1     WNEW2     TICKTOP   TICKBOT   SMOOTH    DOPOBS    DOPCALC
+0.        0.000     0.000     0.        0.        0.5       0.        RED      
+DOPTERR   SCALOBS   ZEROOBS   RMIN2     RMAX2     XOFFSET   SCALOB2   COLORCALC
+01010101010101010101010101010101010101010101010101010101010101010101010101
+12345678901234567890123456789012345678901234567890123456789012345678901234
+1
+2
+3
+4  
+5  
+6
+7 
+8
+9
+EOF
+mv plot.vec plot1.vec
+ln -s /home/castelli/diskbl/sun/atlaskur/sn7000-7210.bin fort.55
+/home/castelli/diskal/synthe/plotobsimcol.exe<<EOF>plotobsymcol.out
+       0       0       0       0       1       0       0       0       1
+  IFLABL  IFABSO  IFCONT  IFGRID  IFDLIN   IFLOG   JUST1  NOWAVE  NOCALC
+       1       0       2       0       0       0       0       0       0
+  IFNOAX    IFMU  NOPRNT  IFKPNO   IFKPK  IFSACP  IFHAWA   IFNRL  IFPROC
+       0       0       0       0       0       0       0       0       0
+   IFSIR   IFARC  IFSUNF  IFSOIR  IFHALL  IFENGV  IFOPAC   IFFTS  IFDUM5
+1.26      1.5732    .9        90.       0.        1.        0.8       0.
+YSCALE    XSCALE    WEAK      PANEL     CYCLES    OFFSET    RMIN      RMAX
+ 0.       711.0     711.6     0.        0.        0.        0.        0.
+TOP       WNEW1     WNEW2     TICKTOP   TICKBOT   SMOOTH    DOPOBS    DOPCALC
+0.        0.000     0.000     0.        0.        0.5       0.        BLACK      
+DOPTERR   SCALOBS   ZEROOBS   RMIN2     RMAX2     XOFFSET   SCALOB2   COLORCALC
+01010101010101010101010101010101010101010101010101010101010101010101010101
+12345678901234567890123456789012345678901234567890123456789012345678901234
+1
+2
+3
+4  
+5  
+6
+7 
+8
+9
+EOF
+mv plot.vec plot2.vec
+ln -s /home/castelli/diskbl/sun/synspect/plot1.vec fort.1
+ln -s /home/castelli/diskbl/sun/synspect/plot2.vec fort.2
+/home/castelli/diskal/synthe/mergeplotcol.exe>mergeplotcol.out
+mv PLOT plot.vec
+rm fort.*
+ln -s plot.vec fort.1
+/home/castelli/diskal/synthe/psplotcol.exe
+mv fort.2 plot.ps
+rm *.vec
+#lpr plot.ps
+ggv plot.ps
+rm plot.ps
+rm fort.*
+
+
+In the above command file there are the codes:
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/plotsynimcol.for">plotsynimcol.for</a>- plots the synthetic spectrum
+
+To get plotsynimcol.exe:
+ 
+ifort -c plotsynimcol.for
+ifort -c plotpackcol.for
+ifort -o plotsynimcol.exe plotsynimcol.o plotpackcol.o 
+
+where <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/plotpackcol.for">plotpackcol.for</a> is the plotting library
+
+The input file 7000-7210vr2br325br523000.bin for plotsynimcol is the final 
+binary output file from the SYNTHE procedure.
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/plotobsimcol.for">plotobsimcol.for</a>- plots the observed spectrum
+
+To get plotobsimcol.exe:
+ 
+ifort -c plotobsimcol.for
+ifort -c plotpackcol.for
+ifort -o plotobsimcol.exe plotobsimcol.o plotpackcol.o 
+
+The input file for plotobsimcol.for, i.e. snt7000-7210.bin, is a binary file.
+To convert your observed data from ascii to binary use the interactive code:
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/ascibinxyatonm.for">ascibinxyatonm.for</a>-it converts an ascii input file (wave(A),flux) in a binary input file (wave(nm),flux)
+
+To get ascibinxyatonm.exe:
+
+ifort -o ascibinxyatonm.exe ascibinxyatonm.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/mergeplotcol.for">mergeplotcol.for</a>-merges the plots of the observed spectrum with the plot of the computed spectrum
+
+To get mergeplotcol.exe:
+
+ifort -o mergeplotcol.exe mergeplotcol.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/psplotcol.for">psplotcol.for</a>- converts the .vec format of the plot in .ps format
+
+To get psplotcol.exe:
+
+ifort -o psplotcol.exe psplotcol.for
+
+</pre>
+</body>
+</html>

@@ -1,0 +1,68 @@
+
+
+<font COLOR="#436EEE">SYNTHE for gfortran </font>
+
+<pre>
+<font size=+1>
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/xnfpelsyn.for"> xnfpelsyn.for </a>   
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/atlas7v.for"> atlas7v.for </a>   
+compile: gfortran -fno-automatic -w -O3 -c xnfpelsyn.for
+         gfortran -fno-automatic -w -O3 -c atlas7v.for
+         gfortran xnfpelsyn.o atlas7v.o -o xnfpelsyn.exe
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/synbeg.for"> synbeg.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o synbeg.exe synbeg.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rgfalllinesnew.for"> rgfalllinesnew.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o rgfalllinesnew.exe rgfallinesnew.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rpredict.for"> rpredict.for </a>  
+compile: gfortran -fno-automatic -w -O3 -o rpredict.exe rpredict.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rmolecasc.for"> rmolecasc.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o rmolecasc.exe rmolecasc.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rschwenk.for"> rschwenk.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o rschwenk.exe rschwenk.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rh2ofast.for"> rh2ofast.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o rh2ofast.exe rh2ofast.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/synthe.for">synthe.for </a>  
+compile: gfortran -fno-automatic -w -O3 -o synthe.exe synthe.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/spectrv.for"> spectrv.for </a>   
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/atlas7v.for"> atlas7v.for </a>   
+compile: gfortran -fno-automatic -w -O3 -c spectrv.for
+         gfortran -fno-automatic -w -O3 -c atlas7v.for
+         gfortran spectrv.o atlas7v.o -o spectrv.exe
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rotate.for"> rotate.for </a>  
+compile: gfortran -fno-automatic -w -O3 -o rotate.exe rotate.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/broaden.for"> broaden.for </a>   
+compile: gfortran -fno-automatic -w -O3 -o broaden.exe broaden.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/converfsynnmtoa.for"> converfsynnmtoa.for </a>  
+compile: gfortran -fno-automatic -w -O3 -o converfsynnmtoa.exe converfsynnmtoa.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/fluxaverage1a_nmtoa.for"> fluxaverage1a_nmtoa.for </a>  
+compile: gfortran -fno-automatic -w -O3 -o fluxaverage1a_nmtoa.exe fluxaverage1a_nmtoa.for
+
+
+
+
+</pre>
+
+
+</font>
+
+
+
+
+
+</html>

@@ -1,0 +1,49 @@
+      PROGRAM ASCIISYN
+      IMPLICIT REAL*8 (A-H,O-Z)
+c     revised 8oct00
+C     TAPE1=SPECTRUM INPUT
+C     TAPE2=SPECTRUM OUTPUT IN ASCII WAVELENGTH-INTENSITY-CONTINUUM TRIPLETS
+C     TAPE6=OUTPUT
+C     FOR FLUX SPECTRA NMU IS 1
+C     NO LINE DATA                                                                          
+      REAL*8 TEFF,GLOG,TITLE(74),WBEGIN,RESOLU,WLEDGE,RATIO,WL
+      REAL*8 QMU(40),XMU(20)
+      OPEN(UNIT=2,RECORDTYPE='STREAM_CR',CARRIAGECONTROL='NONE',
+     1     STATUS='NEW')
+      READ(1)TEFF,GLOG,TITLE,WBEGIN,RESOLU,NWL,IFSURF,NMU,XMU
+      WRITE(6,1)TEFF,GLOG,TITLE
+    1 FORMAT(5H TEFF,F7.0,7H   GRAV,F7.3/7H TITLE ,74A1)
+      NAV=IFSURF/10
+      IFSURF=IFSURF-NAV*10
+      IF(NAV.EQ.0.)NAV=1
+      IF(IFSURF.EQ.3)NMU=1
+      NMU2=NMU+NMU
+      RATIO=1.D0+1.D0/RESOLU
+      DO 6 IWL=1,NWL
+      WL=WBEGIN*RATIO**((IWL-1)*NAV)
+      READ(1)(QMU(I),I=1,NMU2)
+      WRITE(2,5)WL,(QMU(I)*2.99792458e17/wl**2,I=1,NMU2)
+    5 FORMAT(F17.8,1P8E10.3)
+    6 CONTINUE                                                                  
+      CALL EXIT
+      END
+c     make header by hand
+c$ type SIR090250000P.ASC;6
+cSIRIUS TEST SPECTRUM
+cTITLE ATLAS12 SIRIUS      AP04T9850G43K0HE05Y
+cTEFF  9850.
+cGRAV  4.300
+cABUND [+0.4]
+cVTURB  0.
+cHE 0.05
+cVROTATION  16.0 km/s
+cWavelength, flux, continuum triplets
+c  in vacuum nm and in ergs/cm**2/s/ster/nm
+c(WL(I)=FIRSTWL*(1.D0+1.D0/RESOLUTION)**(I-1),I=1,NWL)
+cFIRSTWL      90.00016470
+cLASTWL   300009.49066160
+cRESOLUTION        500000  (actually resolving power)
+cNWL              4055884
+c      90.00016470 3.296E+00 3.296E+00
+c      90.00034470 3.297E+00 3.297E+00
+c      90.00052470 3.297E+00 3.297E+00

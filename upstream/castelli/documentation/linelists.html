@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+
+<TITLE> Line Lists </TITLE>
+</HEAD>
+
+<BODY bgcolor="#f7f7f7">
+
+<H1 ALIGN=CENTER>Line lists </H1>
+
+<B>
+<font size=+1>
+
+<pre>
+
+March, 2016
+
+The wavelength region from 18.0 to 1000000 A is divided in intervals.
+
+The linelist is mostly that available on the  Kurucz website on 18 Feb 2016:
+<a HREF="http://kurucz.harvard.edu/linelists/gfnew">gfall18feb16.dat</a>
+In the Kurucz website update versions of this linelist may be present
+according to the Kurucz file gfnew.readme
+
+<font size=+3>
+<font color=red>
+In all the intervals we MODIFIED and ADDED </a>several lines.
+All the changes and additions can be seen   <a href="linelists/atoms.html">HERE </A>
+
+</font>
+</font>
+
+<A HREF="linelists/gf0100.100"> gf0100.100 </A>-- 
+<A HREF="linelists/gf0150.100"> gf0150.100 </A>-- 
+<A HREF="linelists/gf0200.100"> gf0200.100 </A>-- 
+<A HREF="linelists/gf0300.100"> gf0300.100 </A>-- 
+<A HREF="linelists/gf0400.100"> gf0400.100 </A>-- 
+<A HREF="linelists/gf0500.100"> gf0500.100 </A>-- 
+<A HREF="linelists/gf0600.100"> gf0600.100 </A>-- 
+<A HREF="linelists/gf0800.100"> gf0800.100 </A>-- 
+<A HREF="linelists/gf1200.100"> gf1200.100 </A>-- 
+<A HREF="linelists/gf3000.100"> gf3000.100 </A>-- 
+
+
+
+These linelists are used by SYNTHE for synthetic spectra computations.
+
+
+
+
+
+<A HREF="http://kurucz.harvard.edu/linelists/linescd/nltelines.asc"> nltelines.asc </A>--is the Kurucz line list "nltelines.asc" from his CD-ROM No1 
+
+<A HREF="http://kurucz.harvard.edu/linelists/linescd/nltelines.bin"> nltelines.bin</A>--is the binary version of nltelines.asc 
+the file nltelines.asc contains lines of HI, HeI, HeII, CI, CII, OI, NaI, MgI, MgII, AlI, SiI, SiII,
+KI, CaI, CaII. 
+
+The Kurucz code to convert nltelines from ascii to binary is: <A HREF="linelists/nltelinesasctobin.for">nltelinesasctobin.for</A>
+
+
+<A HREF="http://kurucz.harvard.edu/linelists/linescd/lowlines.bin"> lowlines.bin </A>-- is the Kurucz <b>atomic</b> line list  taken from <a href="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelist/linescd</a>
+This line list is used both by ATLAS12 and by SYNTHE when it computes a 
+spectrum including lines  from predicted levels. This file contains lines of 
+all elements up to first 5 stages of ionization. It does not include
+lines of HI, HeI, HeII, CI, CII, OI, NaI, MgI, MgII, AlI, SiI, SiII, KI, CaI, 
+CaII.
+
+<A HREF="http://kurucz.harvard.edu/linelists/linescd/highlines.bin"> hilines.bin </A>-- is the Kurucz <b>atomic</b> line list "highlines.bin" taken from 
+<a href="http://kurucz.harvard.edu/linelists/linescd/">http://kurucz.harvard.edu/linelist/linescd</a>
+
+This line list is used both by ATLAS12 and by SYNTHE when it computes a 
+spectrum including lines from predicted levels. 
+This file contains lines of elements up through Zn in stages of ionization 6 
+and higher 
+    
+<A HREF="linelists/diatomicsiwl.bin"> diatomicsiwl.bin </A>--corresponds to the Kurucz molecular line list DIATOMIC.DAT from his CD-ROM No 15.  
+
+<A HREF="http://kurucz.harvard.edu/molecules/TiO/tioschwenke.bin"> schwenke.bin </A>--are the TiO lines from Schwenke (1998) taken from the Kurucz "molecules/TiO" directory  
+
+<A HREF="linelists/eschwenke.bin"> eschwenke.bin </A>--are the TiO energy levels derived from the .ASC files available in Kurucz "molecules/TiO" directory 
+
+<A HREF="http://kurucz.harvard.edu/molecules/h2o/h2ofast.bin"> h2ofast.bin </A>--are the H2O lines from Partridge & Schwenke (1997) taken from the Kurucz "molecules/H2O" directory  
+
+
+
+</pre>
+</B>
+
+
+
+</BODY>
+</HTML>

@@ -1,0 +1,218 @@
+<html>
+<head>
+<title>SYNTHE</title>
+</head>
+<body BGCOLOR="lemonchiffon" TEXT="000000">
+
+<pre>
+
+<font size=+2>
+
+This example shows how to compute a synthetic spectrum in the region 2500-15000 A
+for a model with parameters Teff=5750 K, logg=4.0, vturb=2 km/s [M/H]=+0.5.
+The spectrum computed at a resolving power of 500000 is then degraded at
+a resolution of 1 A.
+
+To run the SYNTHE procedure type:
+
+<b>source r2500-10500p.com</b>
+
+where <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/examples/r2500-10500t5750g40k2p.com">r2500-10500p.com</a> is:
+
+ln -s <a HREF="http://kurucz.harvard.edu/programs/synthe/">molecules.dat</a> fort.2
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/continua.dat">continua.dat</a> fort.17
+./xnfpelsyn.exe <<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/examples/ap05t5750g40k2odfnew.mod"> ap05t5750g40k2odfnew.mod</a> >xnfpelsyn.out  !! ap05t5750g40k2odfnew.mod--> input model
+mv fort.10 xnfp05t5750g40k2odfnew.dat
+rm fort.*
+./synbeg.exe<<EOF>synbeg.out
+AIR       250.0     1050.0    500000.   0.     0         -10 .001         1   00
+AIRorVAC  WLBEG     WLEND     RESOLU    TURBV  IFNLTE LINOUT CUTOFF        NREAD
+EOF
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf0300.100"> gf0300.100 </a> fort.11
+./rgfalllinesnew.exe>gf0300.out
+rm fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf0400.100"> gf0400.100 </a> fort.11
+./rgfalllinesnew.exe>gf0400.out
+rm fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf0500.100"> gf0500.100 </a> fort.11
+./rgfalllinesnew.exe>gf0500.out
+rm fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf0600.100"> gf0600.100 </a> fort.11
+./rgfalllinesnew.exe>gf0600.out
+rm fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf0800.100"> gf0800.100 </a> fort.11
+./rgfalllinesnew.exe>gf0800.out
+rm fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/gf1200.100"> gf1200.100 </a> fort.11
+./rgfalllinesnew.exe>gf1200.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linescd/"> fclowlines.bin </a> fort.11  !!lowlines.bin does not work with Linux
+./rpredict.exe>predictlow.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linescd/"> fchighlines.bin </a> fort.11  !!highlines.bin does not work with Linux
+./rpredict.exe>predicthigh.out
+rm fort.11
+ln -s  <a HREF="http://kurucz.harvard.edu/molecules/ch/"> chmasseron.asc </a> fort.11
+./rmolecasc.exe>chmasseron.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> mgh.asc </a> fort.11
+./rmolecasc.exe>mgh.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> nh.asc </a> fort.11
+./rmolecasc.exe>nh.out
+rm fort.11
+ln -s  <a HREF="http://kurucz.harvard.edu/molecules/oh/"> ohupdate.asc </a> fort.11
+./rmolecasc.exe>oh.out
+rm fort.11
+ln -s  <a HREF="http://kurucz.harvard.edu/molecules/sih/"> sihax.asc </a> fort.11
+./rmolecasc.exe>sihax.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> h2.asc </a> fort.11
+./rmolecasc.exe>h2.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/h2/"> h2xx.asc </a> fort.11
+./rmolecasc.exe>h2xx.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/h2/"> hdxx.asc </a> fort.11
+./rmolecasc.exe>hdxx.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> c2ax.asc </a> fort.11
+./rmolecasc.exe>c2ax.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> c2ba.asc </a> fort.11
+./rmolecasc.exe>c2ba.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/c2/">  c2dabrookek.asc </a> fort.11
+./rmolecasc.exe>c2da.out
+rm fort.11
+ln -s  <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> c2ea.asc </a> fort.11
+./rmolecasc.exe>c2ea.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/cn/"> cnaxbrookek.asc </a> fort.11
+./rmolecasc.exe>cnax.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/cn/"> cnbxbrookek.asc </a> fort.11
+./rmolecasc.exe>cnbx.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/cn/"> cnxx12brooke.asc </a> fort.11
+./rmolecasc.exe>cnxx12.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/co/"> coax.asc </a> fort.11
+./rmolecasc.exe>coax.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> coxx.asc </a>fort.11
+./rmolecasc.exe>coxx.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> sioax.asc </a> fort.11
+./rmolecasc.exe>sioax.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> sioex.asc </a> fort.11
+./rmolecasc.exe>sioex.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/linelists/linesmol/"> sioxx.asc </a> fort.11
+./rmolecasc.exe>sioxx.out
+rm fort.11
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/tio/"> tioschwenke.bin </a> fort.11
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/eschwenke.bin">eschwenke.bin</a> fort.48
+./rschwenk.exe>rschwenk.out
+rm fort.11
+rm fort.48
+ln -s <a HREF="http://kurucz.harvard.edu/molecules/h2o/"> h2ofastfix.bin </a> fort.11
+./rh2ofast.exe>h2ofastfix.out
+rm fort.11
+ln -s xnfp05t5750g40k2odfnew.dat fort.10
+ln -s <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/he1tables.dat">he1tables.dat</a> fort.18
+./synthe.exe>synthe.out
+ln -s <a HREF="http://kurucz.harvard.edu/programs/synthe/">molecules.dat</a> fort.2
+cat <<EOF >fort.25
+0.0       0.        1.        0.        0.        0.        0.        0.
+0.
+RHOXJ     R1        R101      PH1       PC1       PSI1      PRDDOP    PRDPOW
+EOF
+./spectrv.exe<<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/examples/ap05t5750g40k2odfnew.mod">ap05t5750g40k2odfnew.mod</a>>spectrv.out
+mv fort.7 i2500-10500.dat
+ln -s i2500-10500.dat fort.1
+./rotate.exe<<EOF>rotate.out
+    1
+0.
+EOF
+mv ROT1 f2500-10500vr0p05t5750g40k2.dat
+rm fort.*
+#!
+
+THE SYNTHETIC SPECTRUM f2500-10500vr0t5750g40k2.dat 
+IS IN BINARY FORM Hnu versus lambda in nm. Its resolution is 
+500000.  TO DEGRADE IT TO 1 A RESOLUTION AND CONVERT IT TO ASCII
+as Flamda versus lambda in A:
+
+
+ln -s f2500-10500vr0p05t5750g40k2.dat fort.1
+./fluxaverage1a_nmtoa.exe<<EOF>f2500-10500p05t5750g40k2_1a.out
+ 250.0    1050.0
+ 250.0    250.1     250.05
+EOF
+mv fort.2 f2500-10500p05t5750g40k2_1ap.txt
+rm fort.*
+
+
+In the above command file there are the codes:
+
+xnfpelsyn.for--xnfpelsyn is linked with atlas7v.
+ It computes atomic and molecular number densities and continous opacities
+
+
+
+The output model from ATLAS9 <a HREF="http://wwwuser.oats.inaf.it/castelli/grids/gridp05k2odfnew/ap05t5750g40k2odfnew.dat">
+ap05t5750g40k2odfnew.dat</a> MUST BE MODIFIED in <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/examples/ap05t5750g40k2odfnew.mo">ap05t57500g40k2odfnew.mod</a>
+
+1) ADD the following control cards at the top of the model:
+
+SURFACE INTENSI 17 1.,.9,.8,.7,.6,.5,.4,.3,.25,.2,.15,.125,.1,.075,.05,.025,.01
+ITERATIONS 1 PRINT 2 PUNCH 2
+CORRECTION OFF
+PRESSURE OFF
+READ MOLECULES
+MOLECULES ON
+
+
+
+synbeg.for --initializes the synthetic spectrum computations
+
+rgfalllinesnew.for--reads the atomic line lists gf****.100
+
+rpredict.for -- reads lines from predicted levels from the binary file "fclowlines.bin" 
+ 
+rmolecasc.for --reads the molecular line lists in ASCII format
+rschwenk.for --reads the TiO line list
+ "tioschwenke.bin" (binary file) and the TiO energy levels  "eschwenke.bin"  (binary file)
+
+rh2ofast.for--reads the H2O line list h2ofastfix.bin in binary format
+
+synthe.for--computes the line opacity
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/he1tables.dat">he1tables.dat</a>--Stark broadening for HeI 4026, 4387, 4471, 4922 A  
+
+spectrv.for --spectrv is linked with atlas7v.
+It computes in the wavelength range WLBEG--WLEND fixed by synbeg the emergent intensities
+at 17 angles or the emergent flux at the resolution RESOLU fixed by synbeg
+
+rotate.for --it computes the emergent flux for different rotational velocities vsini
+
+broaden.for --broadens the emergent flux for macroturbolence or instrumental effects.
+
+
+fluxaverage1a_nmtoa.for convets from binary to ascii, from nm to A, and degrades from 500000 resolving power to 1A resolution.
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</body>
+</html>

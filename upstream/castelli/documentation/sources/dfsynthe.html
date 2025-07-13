@@ -1,0 +1,193 @@
+<html>
+<head>
+<title>DFSYNTHE</title>
+</head>
+<body BGCOLOR="lemonchiffon" TEXT="000000">
+
+<font size=+1>
+
+<pre>
+
+<a HREF="http://adsabs.harvard.edu/abs/2005MSAIS...8...34C">PAPER on ODFs</a>
+
+
+This example shows how to compute an opacity distribution function (ODF) for [M/H]=0.0 and vturb=2 km/s.
+
+The procedure requires 4 codes: 
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/xnfdf.for">xnfdf.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsynthe.for">dfsynthe.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortp.for">dfsortp.for</a>
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/separatedf.for">separatedf.for</a>
+
+and a set of REPACKED line lists:
+
+lowlinesdf.bin---repacked version of the binary file "lowlines.bin". It is available at:
+
+<a HREF="http://kurucz.harvard.edu/LINELISTS/LINESCD/">http://kurucz.harvard.edu/LINELISTS/LINESCD/</a> 
+For LINUX, THE NAME is: "fclowlines.bin"
+
+highlinesdf.bin--repacked version of the binary file "highlines.bin". It is available at:
+<a HREF="http://kurucz.harvard.edu/LINELISTS/LINESCD/">http://kurucz.harvard.edu/LINELISTS/LINESCD/</a> 
+For LINUX, THE NAME is: "fchighlines.bin"
+
+diatomicsdf.bin---repacked version of the binary file:
+<a HREF="http://wwwuser.oats.inaf.it/castelli/linelists/diatomicsiwl.bin">diatomicsiwl.bin</a>
+
+tiolinesdf.bin---repacked version of the binary file "tioschwenke.bin" available  at:
+<a HREF="http://kurucz.harvard.edu/MOLECULES/TiO/">http://kurucz.harvard.edu/MOLECULES/TiO/</a>
+
+h2olinesdf.bin---repacked version of the binary file "h2ofastfix.bin" available at:  
+<a HREF="http://kurucz.harvard.edu/MOLECULES/H2O/">http://kurucz.harvard.edu/MOLECULES/H2O/</a>
+
+nltelinesdf.bin---repacked version of the ascii file "nltelines.asc" available at:
+<a HREF="http://kurucz.harvard.edu/LINELISTS/LINESCD/">http://kurucz.harvard.edu/LINELISTS/LINESCD/</a> 
+
+
+To get repacked lines:
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacklow.for">repacklow.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacklow.com">repacklow.com</a>
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackhi.for">repackhi.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackhi.com">repackhi.com</a> 
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackdi.for">repackdi.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackdi.com">repackdi.com</a> 
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacktio.for">repacktio.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacktio.com">repacktio.com</a> 
+ 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackh2o.for">repackh2o.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repackh2o.com">repackh2o.com</a> 
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacknlte.for">repacknle.for</a> 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/repacknlte.com">repacknlte.com</a> 
+
+
+
+
+<b>The XNFDF code</b>
+                                
+It pretabulates the atomic and molecular number densities and continuum opacities
+for 57 temperatures T and 25 Pgas values.
+
+To compile it:
+
+ifort -save -o xnfdf.exe xnfdf.for
+
+To run it: 
+
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/xnfdf.com"><b>xnfdf.com</b></a></b>
+
+Input data are:
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/molecules.dat">molecules.dat</a>
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/pfiron.dat">pfiron.dat</a>
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/continua.dat">continua.dat</a>
+
+Furthermore, there is a set of input control cards. 
+They fix:
+
+1) the values of temperature and the gas pressure for which the 
+   ODF's will be tabulated 
+2) the abundances for which ODF's will be computed
+
+
+Output data are the two binary files:
+
+ xnfpdf.dat
+ xnfpdfmax.dat
+
+
+<b>The DFSYNTHE code </b>
+
+It computes ODF's for the atomic and molecular number densities
+xnfpdf.dat produced by the XNFDF code and for the 5 microturbulent
+velocities 0,1,2,4, and 8 km/s.
+
+To compile it:
+
+ifort -save -o dfsynthe.exe dfsynthe.for
+
+To run it:(the example is for [M/H]=0.0]
+
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfp00.com"><b>dfp00.com</b></a></b>
+ 
+In dfp00.com there are 57 runs of DFSYNTHE, one for each temperature T.
+
+Input data are for EACH RUN are:
+
+xnfpdf.dat ---> the output from the XNFPDF code
+xnfpdfmax.dat ---> the ouput from the XNFDF code
+lowlinesdf.bin --->the output from the REPACKLOW code
+highlinesdf.bin --->the output from the REPACKHI code
+diatomicsdf.bin ---> the output from the REPACKDI code
+tiolinesdf.bin ---> the output frem the REPACKTIO code
+h2olinesdf.bin ---> the output from the REPACKH2O code
+nltelinesdf.bin ---> the output from the REPACKNLTE code
+A set of 57 switches corresponding to the 57 temperatures of the ODF table.
+All the switches are  zero, except that of the temperature for the specific run, which is 1.
+
+
+Otput data from EACH RUN are 5 files for 5 different microturbulent velocities vturb:
+
+dfp00t-xxxx-vt0.bin
+dfp00t-xxxx-vt1.bin
+dfp00t-xxxx-vt2.bin
+dfp00t-xxxx-vt4.bin
+dfp00t-xxxx-vt4.bin
+
+where -xxxx- is the temperature for the specific run.
+Each file is an ODFxxxx table for the given temperature -xxxx-, a given microturbulent velocity, and 25 different Pgas.
+
+Output data from dfp00.com are 57 X 5  ODFxxxx tables, one for each temperature and microturbulent velocity. 
+
+
+<b>The DFSORTP code</b>
+
+For each vturb, it rearranges each of the 57 ODFxxxx tables, which are the output from DFSYNTHE.
+Each table is converted from 1540 X 25  ODFxxxx values (where 1540 are frequency points and 25 are 
+the Pgas values) in 25 X 1540 ODFxxxx values. Namely, 1540 ODFxxxx for each Pgas are rearranged in
+25 ODFxxxx for each frequency.  
+
+To compile it:
+
+ifort -o dfsortp.exe dfsortp.for
+
+To run it:
+
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortpvt0.com"><b>dfsortpvt0.com</b></a></b> for vturb= 0 km/s
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortpvt1.com"><b>dfsortpvt1.com</b></a></b> for vturb= 1 km/s
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortpvt2.com"><b>dfsortpvt2.com</b></a></b> for vturb= 2 km/s
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortpvt4.com"><b>dfsortpvt4.com</b></a></b> for vturb= 4 km/s
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/dfsortpvt8.com"><b>dfsortpvt8.com</b></a></b> for vturb= 8 km/s
+
+For each vturb:
+  
+Input data are the 57 ODFxxxx tables computed by DFSYNTHE.
+Output data are 57 rearranged ODFyyyy in ascii format. 
+
+
+<b>The SEPARATEDF code</b>
+
+For a given vturb, it merges the 57 ODFyyyy tables in a single ODF table.
+It then separates the BIG intervals ODFs from the LITTLE intervals ODFs.
+
+To compile it:
+
+ifort -o separatedf.exe separatedf.for
+
+To run it:  
+
+<b>source</b> <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/dfsynthe/separatedf.com"><b>separatedfvt2.com</b></a></b> for vturb= 2.0 km/s
+
+The input is the output from DFSORTP for vturb=2 km/seec
+The output are the binary files: p00big2.bdf
+                                 p00lit2.bdf
+
+
+
+</pre>
+</body>
+</html>

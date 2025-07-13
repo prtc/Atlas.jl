@@ -1,0 +1,29 @@
+      PROGRAM GHIK
+      CHARACTER*2 LE,LO
+      CHARACTER*160 LINE
+      OPEN(UNIT=1,STATUS='OLD',RECL=160)
+      OPEN(UNIT=2,STATUS='NEW',RECL=160,CARRIAGECONTROL='LIST')
+      DO 5 I=1,9999999
+      READ(1,1,END=9)LINE
+    1 FORMAT(A160)
+      READ(LINE,2)LE,LO
+    2 FORMAT(42X,A2,26X,A2)
+      IF(LE.EQ.'E(')GO TO 3
+      IF(LE.EQ.'F(')GO TO 3
+      IF(LE.EQ.'G(')GO TO 3
+      IF(LE.EQ.'H(')GO TO 3
+      IF(LE.EQ.'I(')GO TO 3
+      IF(LE.EQ.'J(')GO TO 3
+      IF(LE.EQ.'K(')GO TO 3
+      IF(LE.EQ.'L(')GO TO 3
+      IF(LO.EQ.'E(')GO TO 3
+      IF(LO.EQ.'F(')GO TO 3
+      IF(LO.EQ.'G(')GO TO 3
+      IF(LO.EQ.'H(')GO TO 3
+      IF(LO.EQ.'I(')GO TO 3
+      IF(LO.EQ.'J(')GO TO 3
+      GO TO 5
+    3 WRITE(2,1)LINE
+    5 CONTINUE
+    9 CALL EXIT
+      END

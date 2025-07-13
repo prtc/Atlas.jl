@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>ATLAS12</title>
+</head>
+<body BGCOLOR="white" TEXT="000000">
+
+<font SIZE="+2"> 
+<pre>
+<B>
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas12.html">ATLAS12</a> computes model atmospheres for individual abundances. 
+The line opacity is computed with the Opacity Sampling (OS) method.
+Once a model is computed, the corresponding flux can be obtained 
+with <a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe.html">SYNTHE</a>. In this case:
+
+The ATLAS12 ouput model, for example ap04t4970g46k1at12.dat, MUST BE MODIFIED 
+in  ap04t4970g46k1at12.mod:
+
+1) ADD the following control cards at the top of the ATLAS12 model 
+(this holds also for an ATLAS9 input model):
+
+SURFACE INTENSI 17 1.,.9,.8,.7,.6,.5,.4,.3,.25,.2,.15,.125,.1,.075,.05,.025,.01
+ITERATIONS 1 PRINT 2 PUNCH 2
+CORRECTION OFF
+PRESSURE OFF
+READ MOLECULES
+MOLECULES ON
+
+2) DROP the cards of the ATLAS12 model:
+                                   ABUNDANCE TABLE
+                                   1H  XXX  2He XXX
+                                   3Li XXX XX 4Be XXX XX etc..
+                                   up to
+                                   98Cf XXX CC  99Es XXX XX 
+
+
+
+<b>
+</pre>
+</font>
+</body>
+</html>

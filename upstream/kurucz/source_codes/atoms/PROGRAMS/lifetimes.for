@@ -1,0 +1,48 @@
+      PROGRAM LIFETIMES
+      implicit real*8 (a-h,o-z)
+      CHARACTER*12 ODDEVE
+      CHARACTER*10 ELAB
+      CHARACTER*132 CARD
+      OPEN(UNIT=7,STATUS='NEW',CARRIAGECONTROL='LIST')
+      OPEN(UNIT=8,STATUS='NEW',CARRIAGECONTROL='LIST')
+C 996 FORMAT(F5.2,I10,' lines saved',I10,' positive lines saved',I7,
+C    1' even',I7,' odd levels',I10,' ion pot cm-1')
+      READ(1,11)CARD
+      WRITE(7,11)CARD
+      WRITE(8,11)CARD
+      READ(CARD,1)NLINES,NPOS,NE,NO,IONPOT
+    1 FORMAT(5X,I10,12X,I10,21X,I7,5X,I7,11X,I10)
+      POTION=IONPOT
+      DO 987 ISKIP=1,28
+      READ(1,11)CARD
+      WRITE(8,11)CARD
+  987 WRITE(7,11)CARD
+   11 FORMAT(A132)
+      READ(1,11)CARD
+      WRITE(7,12)
+      WRITE(8,12)
+   12 FORMAT('ELEM index(J)   E(cm-1)    J    label     sum A   '
+     1   'life(ns)    life(ns)      ref')
+      REF='K03'
+      REF='K04'
+      REF='K05'
+      REF='K06'
+      REF='K07'
+      REF='K08'
+      REF='K09'
+      DO 4 K=1,NE+NO
+      READ(1,2)ODDEVE,E,XJ,ELAB,GLANDE,ASUM
+    2 FORMAT(A12,F12.3,f5.1,1X,A10,F7.3,E9.2,2X,A3)
+      TIME=0.
+      IF(ASUM.GT.0.)TIME=1.E9/ASUM
+      IF(ABS(E).GT.POTION)GO TO 3
+      TIMEMAX=MIN(TIME,9999999999.D0)
+      WRITE(7,22)ODDEVE,E,XJ,ELAB,ASUM,TIME,TIMEMAX,REF
+      IF(ASUM.LT.1.E5)
+     1   WRITE(8,22)ODDEVE,E,XJ,ELAB,ASUM,TIME,TIMEMAX,REF
+    3 CONTINUE
+   22 FORMAT(A12,F12.3,f5.1,1X,A10,1PE9.2,E10.3,0PF15.3,2X,A3)
+    4 CONTINUE
+      CALL EXIT
+      END
+ 

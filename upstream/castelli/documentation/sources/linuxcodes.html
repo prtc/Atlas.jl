@@ -1,0 +1,156 @@
+<html>
+<head>
+<title>ATALS12 ad Related Codes</title>
+</head>
+<body BGCOLOR="lemonchiffon" TEXT="crimson">
+
+
+
+
+<font COLOR="#000000"><u> HOW TO COMPILE</u> </font>
+
+
+
+<pre>
+
+<font size=+2>
+
+October 2016
+
+The INTEL Fortran compiler is no more free. 
+For this reason we are recompiling all the codes with the linux gfortran compiler.
+
+<font COLOR="#436EEE">ATLAS9mem and ATLAS9v for gfortran </font>
+
+ 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9g/atlas9mem.for"> atlas9mem.for </a>  is atlas9mem.for gfortran 
+  compile:     gfortran -fno-automatic -w -O3 -o atlas9mem.exe atlas9mem.for
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9g/atlas9v.for"> atlas9v.for </a>  is atlas9v.for gfortran             
+  compile:     gfortran -fno-automatic -w -O3 -o atlas9v.exe atlas9v.for
+
+
+<font COLOR="#436EEE">SYNTHE for gfortran </font>
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/xnfpelsyn.for"> xnfpelsyn.for </a>  is xnfpelsyn.for gfortran 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/atlas7v.for"> atlas7v.for </a>  is atlas7v.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -c xnfpelsyn.for
+         gfortran -fno-automatic -w -O3 -c atlas7v.for
+         gfortran xnfpelsyn.o atlas7v.o -o xnfpelsyn.exe
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/synbeg.for"> synbeg.for </a>  is synbeg.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o synbeg.exe synbeg.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rgfalllinesnew.for"> rgfalllinesnew.for </a>  is rgfalllinesnew.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rgfalllinesnew.exe rgfallinesnew.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rpredict.for"> rpredict.for </a>  is rpredict.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rpredict.exe rpredict.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rmolecasc.for"> rmolecasc.for </a>  is rmolecasc.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rmolecasc.exe rmolecasc.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rschwenk.for"> rschwenk.for </a>  is rschwenk.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rschwenk.exe rschwenk.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rh2ofast.for"> rh2ofast.for </a>  is rh2ofast.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rh2ofast.exe rh2ofast.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/synthe.for">synthe.for </a>  is synthe.for for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o synthe.exe synthe.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/spectrv.for"> spectrv.for </a>  is spectrv.for gfortran 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/atlas7v.for"> atlas7v.for </a>  is atlas7v.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -c spectrv.for
+         gfortran -fno-automatic -w -O3 -c atlas7v.for
+         gfortran spectrv.o atlas7v.o -o spectrv.exe
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/rotate.for"> rotate.for </a>  is rotate.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o rotate.exe rotate.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/broaden.for"> broaden.for </a>  is broaden.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o broaden.exe broaden.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/syntheg/converfsynnmtoa.for"> converfsynnmtoa.for </a>  is converfsynnmtoa.for gfortran 
+compile: gfortran -fno-automatic -w -O3 -o converfsynnmto.exe converfsynnmtoa.for
+
+
+-------------------------------------------------------------------------------
+
+
+Source codes that can be compiled with the INTEL Fortran for Linux.
+This compiler needs a licence from the INTEL organization. 
+The licence is free from charge only for students.
+
+
+<font COLOR="#436EEE">ATLAS9 and ATLAS12 for INTEL fortran </font>
+
+<a HREF="http://kurucz.harvard.edu/programs/atlas9/atlas9mem.for"> atlas9mem.for </a> 
+compile: ifort -double-size 64 -save -o atlas9mem.exe atlas9mem.for
+
+<a HREF="http://kurucz.harvard.edu/programs/atlas9/atlas9v.for"> atlas9v.for </a> 
+compile: ifort -double-size 64 -save -o atlas9v.exe atlas9v.for
+
+<a HREF="http://kurucz.harvard.edu/programs/atlas12/atlas12.for"> atlas12.for </a> 
+compile: ifort -double-size 64 -save -o atlas12.exe atlas12.for
+
+<font COLOR="#436EEE">THE SYNTHE PACKAGE for INTEL fortran </font>
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/xnfpelsyn.for"> xnfpelsyn.for </a> 
+<a HREF="http://kurucz.harvard.edu/programs/synthe/atlas7v.for"> atlas7v.for </a> 
+compile:
+ifort -double-size 64 -save -c xnfpelsyn.for
+ifort -double-size 64 -save -c atlas7v.for
+ifort -double-sixe 64 -save -o xnfpelsyn.exe xnfpelsyn.o atlas7v.o
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/rgfall.for"> rgfall.for </a> 
+compile: ifort -double-size 64 -save -o rgfall.exe rgfall.for
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/rmolecasc.for"> rmolecasc.for </a> 
+compile: ifort -double-size 64 -save -o rmolecasc.exe rmolecasc.for
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/synthe.for"> synthe.for </a> 
+compile: ifort -double-size 64 -save -o synthe.exe synthe.for
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/spectrv.for"> spectrv.for </a> 
+compile:
+ifort -double-size 64 -save -c spectrv.for
+ifort -double-size 64 -save -o spectrv.exe spectrv.o atlas7v.o
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/rotate.for"> rotate.for </a> 
+compile: ifort -double-size 64 -save -o rotate.exe rotate.for
+
+<a HREF="http://kurucz.harvard.edu/programs/synthe/broaden.for"> broaden.for </a> 
+compile: ifort -double-size 64 -save -o broaden.exe broaden.for
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/synthe/converfsynnmtoa.for"> conversynnmtoa.for </a> 
+compile: ifort -double-size 64 -save -o conversynnmtoa.exe conversynnmtoa.for
+
+
+<font COLOR="#436EEE">THE SYNTHE PLOTTING CODES compilation </font>
+
+ifort -c plotpackimcol.for
+ifort -c plotsynimcol.for
+ifort -c plotobsimcol.for
+ifort -o plotsynimcol.exe plotsynimcol.o plotpackimcol.o
+ifort -o plotobsimcol.exe plotobsimcol.o plotpackimcol.o
+ifort -o mergeplotcol.exe mergeplotcol.for
+ifort -o psplotcol.exe psplotcol.for
+
+
+
+
+
+
+</pre>
+
+
+</font>
+
+
+
+
+
+</html>

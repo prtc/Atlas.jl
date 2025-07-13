@@ -1,0 +1,91 @@
+
+
+<html>
+<head>
+<title>ATLAS9</title>
+</head>
+<body BGCOLOR="lemonchiffon" TEXT="000000">
+
+<pre>
+
+<font size=+2>
+
+ Starting from October 2016 ONLY THE CODES FOR gfortran ARE UPDATED !!!
+
+ 17 Oct 2016
+
+ ATLASMEM.FOR and ATLAS9V.FOR to be compiled with the <font color=red><B> linux gfortran</B> </font> are added.
+ 
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9g/atlas9mem.for">atlas9mem.for</a>--ATLAS9 for computing model atmospheres with NEWODF's: to be compiled with the <font color=red><B> linux gfortran.</B> </font>
+how to compile: gfortran -fno-automatic -w -O3 -o atlas9mem.exe atlas9mem.for >& err.out
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9g/atlas9v.for">atlas9v.for</a>--ATLAS9 for computing fluxes with NEWODF's: to be compiled with the <font color=red><B> linux gfortran.</B> </font>
+how to compile: gfortran -fno-automatic -w -O3 -o atlas9v.exe atlas9v.for >& err.out
+
+---------------------------------------------------------------
+
+ May 2005
+
+ ATLASMEM.FOR and ATLAS9V.FOR to be compiled with the <font color=red><B> INTEL fortran</B> </font> for linux
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9/atlas9mem.for">atlas9mem.for</a>--ATLAS9 for computing model atmospheres with NEWODF's: to be compiled with the <font color=red><b>INTEL fortran </b></font> for linux.
+how to compile: ifort -double-size 64 -save -o atlas9mem.exe atlas9mem.for
+
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9/atlas9v.for">atlas9v.for</a>--ATLAS9 for computing fluxes with NEWODF's: to be compiled with the <font color=red><b>INTEL fortran</b></font> for linux.
+how to compile: ifort -double-size 64 -save -o atlas9v.exe atlas9v.for
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+<font color=red><b>HOW TO EXECUTE:</b></font>
+
+A) <font COLOR="red">MODELS:</font>
+
+To compute an ATLAS9 model with parameters Teff=10000, logg=4.0, vturb=2 km/s [M/H]=0.0 download:
+
+<a HREF="atlas9/ap00t10000g40k2odfnew.com">ap00t10000g40k2odfnew.com</a>
+
+and type:   <b>source ap00t10000g40k2odfnew.com</b>
+
+
+The OUTPUT files are:
+
+<a HREF="atlas9/ap00t10000g40k2odfnew.out">ap00t10000g40k2odfnew.out</a> which controls the ouput
+
+<a HREF="atlas9/ap00t10000g40k2odfnew.dat">ap00t10000g40k2odfnew.dat</a> : the final model for further uses
+
+
+B) <font COLOR="red">FLUXES:</font>
+
+To compute an ATLAS9 flux for the model with parameters Teff=10000, logg=4.0, vturb=2 km/s [M/H]=0.0 download:
+
+<a HREF="atlas9/fp00t10000g40k2.com">fp00t10000g40k2.com</a>
+
+and type:  <b>source fp00t10000g40k2.com</b>
+
+
+C) <font COLOR="red">INTENSITIES:</font>
+
+To compute ATLAS9 intensities at specific N cos(theta) values (maximum 20) for the model with 
+parameters Teff=10000, logg=4.0, vturb=2 km/s [M/H]=0.0 download:
+
+<a HREF="atlas9/ip00t10000g40k2.com">ip00t10000g40k2.com</a>
+
+and type:  <b>source ip00t10000g40k2.com</b>
+
+-----------------------
+In the above command (.com) files:
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/kaprossnew/kapp00.ros">kapp00.ros</a> is the Rosseland opacity table for [M/H]=0.0
+
+<font COLOR="blue">p00big2.bdf</font> and <font COLOR="blue">p00lit2.bdf</font> 
+are the big and little intervals ODF tables for [M/H]=0.0 and vturb=2.0 km/s in binary form.
+They can be downloaded from the Kurucz website <a HREF="http://kurucz.harvard.edu/opacities.html"></a>http://kurucz.harvard.edu/opacities.html 
+
+<a HREF="http://wwwuser.oats.inaf.it/castelli/sources/atlas9/molecules.dat">molecules.dat</a> are molecular data for computing molecular number densities
+
+</pre>
+</body>
+</html>
+
