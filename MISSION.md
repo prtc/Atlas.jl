@@ -2,8 +2,8 @@
 *Legacy Code Documentation for Julia Migration*
 
 ## Mission Status
-**Current Phase**: Not started
-**Last Updated**: [Claude Code Web will update this]
+**Current Phase**: Phase 1 - Repository Census
+**Last Updated**: 2025-11-04
 **Days Remaining**: 14
 
 ---
@@ -20,18 +20,18 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 
 ## Progress Tracker
 
-### Phase 1: Repository Census ✱ NOT STARTED
-**Target**: Days 1-2 | **Status**: ⬜ Not started
+### Phase 1: Repository Census ✱ ACTIVE
+**Target**: Days 1-2 | **Status**: 🔄 In progress
 
 #### Tasks:
-- [ ] 1.1 - Catalog all .for files in `upstream/castelli/source_codes/`
+- [x] 1.1 - Catalog all .for files in `upstream/castelli/source_codes/`
 - [ ] 1.2 - Catalog all .for files in `upstream/kurucz/source_codes/`
 - [ ] 1.3 - Count total lines of code per file
 - [ ] 1.4 - Identify file types (main program / subroutine / function)
 - [ ] 1.5 - Create initial dependency map
 - [ ] 1.6 - Write `docs/archaeology/CENSUS_REPORT.md`
 
-**Notes**: [Claude Code Web adds notes here]
+**Notes**: Task 1.1 complete. Cataloged 68 Fortran files in Castelli codes (282K lines). Created CASTELLI_CATALOG.md with detailed breakdown by component. Identified duplicate/variant pattern ("g" suffix) and heavy utility presence (40% of files).
 
 ---
 
