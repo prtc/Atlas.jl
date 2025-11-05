@@ -186,6 +186,16 @@ For each component document:
 
 ## Working Instructions for Claude Code Web
 
+## Git Workflow Requirements
+
+IMPORTANT: Due to connection instability, please commit and push your work frequently:
+- After completing each subtask (not just full phases)
+- After updating MISSION.md progress markers
+- After creating each report file
+- Use clear commit messages like "Phase 1.3: Add line count analysis"
+
+If you lose connection, Paula needs to see what work was completed.
+
 ### How to use this file:
 1. **Read this file at the start of each session**
 2. **Update your current task** with ✱ ACTIVE marker
