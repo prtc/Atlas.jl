@@ -63,12 +63,20 @@ Since no Julia infrastructure exists yet, initial development will involve:
 - Creating input/output parsers compatible with legacy formats
 - Building comprehensive test suites using upstream example data
 
-## Git Workflow Requirements
+## Temporary Git Workflow (2-week Claude Code Web credit period)
 
-IMPORTANT: Due to connection instability, please commit and push your work frequently:
-- After completing each subtask (not just full phases)
-- After updating MISSION.md progress markers
-- After creating each report file
-- Use clear commit messages like "Phase 1.3: Add line count analysis"
+**Duration**: November 4-18, 2025 (or until $250 credit exhausted)
 
-If you lose connection, Paula needs to see what work was completed.
+During this period, work is split between two interfaces:
+- **Claude Code Web** (web interface): Code archaeology and documentation work
+  - Works on feature branch: `claude/clone-repo-structure-011CUobdc216xNwRVc7QdFCS`
+  - Branch must be preserved - web session is linked to it
+  - Commits and pushes automatically to this branch
+- **Claude Code** (local, this interface): Supporting work and git management
+  - Works on `main` branch
+  - Merges completed work from web interface feature branch
+
+**For detailed merge workflow**: See `GIT-WORKFLOW.md`
+
+**After credit period ends**: Resume normal single-branch workflow on `main`
+
