@@ -150,6 +150,39 @@ For each component document:
 
 ---
 
+## Questions & Doubts Log
+*Running list of items for Paula to investigate asynchronously*
+
+### Phase 1 Discoveries:
+
+**Q1: Atomic Number Codes in `atoms/` Directory**
+- **Location**: `upstream/kurucz/source_codes/atoms/`
+- **Observation**: Directories named with 4-digit codes (e.g., 2603, 2604, 2605)
+- **Working Hypothesis**: Format = `[atomic_number][ionization_state]`
+  - 2603 = Element 26 (Fe), ionization III → Fe III
+  - 2604 = Element 26 (Fe), ionization IV → Fe IV
+  - 0602 = Element 6 (C), ionization II → C II (?)
+- **Question**: Is this mapping correct? Should I create a definitive reference table?
+- **Impact**: Documentation accuracy for atomic data processing section
+- **Status**: ⏸️ Awaiting Paula's confirmation
+
+**Q2: "g" Suffix Meaning - Verification Needed**
+- **Location**: Multiple files (atlas9g, width9g, syntheg, etc.)
+- **Working Hypothesis**: "g" = gfortran compatibility (per Paula's MISSION.md update)
+- **Question**: Should I spot-check source file headers/comments to verify?
+- **Potential Check**: Compare first 50 lines of atlas9.for vs atlas9g.for for compilation notes
+- **Impact**: Understanding which versions to prioritize for migration
+- **Status**: ⏸️ Deferred to Phase 2 unless Paula wants preliminary check
+
+**Q3: ATLAS12 Version Differences - Scale Unknown**
+- **Location**: Castelli atlas12.for (23,247 lines) vs Kurucz atlas12.for (22,152 lines)
+- **Observation**: 1,095 line difference (4.7% smaller in Kurucz)
+- **Question**: Quick diff to assess scale? Whole-file restructure or targeted bug fixes?
+- **Impact**: Migration strategy - merge both or choose one as base?
+- **Status**: ⏸️ Explicitly deferred to Phase 2 Architecture Mapping
+
+---
+
 ## Working Instructions for Claude Code Web
 
 ### How to use this file:
