@@ -57,7 +57,7 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 - [x] 1.1 - Catalog all .for files in `upstream/castelli/source_codes/`
 - [x] 1.2 - Catalog all .for files in `upstream/kurucz/source_codes/`
 - [x] 1.3 - Count total lines of code per file
-- [ ] 1.4 - Identify file types (main program / subroutine / function)
+- [x] 1.4 - Identify file types (main program / subroutine / function)
 - [ ] 1.5 - Create initial dependency map
 - [ ] 1.6 - Write `docs/archaeology/CENSUS_REPORT.md`
 
@@ -65,6 +65,7 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 - Task 1.1 complete: 68 Castelli files (282K lines). Created CASTELLI_CATALOG.md.
 - Task 1.2 complete: 163 Kurucz files (205K lines). Created KURUCZ_CATALOG.md. More modular organization with 6 functional categories. Unique capabilities: atomic data tools (28 files), photometric systems (15 files), solar tools (6 files). Significant code overlap with Castelli - version comparison needed in Phase 2.
 - Task 1.3 complete: Created CONSOLIDATED_LINE_COUNTS.md with comprehensive analysis. Total: 231 files, 487K lines. Key finding: 7 mega-programs (3% of files) contain 31% of code. Top 24 files contain 65% of codebase. CSV export created for further analysis.
+- Task 1.4 complete: Created FILE_TYPES.md. 79% standalone main programs (tool-oriented architecture). Only 14 subroutine libraries (6%). Pure Fortran 77 (no modules). ATLAS7V appears 4 times as shared dependency. Even mega-programs (23K lines) often don't use internal subroutines.
 
 ---
 
