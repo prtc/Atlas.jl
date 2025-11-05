@@ -55,13 +55,16 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 
 #### Tasks:
 - [x] 1.1 - Catalog all .for files in `upstream/castelli/source_codes/`
-- [ ] 1.2 - Catalog all .for files in `upstream/kurucz/source_codes/`
-- [ ] 1.3 - Count total lines of code per file
+- [x] 1.2 - Catalog all .for files in `upstream/kurucz/source_codes/`
+- [x] 1.3 - Count total lines of code per file
 - [ ] 1.4 - Identify file types (main program / subroutine / function)
 - [ ] 1.5 - Create initial dependency map
 - [ ] 1.6 - Write `docs/archaeology/CENSUS_REPORT.md`
 
-**Notes**: Task 1.1 complete. Cataloged 68 Fortran files in Castelli codes (282K lines). Created CASTELLI_CATALOG.md with detailed breakdown by component. Identified duplicate/variant pattern ("g" suffix) and heavy utility presence (40% of files).
+**Notes**:
+- Task 1.1 complete: 68 Castelli files (282K lines). Created CASTELLI_CATALOG.md.
+- Task 1.2 complete: 163 Kurucz files (205K lines). Created KURUCZ_CATALOG.md. More modular organization with 6 functional categories. Unique capabilities: atomic data tools (28 files), photometric systems (15 files), solar tools (6 files). Significant code overlap with Castelli - version comparison needed in Phase 2.
+- Task 1.3 complete: Created CONSOLIDATED_LINE_COUNTS.md with comprehensive analysis. Total: 231 files, 487K lines. Key finding: 7 mega-programs (3% of files) contain 31% of code. Top 24 files contain 65% of codebase. CSV export created for further analysis.
 
 ---
 
@@ -145,6 +148,39 @@ For each component document:
 **This is the key deliverable for the research credit application**
 
 **Notes**: [Claude Code Web adds notes here]
+
+---
+
+## Questions & Doubts Log
+*Running list of items for Paula to investigate asynchronously*
+
+### Phase 1 Discoveries:
+
+**Q1: Atomic Number Codes in `atoms/` Directory**
+- **Location**: `upstream/kurucz/source_codes/atoms/`
+- **Observation**: Directories named with 4-digit codes (e.g., 2603, 2604, 2605)
+- **Working Hypothesis**: Format = `[atomic_number][ionization_state]`
+  - 2603 = Element 26 (Fe), ionization III → Fe III
+  - 2604 = Element 26 (Fe), ionization IV → Fe IV
+  - 0602 = Element 6 (C), ionization II → C II (?)
+- **Question**: Is this mapping correct? Should I create a definitive reference table?
+- **Impact**: Documentation accuracy for atomic data processing section
+- **Status**: ⏸️ Awaiting Paula's confirmation
+
+**Q2: "g" Suffix Meaning - Verification Needed**
+- **Location**: Multiple files (atlas9g, width9g, syntheg, etc.)
+- **Working Hypothesis**: "g" = gfortran compatibility (per Paula's MISSION.md update)
+- **Question**: Should I spot-check source file headers/comments to verify?
+- **Potential Check**: Compare first 50 lines of atlas9.for vs atlas9g.for for compilation notes
+- **Impact**: Understanding which versions to prioritize for migration
+- **Status**: ⏸️ Deferred to Phase 2 unless Paula wants preliminary check
+
+**Q3: ATLAS12 Version Differences - Scale Unknown**
+- **Location**: Castelli atlas12.for (23,247 lines) vs Kurucz atlas12.for (22,152 lines)
+- **Observation**: 1,095 line difference (4.7% smaller in Kurucz)
+- **Question**: Quick diff to assess scale? Whole-file restructure or targeted bug fixes?
+- **Impact**: Migration strategy - merge both or choose one as base?
+- **Status**: ⏸️ Explicitly deferred to Phase 2 Architecture Mapping
 
 ---
 
