@@ -1,2 +1,2 @@
 # Atlas.jl
-Julia refactor of ATLAS Suite of fortran codes from Robert Kurucz
+This is a project to honor the memory and scientific legacy of Robert Kurucz. The aim is to document the legacy codes and rewrite them in modern language. 
