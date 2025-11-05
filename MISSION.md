@@ -18,6 +18,36 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 
 ---
 
+## Critical Context from Paula
+
+### Migration Priority
+**Primary targets**: ATLAS12 and SYNTHE
+- **ATLAS12** is the main goal for API credit application and Astronomy & Computing paper
+- These are Paula's active research tools
+- Other components (ATLAS9, WIDTH, KAPPA9, etc.) are lower priority but still need documentation
+
+### The "g" Suffix Mystery - Working Hypothesis
+**Hypothesis**: "g" likely means "gfortran" compatibility
+- Castelli ported Kurucz's original codes to compile with gfortran
+- Patterns observed: atlas9 vs atlas9g, synthe vs syntheg, width9 vs width9g
+- **VERIFY THIS**: Check source code comments, compilation notes, or version history
+- **If confirmed**: Document what changes were needed for gfortran compatibility
+
+### Code Provenance - Critical for Phase 2
+- **Kurucz**: Original author (deceased March 2025) - authoritative but older compilers
+- **Castelli**: Maintained and ported the codes - gfortran compatible, possible bug fixes
+- **IMPORTANT**: Castelli and Kurucz versions may have diverged over time with independent bug fixes
+- **Phase 2 task**: Carefully compare Castelli vs Kurucz versions of ATLAS12 and its dependencies
+- **Decision needed**: Which version forms the migration base? Or do we need to merge fixes from both?
+
+### Questions for Phase 2 Analysis
+1. What exactly changed between Kurucz and Castelli "g" versions?
+2. Are there bug fixes in one version but not the other?
+3. Which version is more numerically stable/accurate?
+4. Are there compilation flags or precision differences that matter?
+
+---
+
 ## Progress Tracker
 
 ### Phase 1: Repository Census ✱ ACTIVE
@@ -42,7 +72,11 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 
 #### Major Components to Map:
 - [ ] 2.1 - ATLAS9 architecture
-- [ ] 2.2 - ATLAS12 architecture
+- [ ] 2.2 - ATLAS12 architecture ⭐ **HIGH PRIORITY - MIGRATION TARGET**
+  - Compare Castelli vs Kurucz versions line-by-line if both exist
+  - Document all differences (bug fixes, gfortran compatibility changes, numerical changes)
+  - Identify which version should be the migration base
+  - Flag any merged fixes needed from both versions
 - [ ] 2.3 - SYNTHE architecture
 - [ ] 2.4 - ODF architecture
 - [ ] 2.5 - DFSYNTHE architecture
