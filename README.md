@@ -36,7 +36,7 @@ Phase 1 deliverables are in `docs/archaeology/`:
 - Dependency mapping for major components
 - Census report synthesizing findings
 
-**Next stage**: Julia migration (timeline TBD based on funding)
+**Next stage**: Architecture Mapping
 
 ---
 
