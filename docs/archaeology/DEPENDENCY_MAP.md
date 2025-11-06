@@ -333,7 +333,157 @@ Present in 3+ programs:
 
 ---
 
+## Runtime Architecture (Updated from Phase 2A Workflow Analysis)
+
+**Phase 2A Discovery**: The ATLAS Suite is not a library but a **pipeline architecture** where standalone programs communicate via Fortran unit files (fort.X). The architecture visible from source code analysis (subroutine calls, COMMON blocks) represents *internal* structure, but the *external* workflow is a sequence of separate executables.
+
+### ATLAS12 Two-Stage Execution
+
+ATLAS12 runs in **two separate executions** of the same program:
+
+**Stage 1: Line Selection**
+```
+Input:  fort.3 (input model)
+        fort.11 (complete line lists - millions of lines)
+        fort.2 (molecules.dat)
+Output: fort.12 (selected lines - hundreds of thousands)
+        fort.55 (completion indicator)
+```
+
+**Stage 2: Atmosphere Iteration**
+```
+Input:  fort.3 (input model)
+        fort.12 (selected lines from Stage 1)
+        fort.2 (molecules.dat)
+        fort.19 (optional NLTE data)
+Output: fort.7 (converged atmosphere model)
+        fort.8/9 (additional outputs)
+```
+
+**Between stages**: User must move fort.55 to fort.5 to trigger Stage 2.
+
+**Typical runtime**: Stage 1 = 5-10 minutes, Stage 2 = 30-120 minutes depending on convergence.
+
+### Complete SYNTHE Pipeline (11 Programs)
+
+**Critical correction from Phase 2A**: SYNTHE is not a single 3K-line program but an **11-program sequential pipeline**. The "SYNTHE" analyzed above is just step 8 of 11.
+
+**Full Pipeline**:
+
+```
+1. xnfpelsyn (+ atlas7v.o)
+   Input:  fort.3 (input parameters)
+   Output: fort.10 (abundance/partition function data)
+
+2. synbeg
+   Input:  fort.10
+   Output: fort.12 (wavelength grid), fort.14 (initialization)
+
+3-7. Line Data Readers (executed sequentially, multiple times):
+   - rgfalllinesnew: Read Kurucz/Fall atomic line lists
+   - rmolecasc: Read molecular line lists
+   - rschwenk: Read Schwenk TiO lines
+   - rh2ofast: Read H2O lines (Partridge-Schwenke database)
+   - (rpredict: Read NIST predicted lines - optional)
+   Each appends to: fort.12 (accumulated line data)
+
+8. synthe
+   Input:  fort.12 (all line data), fort.14
+   Output: fort.16 (high-res spectrum), fort.18 (continuum)
+
+9. spectrv (+ atlas7v.o)
+   Input:  fort.16, fort.18
+   Output: fort.7 (flux vs wavelength)
+
+10. rotate
+    Input:  fort.7
+    Output: ROT1 (rotationally broadened spectrum)
+
+11. broaden
+    Input:  ROT1
+    Output: fort.22 (broadened spectrum)
+
+12. converfsynnmtoa (optional)
+    Input:  fort.22
+    Output: ASCII spectrum (nm → Angstrom conversion)
+```
+
+**Key architectural insight**: Steps 3-7 are run **multiple times** to read different line lists, all appending to fort.12. Example from r7000-7210.com:
+- rgfalllinesnew run 3 times (different line list segments)
+- rmolecasc run 6 times (different molecules: CH, NH, OH, MgH, CN, C2)
+- rschwenk run 1 time (TiO)
+- rh2ofast run 1 time (H2O)
+
+**Total line data**: Millions of lines compiled into fort.12 before synthesis.
+
+### DFSYNTHE → ATLAS9 ODF Generation Pipeline
+
+**Purpose**: Generate Opacity Distribution Functions for ATLAS9 (statistical opacity representation, much faster than ATLAS12's opacity sampling).
+
+**Complete workflow**:
+
+```
+1. xnfdf
+   Input:  Line lists (same format as SYNTHE)
+   Output: fort.10 (processed line data)
+
+2. dfsynthe
+   Input:  fort.10
+           fort.3 (atmospheric parameters)
+   Output: fort.7 (opacity distribution functions)
+           fort.8 (wavelength grid)
+
+3. dfsortp
+   Input:  fort.7
+   Output: Sorted ODFs
+
+4. separatedf
+   Input:  Sorted ODFs
+   Output: Individual ODF files (one per wavelength/temperature)
+
+5. Various "repack" utilities prepare ODFs for ATLAS9:
+   - repackhi.for: High-resolution ODF repack
+   - repacklow.for: Low-resolution ODF repack
+   - repackdi.for: Diatomic molecule ODF repack
+   - repacknlte.for: NLTE ODF repack
+   - repackh2o.for: H2O ODF repack
+   - repacktio.for: TiO ODF repack
+```
+
+**ATLAS9 usage**: Reads pre-computed ODFs instead of calculating line-by-line opacity → ~10× faster than ATLAS12.
+
+**Trade-off**: ODFs are less accurate than ATLAS12's opacity sampling for certain applications (rapid rotation, strong magnetic fields, extreme abundances).
+
+### Fort Unit Communication Patterns
+
+**Standard I/O conventions** (discovered from .com scripts and .html documentation):
+
+| Unit | Purpose | Programs |
+|------|---------|----------|
+| fort.2 | molecules.dat (molecular data) | ATLAS12, DFSYNTHE |
+| fort.3 | Input model/parameters | ATLAS12, SYNTHE pipeline, DFSYNTHE |
+| fort.5 | Continuation signal (renamed fort.55) | ATLAS12 Stage 2 |
+| fort.7 | Primary output (model or spectrum) | ATLAS12, SYNTHE/spectrv, DFSYNTHE |
+| fort.8/9 | Additional outputs | ATLAS12 |
+| fort.10 | Processed abundance/PF data | SYNTHE/xnfpelsyn, DFSYNTHE/xnfdf |
+| fort.11 | Complete line lists (input) | ATLAS12 Stage 1 |
+| fort.12 | Selected/accumulated lines | ATLAS12 (output Stage 1, input Stage 2), SYNTHE (accumulated) |
+| fort.14 | Initialization data | SYNTHE/synbeg (output), SYNTHE/synthe (input) |
+| fort.16 | High-resolution spectrum | SYNTHE/synthe (output), SYNTHE/spectrv (input) |
+| fort.18 | Continuum spectrum | SYNTHE/synthe (output), SYNTHE/spectrv (input) |
+| fort.19 | NLTE data (optional) | ATLAS12 |
+| fort.22 | Final broadened spectrum | SYNTHE/broaden |
+| fort.55 | Stage 1 completion flag | ATLAS12 Stage 1 (renamed to fort.5 for Stage 2) |
+| ROT1 | Rotated spectrum file | SYNTHE/rotate (output), SYNTHE/broaden (input) |
+
+**Migration Implication**: Julia version needs I/O abstraction layer to replace Fortran unit files with:
+- Named files or streams
+- In-memory data structures (pipelines can become function calls)
+- Explicit data passing instead of side-effect I/O
+
 ## Dependency Graph (High-Level)
+
+### Conceptual Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -344,7 +494,7 @@ Present in 3+ programs:
                            ▼             ▼              ▼
                       ┌─────────┐  ┌─────────┐   ┌──────────┐
                       │ ATLAS9  │  │ ATLAS12 │   │  KAPPA9  │
-                      │         │  │         │   │          │
+                      │ (+ ODFs)│  │(2-stage)│   │          │
                       │ 19K loc │  │ 23K loc │   │  19K loc │
                       └────┬────┘  └────┬────┘   └─────┬────┘
                            │            │              │
@@ -359,9 +509,9 @@ Present in 3+ programs:
                                   │ read by
                                   ▼
                         ┌──────────────────┐
-                        │   SYNTHE         │
-                        │                  │
-                        │   3K loc         │
+                        │ SYNTHE Pipeline  │
+                        │  (11 programs)   │
+                        │   ~25K loc total │
                         │   + ATLAS7V lib  │
                         │     (17K loc)    │
                         └────────┬─────────┘
@@ -374,15 +524,20 @@ Present in 3+ programs:
                         └─────────────────┘
 
 Alternative path:
-    DFSYNTHE (3.7K loc)
-         │
-         │ writes
-         ▼
+    ┌─────────────────────────┐
+    │ DFSYNTHE Pipeline       │
+    │ xnfdf → dfsynthe →      │
+    │ dfsortp → separatedf    │
+    │ + repack utilities      │
+    │ (3.7K + utilities)      │
+    └────────┬────────────────┘
+             │ writes
+             ▼
     Opacity Distribution Functions (ODFs)
-         │
-         │ used by
-         ▼
-    ATLAS9/12 (faster runs)
+             │
+             │ used by
+             ▼
+    ATLAS9 (10× faster than ATLAS12)
 ```
 
 ---
