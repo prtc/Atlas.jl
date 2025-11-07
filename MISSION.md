@@ -3,8 +3,8 @@
 
 ## Mission Status
 **Current Phase**: Phase 1 - Repository Census
-**Last Updated**: 2025-11-04
-**Days Remaining**: 14
+**Last Updated**: 2025-11-06
+**Days Remaining**: 12
 
 ---
 
@@ -14,7 +14,7 @@ Create comprehensive documentation of the ATLAS Fortran suite to:
 2. Provide API usage estimates for research credit application  
 3. Generate material for Astronomy & Computing publication
 
-**Time Budget**: 2 weeks | **Resource**: $250 Claude Code Web credits
+**Time Budget**: 2 weeks | **Resource**: $250 Claude Code Web credits (they expire on November 18 at 11:59 PM PT)
 
 ---
 

@@ -13,7 +13,7 @@ The ATLAS Suite implements a **multi-stage computational pipeline** for stellar 
 
 ### Key Discoveries:
 
-1. **ATLAS12 is a 2-stage program**: First run selects relevant lines from massive databases, second run performs atmosphere iterations with selected lines only
+1. **ATLAS12 is a 2-stage program**: First run selects relevant lines from massive databases, second run performs atmosphere iterations with selected lines only (**Paula here:** I suspect the 1st run does more than that, but we will need to investigate later)
 2. **SYNTHE is an 11-program pipeline**: Sequential execution of separate programs, each reading/writing specific fort.X units
 3. **ATLAS9 vs ATLAS12 distinction**: ATLAS9 uses pre-computed ODFs (Opacity Distribution Functions), ATLAS12 uses Opacity Sampling (direct line-by-line calculation)
 4. **DFSYNTHE generates ODFs**: Creates the opacity tables needed by ATLAS9 for faster computation
@@ -168,7 +168,7 @@ Typically converges in 30-50 iterations.
 - RHOX (column density), T (temperature), P (pressure), XNE (electron density)
 - Plus header with abundances, convection parameters
 
-**Note from Paula**: ATLAS9 models (.odfnew.dat suffix) can be used as ATLAS12 input, but ATLAS12 models cannot be used as ATLAS9 input (different opacity methods).
+**Note from Paula**: ATLAS9 models (.odfnew.dat suffix) can be used as ATLAS12 input, but ATLAS12 models cannot be used as ATLAS9 input (different opacity methods). (**Paula here:** I don't remember saying ATLAS12 models cannot be used as ATLAS9 input, but we can check later)
 
 ---
 
@@ -248,6 +248,8 @@ gfortran -fno-automatic -w -O3 -o converfsynnmtoa.exe converfsynnmtoa.for
 ### Execution Pipeline
 
 SYNTHE pipeline consists of **11 sequential programs**. Each program reads input from fort.X units and writes output to other fort.X units. The pipeline builds up a complete line list, then synthesizes the spectrum.
+
+**Paula here:** I adapted the script pipeline to my own needs over time, later I would like to update details in this section.
 
 #### Program 1: xnfpelsyn
 **Purpose**: Compute atomic/molecular number densities and continuum opacities from atmosphere model
@@ -568,6 +570,7 @@ mv fort.2 final_spectrum.asc
 ---
 
 ### SYNTHE Pipeline Summary Diagram
+**Paula here:** We need to update the diagram below to include the optional input of the predicted lines.
 
 ```
 Input: ATLAS12 atmosphere model (.dat)
@@ -911,12 +914,16 @@ You mentioned "ATLAS12 LTE only, no NLTE" as migration priority. However, ATLAS1
 
 **Question**: Is NLTE functionality in current ATLAS12 unused/optional? Should Julia migration completely omit NLTE code paths, or just defer their implementation?
 
+**Paula here:** Good point. I will need to revise and get back to you later.
+
 ---
 
 ### Q2: ATLAS9 Migration Priority
 Phase 1 report indicated ATLAS9 might be useful for faster computations. With DFSYNTHE dependency:
 
 **Question**: Should ATLAS9 + DFSYNTHE be migrated at all? Or is ATLAS12 alone sufficient for your research needs? (Computational time vs. accuracy trade-off)
+
+**Paula here:** For my own needs ATLAS12 is sufficient, but other users might benefit from ATLAS9. So I would say it is useful to migrate both if possible.
 
 ---
 
@@ -928,6 +935,8 @@ ATLAS outputs .dat format, SYNTHE requires .mod format (with added control cards
 - Create unified format?
 - Auto-convert on-the-fly?
 
+**Paula here:** The format is actually the same, just named differently (I don't know why). No conversion needed. 
+
 ---
 
 ### Q4: SYNTHE Pipeline Simplification
@@ -937,6 +946,8 @@ Current SYNTHE is 11 sequential programs. In Julia, could consolidate into:
 - Keep separate programs for flexibility
 
 **Question**: What's your preference? Maintain modularity or consolidate for simplicity?
+
+**Paula here:** Consolidate for simplicity.
 
 ---
 
@@ -948,12 +959,16 @@ Documentation shows Kurucz line lists dated 2016-2021, with notes like "last rel
 - Are line list formats stable, or do they evolve?
 - Should we support multiple formats?
 
+**Paula here:** I remember having problems with different code versions expecting slightly different formats. For our migration we should define our preferred format of the line list and stick to it, offering utilities to convert Kurucz/Castelli line lists. Important: atomic line list and molecular line list have different formats.
+
 ---
 
 ### Q6: Molecular Line Lists
 Current pipeline handles ~15+ molecular species (CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO, TiO, H2O).
 
 **Question**: Which molecules are essential for your research? Can we prioritize subset for initial migration?
+
+**Paula here:** Good question. With the exception of TiO and H2O, the other molecules share the same format so let's start with those. In practice it will limit the Teff to larger than about 4250K.
 
 ---
 
@@ -962,12 +977,16 @@ SYNTHE includes plotting codes (plotsynimcol, plotobsimcol, plotpackimcol).
 
 **Question**: Are these critical, or can modern plotting (Julia Plots.jl, Python matplotlib) replace them?
 
+**Paula here:** They can be replaced with modern plotting libraries.
+
 ---
 
 ### Q8: Convective Models
 ATLAS12 has `CONVECTION OVER 1.25 0 36` (mixing-length theory parameter).
 
 **Question**: Do you use different convection models, or is MLT with α=1.25 standard?
+
+**Paula here:** I usually use MLT with α=1.25 but we it is better if we allow flexibility to change it.
 
 ---
 
@@ -1004,6 +1023,8 @@ ATLAS12 has `CONVECTION OVER 1.25 0 36` (mixing-length theory parameter).
 | Binary I/O | Fortran UNFORMATTED | Match Fortran binary | Use HDF5/Arrow |
 
 **Recommendation**: Start with Option A (preserve architecture) for validation, refactor to Option B later.
+
+**Paula here:** Let's revisit this once we are at a larger stage. My gut feeling is to prioritize code clarity and test-driven-development. But I can be convinced otherwise. 
 
 ---
 

@@ -8,7 +8,7 @@ This project was born from a sense of urgency. [Robert Kurucz (1938-2025)](https
 
 ## What is the ATLAS Suite?
 
-The ATLAS Suite is a collection of Fortran programs for stellar atmosphere modeling and synthetic spectrum synthesis, developed primarily by Robert Kurucz with contributions from late Fiorella Castelli, Piercarlo Bonifacion, Luca Sbordone among others. These codes have been foundational tools in astronomy for decades, used to:
+The ATLAS Suite is a collection of Fortran programs for stellar atmosphere modeling and synthetic spectrum synthesis, developed primarily by Robert Kurucz with contributions from late Fiorella Castelli, John Lester, M. Stift, Piercarlo Bonifacio, Luca Sbordone among others. These codes have been foundational tools in astronomy for decades, used to:
 
 - Compute stellar atmosphere models (ATLAS9, ATLAS12)
 - Synthesize high-resolution stellar spectra (SYNTHE)
@@ -59,7 +59,7 @@ This work is currently funded through:
 - Paula's Claude Pro subscription for strategic planning and synthesis work
 - Anthropic's $250 research preview credit for Claude Code (web interface), which enabled the intensive Phase 1 code archaeology work
 
-We are grateful to Anthropic for making these tools available and for the research credit that catalyzed this project. Future phases will depend on securing additional computational resources, potentially through research credit applications to AI organizations or traditional grant funding.
+We are grateful to Anthropic for making the technology available and for the research credit that catalyzed this project. Future phases will depend on securing additional computational resources, potentially through research credit applications to AI organizations or traditional grant funding.
 
 ---
 
