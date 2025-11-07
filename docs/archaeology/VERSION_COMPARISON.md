@@ -16,12 +16,14 @@ The Castelli and Kurucz repositories contain **overlapping but divergent version
 | Aspect | Castelli Repository | Kurucz Repository |
 |--------|---------------------|-------------------|
 | **Last updates** | ~2009 (ATLAS12), ~2001 (SYNTHE) | ~2015 (SYNTHE), ~2005 (ATLAS12) |
-| **Maintainer focus** | Fiorella Castelli (deceased 2019) | Robert Kurucz (deceased 2017) |
+| **Maintainer focus** | Fiorella Castelli (deceased 2019) | Robert Kurucz (deceased 2025) |
 | **Platform target** | Linux (gfortran), modern syntax | Multi-platform (VMS legacy preserved) |
 | **Extensibility** | Hardcoded array dimensions | Parameterized dimensions |
 | **Molecule support** | Original 39 molecules | Extended 139 molecules |
 | **Bug fixes** | 2009 fixes by M. Stift (Be, B, Ar, O) | Earlier baseline (2005) |
 | **Precision** | Mixed REAL*4/REAL*8, D exponents | Mixed REAL*4/REAL*8, E exponents |
+
+**Paula here:** We have to consider that some bug fixes might have been applied but not documented (I remember seeing newer changes in SYNTHE from Castelli but we can revisit later). 
 
 **Migration Implication**: Neither version is definitively "better" - they represent **different trade-offs**. Julia migration should **synthesize the best of both**, incorporating all bug fixes and choosing the most extensible architecture.
 
@@ -66,6 +68,9 @@ c     27may2005 ATLAS9 abundance scaling per Fiorella Castelli
 - Array dimension issues
 
 **Migration Decision**: ✅ **Use Castelli version as baseline** and verify bug fixes are preserved.
+
+**Paula here:** We have to consider that some bug fixes might have been applied but not documented. We can start with Castelli (it is the one I use) but we will need to compare in detail with Kurucz.
+
 
 #### 2. Numerical Precision
 
@@ -213,6 +218,8 @@ DO 205 NELION=1,mw6
 
 **Migration Decision**: ✅ **Use parameterized approach** (Kurucz style) for Julia, but even better: use dynamic arrays (vectors) that can grow at runtime.
 
+**Paula here:** Dynamic arrays please.
+
 #### 2. Van der Waals Broadening
 
 **Castelli implementation**:
@@ -350,6 +357,8 @@ C    6    510,   516,   522,   528,   534,   540,   546,   552,   558,
 - **Hydrocarbons**: CH3, NH3, C2H2, CH4, SiH4
 - **Carbon chains**: SiC, SiC2, C2N, C2N2, C3N
 
+**Paula here:** We need to check if the data for all those molecules is indeed available or if they exist only in the code expecting future data files.
+
 **Scientific Impact**: Kurucz version is **essential for cool star modeling**:
 - M dwarfs (T < 4000 K): TiO, VO, H2O, FeH dominate optical spectra
 - Carbon stars: C2, CN, CH, C3, C2H2 critical
@@ -423,7 +432,7 @@ Kurucz (2000-2005)   Castelli (2000-2009)
 - Maintained VMS      - Bug fixes (Stift, Lester)
 - 2015: Final updates - BAO van der Waals
   to SYNTHE           - Modern I/O syntax
-- Dies 2017          - Dies 2019
+- Dies 2025          - Dies 2019
      ↓                     ↓
      └─────────────────────┘
               ↓

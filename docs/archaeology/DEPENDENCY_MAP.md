@@ -484,6 +484,7 @@ Output: fort.7 (converged atmosphere model)
 ## Dependency Graph (High-Level)
 
 ### Conceptual Data Flow
+**Paula here:** I want to revise the position of KAPPA9 in the diagram.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -569,6 +570,8 @@ How are programs built?
 **Missing**: Makefiles, build scripts, compilation notes
 
 **Action for Phase 2**: Search for Makefiles, README files with compilation instructions.
+
+**Paula here:** They are build with simple gfortran commands. They are now documented in `WORKFLOW_ANALYSIS.md`.
 
 ### 4. COMMON Block Layouts
 
