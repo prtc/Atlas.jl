@@ -910,6 +910,19 @@ end
 
 ---
 
+## Cross-References
+
+**Related Deep Dives**:
+- **Deep Dive 01 (Voigt Profiles)**: Line opacity uses Voigt function for each line contribution (CV calculation)
+- **Deep Dive 04 (Binary I/O)**: LINOP1 reads line data from fort.12 in IIIIIII format
+- **Deep Dive 05 (JOSH/RT)**: JOSH uses accumulated XLINES opacity for radiative transfer
+
+**Referenced in**:
+- `docs/archaeology/ARCHITECTURE_INSIGHTS.md` Section 6.7 (Rank #3 high-risk code)
+- `docs/archaeology/DEEP_DIVES/00_INDEX.md` (Performance-critical deep dives)
+
+---
+
 **Status**: ✅ Deep dive complete
 
 **Time invested**: ~75 minutes
