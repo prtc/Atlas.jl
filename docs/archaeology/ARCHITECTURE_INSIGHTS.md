@@ -2520,7 +2520,7 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 | 2 | Voigt profile evaluation | Algorithm, Performance | Medium | High | 🔴 Highest | 🐲✨ Deep Dive 01 |
 | 3 | Line opacity summation | Precision, Performance | Medium | High | 🔴 Highest | 🐲✨ Deep Dive 03 |
 | 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest | 🐲✨ Deep Dive 04 |
-| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | ✅ Partial (DD02) |
+| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | 🐲✨ Deep Dive 06 |
 | 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High | 🐲✨ Deep Dive 05 |
 | 7 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High | 🔲 Pending |
 | 8 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium | 🔲 Pending |
@@ -2544,6 +2544,7 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 - [x] 🐲✨ Deep dive on Rank #2 risk (Voigt) - Deep Dive 01
 - [x] 🐲✨ Deep dive on Rank #3 risk (Line Opacity) - Deep Dive 03
 - [x] 🐲✨ Deep dive on Rank #4 risk (Binary I/O) - Deep Dive 04
+- [x] 🐲✨ Deep dive on Rank #5 risk (Iteration Damping/TCORR) - Deep Dive 06
 - [x] 🐲✨ Deep dive on Rank #6 risk (RT Integration/JOSH) - Deep Dive 05
 - [x] Paula decides on critical questions (Section V) - 5/10 resolved (5.1-5.5)
 - [ ] Generate Fortran reference outputs for test cases
