@@ -2,9 +2,9 @@
 *Legacy Code Documentation for Julia Migration*
 
 ## Mission Status
-**Current Phase**: Phase 1 - Repository Census
-**Last Updated**: 2025-11-06
-**Days Remaining**: 12
+**Current Phase**: Phase 2B - Architecture Mapping (Detailed)
+**Last Updated**: 2025-11-07
+**Days Remaining**: 10
 
 ---
 
@@ -66,23 +66,36 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 
 ---
 
-### Phase 2: Architecture Mapping ✱ NOT STARTED
-**Target**: Days 3-5 | **Status**: ⬜ Not started
+### Phase 2: Architecture Mapping ✱ ACTIVE
+**Target**: Days 3-5 | **Status**: 🔄 In progress
+
+#### Phase 2A (Days 3-4): ✅ COMPLETE
+- [x] Analyzed .com and .html workflow documentation
+- [x] Created WORKFLOW_ANALYSIS.md - Documents ATLAS12 two-stage execution, SYNTHE 11-program pipeline, DFSYNTHE → ATLAS9 connection
+- [x] Created VERSION_COMPARISON.md - Castelli vs Kurucz source code comparison, bug fix tracking, migration recommendations
+- [x] Updated DEPENDENCY_MAP.md with Runtime Architecture and Fort Unit Communication sections
+
+#### Phase 2B (Days 5-6): 🔄 IN PROGRESS
+**Current Focus**: Detailed architecture mapping for ATLAS12 and SYNTHE
 
 #### Major Components to Map:
-- [ ] 2.1 - ATLAS9 architecture
-- [ ] 2.2 - ATLAS12 architecture ⭐ **HIGH PRIORITY - MIGRATION TARGET**
-  - Compare Castelli vs Kurucz versions line-by-line if both exist
-  - Document all differences (bug fixes, gfortran compatibility changes, numerical changes)
-  - Identify which version should be the migration base
-  - Flag any merged fixes needed from both versions
-- [ ] 2.3 - SYNTHE architecture
-- [ ] 2.4 - ODF architecture
-- [ ] 2.5 - DFSYNTHE architecture
-- [ ] 2.6 - KAPPA9 architecture
-- [ ] 2.7 - WIDTH architecture
-- [ ] 2.8 - Hbeta architecture
-- [ ] 2.9 - Write `docs/archaeology/ARCHITECTURE_MAP.md`
+- [ ] 2.1 - ATLAS9 architecture (Deferred - lower priority)
+- [x] 2.2a - ATLAS12 workflow (✅ Complete in WORKFLOW_ANALYSIS.md)
+- [x] 2.2b - ATLAS12 vs Kurucz version comparison (✅ Complete in VERSION_COMPARISON.md)
+- [ ] 2.2c - ATLAS12 detailed subroutine architecture ⭐ **CURRENT TASK**
+  - Main program flow (Stage 1 vs Stage 2)
+  - Key subroutine categories and call chains
+  - COMMON block architecture (56-57 blocks)
+- [x] 2.3a - SYNTHE workflow (✅ Complete in WORKFLOW_ANALYSIS.md)
+- [ ] 2.3b - SYNTHE pipeline detailed architecture ⭐ **CURRENT TASK**
+  - Each of 11 programs in detail
+  - ATLAS7V library interface
+- [ ] 2.4 - ODF architecture (Deferred)
+- [ ] 2.5 - DFSYNTHE architecture (Deferred)
+- [ ] 2.6 - KAPPA9 architecture (Deferred)
+- [ ] 2.7 - WIDTH architecture (Deferred)
+- [ ] 2.8 - Hbeta architecture (Deferred)
+- [ ] 2.9 - Write comprehensive `docs/archaeology/ARCHITECTURE_DETAILS.md`
 
 For each component document:
 - Main program entry point
@@ -91,7 +104,19 @@ For each component document:
 - Output file formats
 - Shared utility functions
 
-**Notes**: [Claude Code Web adds notes here]
+**Notes**:
+Phase 2A successfully completed with two major deliverables:
+1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
+2. **VERSION_COMPARISON.md** (580 lines) - Detailed comparison of Castelli vs Kurucz versions showing 4 years of bug fixes (2005-2009) in Castelli version, molecule database expansion (39→139) in Kurucz version, and migration recommendations for hybrid approach.
+
+Phase 2B (current session) focuses on drilling deeper into subroutine-level architecture for ATLAS12 and SYNTHE core computational engines.
+
+**Methodology Discovery** (Phase 2B):
+During this session, we discovered an important lesson about legacy code archaeology: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This is documented in **METHODOLOGY_NOTES.md** and represents a significant improvement in human-AI collaboration strategy for complex legacy codebases. See `docs/archaeology/METHODOLOGY_NOTES.md` for details.
+
+Phase 2B deliverables:
+3. **ARCHITECTURE_DETAILS.md** (592 lines) - Documents ATLAS12's 80 subroutines, 57 COMMON blocks, main execution flow, and migration implications. Uses "breadth-first" approach: comprehensive survey with explicit TODOs for deeper analysis.
+4. **METHODOLOGY_NOTES.md** (in progress) - Captures lessons learned about effective legacy code documentation strategies during Phase 2B.
 
 ---
 
