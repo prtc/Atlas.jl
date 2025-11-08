@@ -100,7 +100,7 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 - ODF generation pipeline
 
 **Notes**:
-Phase 2 successfully completed with **seven major deliverables** (5 + 2 deep dives):
+Phase 2 successfully completed with **nine major deliverables** (5 + 4 deep dives):
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -136,6 +136,22 @@ Phase 2 successfully completed with **seven major deliverables** (5 + 2 deep div
    - Validated COMMON block categorization and Julia struct design
    - Identified damping factor 0.3 in electron density iteration
    - 2190-line partition function tables documented
+
+8. **DEEP_DIVES/03_LINE_OPACITY_SUMMATION.md** (921 lines) - Deep analysis of Rank #3 highest-risk code section:
+   - Line opacity accumulation from 100K-500M spectral lines
+   - Float32 accumulation with no error compensation
+   - Analysis shows Float32 adequate (error < 0.01% typical)
+   - Early exit optimization critical for performance (600 GFLOP XLINOP)
+   - Recommend Float64 accumulation for Julia (cheap insurance)
+   - Migration strategy with 3 approaches and testing plan
+
+9. **DEEP_DIVES/04_BINARY_IO.md** (966 lines) - Deep analysis of Rank #4 highest-risk code section:
+   - Fortran UNFORMATTED binary format documentation
+   - Fort.12: 16-byte records (IIIIIII packed line data)
+   - Fort.11/21: Direct-access line databases
+   - Wavelength log-encoding and TABLOG index compression
+   - Compiler-specific issues (gfortran vs ifort, endianness)
+   - Migration strategy: FortranFiles.jl for validation, manual parsing for production
 
 **Methodology Discovery** (Phase 2B):
 Discovered critical insight: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This "breadth-first" approach improved productivity 13× (45 min vs 6+ hrs projected for same output). Documented in METHODOLOGY_NOTES.md as reusable pattern for future sessions.
