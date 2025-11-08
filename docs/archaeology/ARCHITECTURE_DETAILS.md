@@ -1100,6 +1100,483 @@ save_model(model, "output.dat")
 
 ---
 
+## III. ATLAS9 Architecture (Breadth-First Survey)
+
+**Status**: Lower priority, ODF-based predecessor to ATLAS12
+**Migration decision needed**: Section V.1 of ARCHITECTURE_INSIGHTS.md (ODF vs OS)
+
+### 3.1 Basic Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Stellar atmosphere modeling using Opacity Distribution Functions |
+| **Versions** | atlas9.for, atlas9mem.for, atlas9v.for, atlas9xlinop.for |
+| **Line count** | ~18,600-20,200 lines (Castelli), ~13,000-18,700 lines (Kurucz) |
+| **Execution model** | Single-program iterative convergence (no two-stage split) |
+| **Key difference from ATLAS12** | Uses pre-computed ODFs instead of direct line opacity |
+
+**Relationships**:
+- **Predecessor** to ATLAS12
+- **Shares** most subroutines with ATLAS12 and KAPPA9
+- **Feeds** SYNTHE (SYNTHE can use ATLAS9 or ATLAS12 models)
+- **Requires** ODF tables from Kurucz's ODF generation pipeline
+
+---
+
+### 3.2 Variants
+
+**Four versions identified** (Castelli):
+
+1. **atlas9v.for** (19,752 lines) - "Vector" version
+2. **atlas9mem.for** (19,763 lines) - "Memory" version
+3. **atlas9.for** (Kurucz only, 18,725 lines) - Original version
+4. **atlas9xlinop.for** (Kurucz only, 13,014 lines) - Explicit line opacity version
+
+📋 **TODO**: Clarify difference between "v" (vector) and "mem" (memory) variants. Likely optimization strategies for different architectures.
+
+⚠️ **Note**: atlas9xlinop.for appears to be hybrid - explicit line opacity like ATLAS12 but otherwise ATLAS9 structure. This might be intermediate between ATLAS9 and ATLAS12.
+
+---
+
+### 3.3 Subroutine Count
+
+**From atlas9v.for** (representative):
+- **Total subroutines**: ~52 (similar to ATLAS12)
+- **Main program**: ATLAS9
+- **Shared with ATLAS12**: ~40+ subroutines (same names, likely same or very similar code)
+
+**Major shared subroutines**:
+- PUTOUT, TCORR, STATEQ, RADIAP, ROSS (iteration control)
+- POPS, NELECT, PFSAHA, IONPOTS, PFIRON (populations)
+- MOLEC, NMOLEC (molecular equilibrium)
+- CONVEC (convection)
+- KAPP, HOP, HMINOP, HE1OP, HE2OP, COOLOP, LUKEOP, HOTOP, SI1OP (opacity sources)
+
+**ATLAS9-specific subroutines**:
+- Code for reading and interpolating ODFs (⚠️ need to identify which subroutines)
+
+**Implication for migration**: If ATLAS9 migration is needed, ~75% of code can reuse ATLAS12 implementation. Only ODF handling is unique.
+
+---
+
+### 3.4 COMMON Blocks
+
+**Preliminary count** (from file header scan):
+- Similar structure to ATLAS12
+- Estimated ~50-60 COMMON blocks
+- Same categories as ATLAS12 (constants, config, state, workspace, control)
+
+**Notable blocks** (from header):
+- /ABROSS/ - Rosseland opacity from ODF tables
+- /BIGLIT/ - ODF wavelength grid (`WAVEDF(1213,2)`)
+- /FRESET/ - Frequency set for integration (~1563 frequencies)
+- All the standard blocks from ATLAS12 (/TEMP/, /STATE/, /FLUX/, etc.)
+
+📋 **TODO**: Full COMMON block catalog (if ATLAS9 migration priority increases)
+
+---
+
+### 3.5 Input/Output Files
+
+**Input files** (from code comments):
+- **TAPE1**: Rosseland opacity tables (if non-solar abundances)
+- **TAPE2**: Molecular equilibrium constants
+- **TAPE5**: Standard input (model parameters)
+- **TAPE9**: Line Distribution Function (ODF) input
+
+**Output files**:
+- **TAPE6**: Standard output (iteration log)
+- **TAPE7**: Final model atmosphere and/or flux
+
+**Key difference from ATLAS12**: Requires pre-computed ODF files (TAPE9) instead of raw line lists.
+
+---
+
+### 3.6 Execution Flow (High-Level)
+
+Based on structural similarity to ATLAS12:
+
+```
+1. Initialize
+   - Read input parameters (TAPE5)
+   - Read molecular data (TAPE2)
+   - Read Rosseland opacity tables if needed (TAPE1)
+   - Read ODF tables (TAPE9)
+
+2. Main iteration loop
+   WHILE NOT CONVERGED:
+     - Calculate populations (POPS, MOLEC)
+     - Calculate continuum opacity (HOP, HMINOP, etc.)
+     - **Read line opacity from ODF** (ATLAS9-specific)
+     - Solve radiative transfer (STATEQ, RADIAP)
+     - Compute corrections (TCORR, ROSS)
+     - Check convergence
+     - Update atmosphere
+
+3. Output final model (PUTOUT to TAPE7)
+```
+
+**Critical difference**: Step 2 uses ODF lookup instead of summing ~1 million individual lines.
+
+**Performance implications**:
+- **ATLAS9**: Minutes to hours (ODF lookup is fast)
+- **ATLAS12**: Hours (direct line sum is slow but accurate)
+
+---
+
+### 3.7 ODF (Opacity Distribution Function) Concept
+
+**What are ODFs?**:
+- Pre-computed probability distribution of opacity at each wavelength
+- Represents ~1 million lines as statistical distribution (~100-1000 points)
+- Created by separate ODF generation programs
+
+**ODF trade-offs** (vs opacity sampling in ATLAS12):
+- ✅ **Faster**: Lookup table vs summing million lines
+- ✅ **Smaller**: ~MB vs GB of line data
+- ❌ **Less accurate**: Statistical approximation vs exact sum
+- ❌ **Inflexible**: Fixed abundances, can't easily change line strengths
+
+**Julia migration question** (from ARCHITECTURE_INSIGHTS.md Section V.1):
+- Implement ATLAS9 (ODF) or ATLAS12 (OS) first?
+- Or both, with shared computational kernel?
+
+---
+
+### 3.8 Migration Implications
+
+**If ATLAS9 migration is needed**:
+
+**Shared code** (~75%, can reuse ATLAS12):
+- All population calculations
+- All continuum opacity sources
+- Radiative transfer solver
+- Convergence logic
+- I/O except ODF reading
+
+**ATLAS9-specific code** (~25%, new work):
+- ODF file format reader
+- ODF interpolation (wavelength, temperature, pressure)
+- Integration of ODF into opacity calculation
+- ODF generation pipeline (if users need custom ODFs)
+
+**Estimated effort** (relative to ATLAS12=100%):
+- **If ATLAS12 done first**: +25% for ATLAS9-specific parts
+- **If ATLAS9 done first**: ~85% (then +15% for ATLAS12 line opacity)
+
+**Recommendation**: See ARCHITECTURE_INSIGHTS.md Section V.1 for decision framework.
+
+---
+
+📋 **Deferred details** (breadth-first approach):
+- [ ] Exact subroutine list and call chains
+- [ ] Complete COMMON block catalog
+- [ ] ODF file format specification
+- [ ] Detailed comparison atlas9v vs atlas9mem vs atlas9xlinop
+- [ ] ODF generation pipeline documentation
+
+---
+
+## IV. DFSYNTHE Architecture (Breadth-First Survey)
+
+**Status**: Lower priority, connects SYNTHE to ATLAS9
+**Purpose**: Creates detailed opacity spectrum for SYNTHE using ATLAS9 output
+
+### 4.1 Basic Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Generate detailed line-by-line opacity spectrum from atmosphere model |
+| **Versions** | Castelli dfsynthe.for (5 files, 22K lines), Kurucz dfsynthe.for |
+| **Line count** | Main program ~2.9K lines, plus XNFDF library ~16K lines |
+| **Execution model** | Single program reading atmosphere, producing opacity file |
+| **Precision** | Mostly REAL*4 (32-bit), except wavelengths/energy levels (REAL*8) |
+
+**Relationships**:
+- **Reads**: ATLAS9 (or ATLAS12) atmosphere models
+- **Feeds**: SYNTHE pipeline (provides opacity data)
+- **Uses**: XNFDF library for detailed opacity calculations
+- **Alternative to**: ATLAS12 Stage 1 (both do line selection/opacity calculation)
+
+**Key insight**: DFSYNTHE+SYNTHE is the ATLAS9 equivalent of ATLAS12+SYNTHE (ATLAS12 integrated).
+
+---
+
+### 4.2 Components
+
+**Main program**: dfsynthe.for (~2,900 lines)
+
+**Library**: xnfdf.for (~16,200-16,600 lines)
+- This is the "heavy lifting" opacity calculation library
+- Shared between DFSYNTHE and other Kurucz programs
+
+**Support programs** (Castelli dfsynthe/ directory):
+- highlinesdf.for (469 lines) - High-energy line processing
+- lowlinesdf.for (452 lines) - Low-energy line processing
+- tiolinesdf.for (1,050 lines) - TiO molecular lines
+- rmodfin.for (72 lines) - Read model file
+- rmolec.for (73 lines) - Read molecular data
+- rpopsw.for (62 lines) - Read populations
+- xlinop.for (88 lines) - Line opacity calculation
+- wrhum.for (47 lines) - Write human-readable output
+- wrread.for (76 lines) - Write/read utility
+
+**Total**: ~22,000 lines across 10 files
+
+---
+
+### 4.3 Subroutine Count
+
+**From dfsynthe.for**: ~10 subroutines
+
+Notable subroutines (inferred from code structure):
+- Line list reading and selection
+- Continuum opacity calculation
+- Profile calculation (Voigt)
+- Output formatting
+
+📋 **TODO**: Catalog subroutines if DFSYNTHE migration prioritized
+
+**From xnfdf.for**: Large library with many opacity calculation routines (detailed analysis deferred).
+
+---
+
+### 4.4 COMMON Blocks
+
+**From header scan**: ~15-20 COMMON blocks
+
+**Notable blocks**:
+- /BUFFER/ - Large workspace `BUFFER(3510000)` (~14 MB)
+- /CONTIN/ - Continuum opacity `CONTINUUM(3510000)` (~14 MB)
+- /BHYD/, /BHE/ - Hydrogen and helium opacities
+- /NBIGLIT/ - Wavelength grid structure
+- /NLINES/ - Line list metadata
+- /STATE/, /TEMP/, /RHOX/ - Atmosphere state (from ATLAS9/12 model)
+
+**Memory footprint**: ~30-50 MB (large buffers for line data)
+
+---
+
+### 4.5 Input/Output Files
+
+**Input files** (from code header):
+- **TAPE5**: Parameters (IFTEFF - temperature flag)
+- **TAPE10, TAPE22**: Opacity data from XNFDF
+- **TAPE11**: Low-energy lines (LOWLINESDF)
+- **TAPE21**: High-energy lines (HIGHLINESDF)
+- **TAPE31**: Diatomic lines (DIATOMICSDF)
+- **TAPE41**: TiO lines (TIOLINESDF)
+- **TAPE43**: H2O lines (H2OLINESDF)
+- **TAPE51, TAPE61**: NLTE line data (optional)
+
+**Output files**:
+- **TAPE6**: Standard output log
+- **TAPE12**: Selected line data for current temperature
+- **TAPE14**: Temporary 0 km/s opacity spectrum
+- **TAPE15**: **Output distribution functions** (this feeds SYNTHE)
+- **TAPE19**: Selected NLTE lines
+
+**Workflow**:
+```
+ATLAS9 model → XNFDF (populations) → DFSYNTHE (line selection) → SYNTHE (spectrum)
+```
+
+---
+
+### 4.6 Purpose and Workflow
+
+**What DFSYNTHE does**:
+1. Reads ATLAS9 atmosphere model (T, P, ρ vs depth)
+2. Reads massive line databases (TAPE11, 21, 31, 41, 43)
+3. Calculates which lines contribute significantly at each depth
+4. Computes detailed opacity vs wavelength
+5. Writes opacity distribution functions to TAPE15
+6. SYNTHE reads TAPE15 and synthesizes spectrum
+
+**Comparison to ATLAS12 workflow**:
+| ATLAS9 + DFSYNTHE | ATLAS12 |
+|-------------------|---------|
+| ATLAS9 atmosphere | ATLAS12 Stage 2 atmosphere |
+| DFSYNTHE opacity calc | ATLAS12 Stage 1 line selection |
+| SYNTHE spectrum | SYNTHE spectrum |
+| **3 separate programs** | **2 stages of one program** |
+
+**Key difference**: DFSYNTHE is post-processing (uses completed ATLAS9 model), while ATLAS12 Stage 1 is pre-processing (before iteration).
+
+---
+
+### 4.7 Migration Implications
+
+**If DFSYNTHE migration is needed**:
+
+**Scenario A - Full ATLAS9 ecosystem**:
+- Need: ATLAS9 + DFSYNTHE + SYNTHE
+- Rationale: Complete Kurucz original workflow
+- Effort: High (3 programs)
+
+**Scenario B - ATLAS12 only**:
+- Need: ATLAS12 + SYNTHE
+- Rationale: Modern approach, no DFSYNTHE needed
+- Effort: Medium (2 stages)
+
+**Scenario C - Hybrid validation**:
+- Implement ATLAS12
+- Use Fortran DFSYNTHE temporarily for cross-validation
+- Migrate DFSYNTHE only if needed
+
+**Recommendation**: Defer DFSYNTHE unless research requires ATLAS9 workflow.
+
+**Code reuse potential**:
+- Line database reading: Similar to SYNTHE
+- Opacity calculation (xnfdf.for): Large library, might be useful for validation
+- Profile calculations: Similar to ATLAS12
+
+---
+
+📋 **Deferred details**:
+- [ ] xnfdf.for library analysis
+- [ ] Detailed subroutine catalog
+- [ ] TAPE15 output format (distribution functions)
+- [ ] Comparison: DFSYNTHE opacity vs ATLAS12 Stage 1 opacity
+
+---
+
+## V. KAPPA9 Architecture (Breadth-First Survey)
+
+**Status**: Lower priority, opacity calculator/validator
+**Purpose**: Calculate opacity tables for ATLAS9
+
+### 5.1 Basic Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Calculate continuum opacity at given T, P, abundance |
+| **Versions** | Castelli kappa9.for (19,715 lines) |
+| **Execution model** | Single-program opacity calculator |
+| **Relationship** | Standalone utility, uses ATLAS9 opacity subroutines |
+
+**Use cases**:
+- Generate opacity tables for specific abundances
+- Validate opacity calculations
+- Test opacity sources (H, He, metals, etc.)
+
+**Relationship to other codes**:
+- **Shares code** with ATLAS9 (~90% overlap)
+- **Not required** for ATLAS9 or ATLAS12 operation
+- **Utility role**: Testing and validation
+
+---
+
+### 5.2 Structure
+
+**Main program**: KAPPA9
+
+**Subroutines**: ~40-45 (from grep count)
+
+**High overlap with ATLAS9** includes:
+- PUTOUT, TCORR, STATEQ, RADIAP, ROSS
+- POPS, NELECT, PFSAHA, IONPOTS, PFIRON
+- MOLEC, NMOLEC, CONVEC
+- HOP, HMINOP, HE1OP, HE2OP, COOLOP, LUKEOP, SI1OP, etc.
+
+**KAPPA9-specific**:
+- Calculation and output of opacity tables
+- Possibly simplified iteration (just opacity, not full atmosphere)
+
+---
+
+### 5.3 COMMON Blocks
+
+**From header scan**: ~50-60 blocks (nearly identical to ATLAS9)
+
+Notable additions:
+- /IFPOP/ - Population calculation flag
+- /ACNOOP/ - Additional continuum opacity sources (expanded list)
+
+Otherwise same structure as ATLAS9/ATLAS12.
+
+---
+
+### 5.4 Input/Output
+
+**Input files** (similar to ATLAS9):
+- TAPE5: Parameters (T, P, abundances)
+- TAPE2: Molecular data
+- TAPE9: ODF tables (if used)
+
+**Output files**:
+- TAPE6: Opacity table results
+- Possibly formatted tables for external use
+
+**Typical use**: "What's the opacity at T=10000K, log(P)=2.0, with 2× solar iron?"
+
+---
+
+### 5.5 Migration Implications
+
+**Priority**: Very low (utility code, not science-critical)
+
+**If needed**:
+- **Effort**: Minimal if ATLAS9 already migrated (~10% additional work)
+- **Alternative**: Write simple Julia opacity calculator using migrated ATLAS9/12 subroutines
+- **Testing value**: Useful for validating migrated opacity calculations
+
+**Recommendation**:
+- Defer indefinitely
+- If opacity validation needed, create lightweight Julia utility using ATLAS12 opacity routines
+- Full KAPPA9 migration only if specific research need identified
+
+---
+
+📋 **Deferred details**:
+- [ ] Full subroutine catalog
+- [ ] Exact input/output format
+- [ ] Differences from ATLAS9 beyond main program
+
+---
+
+## VI. Cross-Code Architecture Summary
+
+**Shared computational kernel identified**:
+
+| Code | Line count | Shared with ATLAS12 | Unique code |
+|------|------------|---------------------|-------------|
+| ATLAS12 | ~23,000 | 100% (reference) | Stage 1+2 logic, line opacity sum |
+| ATLAS9 | ~19,000 | ~75% | ODF handling, single-stage iteration |
+| KAPPA9 | ~19,700 | ~90% | Opacity table output |
+| DFSYNTHE | ~19,000 | ~50% | Line selection, xnfdf library |
+| SYNTHE | ~20,000 | ~30% | RT solving, pipeline |
+
+**Implication**: ~10,500 lines of shared subroutines (populations, continuum opacity, utilities) can be extracted as common Julia modules, reducing total migration effort.
+
+**Proposed Julia package structure**:
+```
+AtlasBase.jl - Shared computational kernel
+  ├── Populations (Saha-Boltzmann, partition functions)
+  ├── ContinuumOpacity (H, He, metals)
+  ├── MolecularEquilibrium
+  └── Utilities (interpolation, integration, etc.)
+
+Atlas12.jl - ATLAS12 specific (depends on AtlasBase)
+  ├── Stage1 (line selection)
+  ├── Stage2 (iteration)
+  └── OutputModel
+
+Atlas9.jl - ATLAS9 specific (depends on AtlasBase) [Optional, if needed]
+  ├── ODFReader
+  └── Iteration
+
+Synthe.jl - SYNTHE (depends on AtlasBase, uses Atlas12 or Atlas9 output)
+  └── Pipeline stages
+
+DFSYNTHE.jl - If ever needed (depends on AtlasBase)
+Kappa9.jl - Probably never needed (trivial utility)
+```
+
+This architecture minimizes code duplication and maximizes reuse.
+
+---
+
 ## Appendix: Data Structure Sizes
 
 **Memory footprint** (estimated from COMMON blocks, kw=72 depth points, mion=1006 ions):
@@ -1120,6 +1597,8 @@ For context: 1GB RAM can hold ~50 models simultaneously in double precision.
 
 ---
 
-**Status**: Phase 2B initial architecture documentation complete. Further detail will be added iteratively.
+**Status**: Phase 2B architecture documentation complete - ATLAS12, SYNTHE, ATLAS9, DFSYNTHE, KAPPA9 surveyed.
 
-**Next**: Commit this document and continue with call-chain diagrams and COMMON block details.
+**Breadth-first approach applied**: Documented clear aspects, flagged complex areas for future investigation, identified shared computational kernel (~10.5K lines reusable across codes).
+
+**Next**: Use insights from this document and ARCHITECTURE_INSIGHTS.md for Phase 3 (Physics Pipeline) and Phase 4 (Migration Assessment).
