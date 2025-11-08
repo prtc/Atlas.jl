@@ -1103,6 +1103,21 @@ end
 
 ---
 
+## Cross-References
+
+**Related Deep Dives**:
+- **Deep Dive 07 (CONVEC)**: TCORR MODE=3 uses FLXCNV from CONVEC for convection coupling (DTFLUX calculation)
+- **Deep Dive 02 (Populations)**: Partial electron density damping analysis (0.3 factor)
+- **Deep Dive 05 (JOSH/RT)**: TCORR MODE=2 accumulates RDIAGJ from JOSH RT solution
+
+**Referenced in**:
+- `docs/archaeology/ARCHITECTURE_INSIGHTS.md` Section 6.7 (Rank #5 high-risk code)
+- `docs/archaeology/DEEP_DIVES/00_INDEX.md` (Convergence stability, dependencies)
+
+**Key coupling**: TCORR is the "glue" that connects RT solution (JOSH), convection (CONVEC), and populations (POPS) into a self-consistent iteration loop.
+
+---
+
 **Status**: Deep Dive complete. Ready for code implementation.
 
 **Next steps**:
