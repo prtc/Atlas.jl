@@ -29,6 +29,36 @@ The Castelli and Kurucz repositories contain **overlapping but divergent version
 
 ---
 
+## ATLAS9 vs ATLAS12 Model Comparisons (from Castelli 2005)
+
+**Reference**: Castelli, F. 2005, "ATLAS12: how to use it", Section 9
+
+### Temperature Structure Differences
+
+Castelli 2005 compared T−log₁₀(τRoss) relations from ATLAS9 and ATLAS12 for various parameters:
+
+**Key finding**: "The differences increase with increasing Teff (Figures 1, 2, 3) but, for a given Teff, they are the same for different gravities (Figures 2 and 4) and different metallicities (Figures 2 and 5)."
+
+**Test cases examined**:
+1. Teff=4000 K, log g=4.5, [M/H]=0.0, ξ=2 km/s (Figure 1)
+2. Teff=6000 K, log g=4.5, [M/H]=0.0, ξ=2 km/s (Figure 2)
+3. Teff=20000 K, log g=4.5, [M/H]=0.0, ξ=2 km/s (Figure 3)
+4. Teff=6000 K, log g=1.5, [M/H]=0.0, ξ=2 km/s (Figure 4) - gravity variation
+5. Teff=6000 K, log g=4.5, [M/H]=−1.0, ξ=2 km/s (Figure 5) - metallicity variation
+
+**Interpretation**:
+- ATLAS12 (Opacity Sampling) produces different temperature stratification than ATLAS9 (ODF)
+- Differences are **temperature-dependent** but **not gravity or metallicity dependent**
+- Hotter stars show larger differences (likely due to more complex line blanketing effects)
+
+⚠️ **IMPLICATION FOR MIGRATION**:
+- ATLAS9 and ATLAS12 models are **not interchangeable** for hot stars
+- Even with same input parameters, different methods produce different T(τ) structures
+- **Validation strategy**: Cannot simply compare ATLAS9 output to ATLAS12 output
+- **Cross-validation needed**: Must compare Julia ATLAS12 to Fortran ATLAS12, separately from ATLAS9
+
+---
+
 ## Detailed Difference Analysis
 
 ### ATLAS12 Comparison
@@ -37,6 +67,7 @@ The Castelli and Kurucz repositories contain **overlapping but divergent version
 - Castelli: `upstream/castelli/source_codes/atlas12/atlas12.for` (23,247 lines)
 - Kurucz: `upstream/kurucz/source_codes/programs/atlas12/atlas12.for` (22,152 lines)
 - **Total diff lines**: 5,448 (24% of smaller file)
+- **Reference documentation**: Castelli 2005 (atlas12.pdf)
 
 #### 1. Version History and Bug Fixes
 
