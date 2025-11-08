@@ -100,7 +100,7 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 - ODF generation pipeline
 
 **Notes**:
-Phase 2 successfully completed with **five major deliverables**:
+Phase 2 successfully completed with **seven major deliverables** (5 + 2 deep dives):
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -118,10 +118,24 @@ Phase 2 successfully completed with **five major deliverables**:
    - Section II: Computational patterns across codes (~10.5K lines shared kernel)
    - Section III: Data flow analysis (ATLAS12 stages, SYNTHE pipeline, redesign principles)
    - Section IV: State management redesign (57 COMMON → 5 Julia struct types)
-   - Section V: **10 critical decision points requiring Paula's domain expertise**
+   - Section V: **10 critical decision points requiring Paula's domain expertise** (1 RESOLVED via code analysis)
    - Section VI: Migration risk assessment (validation strategy, high-risk code sections)
 
 5. **METHODOLOGY_NOTES.md** (303 lines) - Documents "here be dragons" methodology breakthrough: breadth-first documentation beats depth-first analysis paralysis. Key lesson for human-AI collaboration on complex legacy codebases.
+
+6. **DEEP_DIVES/01_VOIGT_PROFILE.md** (628 lines) - Deep analysis of Rank #2 highest-risk code section:
+   - 4-regime piecewise algorithm with 13 undocumented magic constants
+   - Hybrid pretabulation + analytical approximation strategy
+   - Performance critical (~1 μs/call, millions of calls per iteration)
+   - Precision analysis: Float32 acceptable (target ~2%, measured <1.5%)
+   - Migration strategy with test suite design
+
+7. **DEEP_DIVES/02_POPULATIONS.md** (731 lines) - Deep analysis of Rank #1 highest-risk code section:
+   - Saha-Boltzmann population calculations spanning 40+ orders of magnitude
+   - RESOLVED Decision V.4 (Precision): Float64 REQUIRED for populations
+   - Validated COMMON block categorization and Julia struct design
+   - Identified damping factor 0.3 in electron density iteration
+   - 2190-line partition function tables documented
 
 **Methodology Discovery** (Phase 2B):
 Discovered critical insight: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This "breadth-first" approach improved productivity 13× (45 min vs 6+ hrs projected for same output). Documented in METHODOLOGY_NOTES.md as reusable pattern for future sessions.
