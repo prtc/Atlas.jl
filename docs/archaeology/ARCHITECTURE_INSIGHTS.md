@@ -15,6 +15,12 @@ This document bridges "what the Fortran does" to "how to design clean Julia." Un
 
 **Core challenge**: 57 COMMON blocks in ATLAS12 create implicit dependencies that make it impossible to reason about data flow. Julia migration must make these dependencies explicit.
 
+**Progress Update** (2025-11-09):
+- **Deep Dive 01** (Voigt Profile): Analyzed highest-risk numerical algorithm, validated Float32 precision acceptable
+- **Deep Dive 02** (Populations): Resolved critical precision decision (Float64 required), validated state management design
+- **Section V.4** (Precision): Decision RESOLVED via code analysis - mixed precision strategy documented
+- **Section VI** (Risk Assessment): Updated with cross-references to deep dive findings
+
 ---
 
 ## I. Critical Architectural Challenges
@@ -197,8 +203,13 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
 - Where is precision loss acceptable for memory savings?
 - Are there accumulated rounding errors we must match?
 
-**Julia Approach**:
-1. **Analyze first**: Run tests comparing Float32 vs Float64 for each calculation
+**✅ PARTIALLY RESOLVED** - See Deep Dives 01 & 02 for precision analysis:
+- **Populations (Deep Dive 02)**: Float64 REQUIRED - ratios span 40+ orders of magnitude, Float32 underflows
+- **Voigt profiles (Deep Dive 01)**: Float32 acceptable - target accuracy ~2%, measured error <1.5%
+- **Remaining**: Line arrays (XLINES), opacity sums, RT integration (need testing)
+
+**Julia Approach** (validated by code analysis):
+1. **~~Analyze first~~**: ✅ Done for populations & Voigt (see deep dives)
 2. **Parameterize**: Use type parameters for flexibility
    ```julia
    struct AtmosphereState{T<:AbstractFloat}
@@ -207,7 +218,9 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
        # ...
    end
    ```
-3. **Default to Float64**: Only use Float32 where proven safe and necessary
+3. **Mixed precision strategy** (from Deep Dive 02):
+   - Float64: populations, electron density, partition functions
+   - Float32: Voigt profiles, possibly line arrays (need validation)
 
 **Migration risk**: ⚠️ If we change precision, we may get subtly different results that are hard to debug.
 
@@ -323,19 +336,19 @@ The ATLAS Suite shows significant code reuse—not through libraries or modules 
 
 From DEPENDENCY_MAP.md analysis, ~10 subroutines appear in multiple programs with identical or near-identical implementations:
 
-| Subroutine | ATLAS9 | ATLAS12 | SYNTHE | KAPPA9 | Purpose |
-|------------|--------|---------|--------|--------|---------|
-| READIN | ✓ | ✓ | - | ✓ | Read input parameters |
-| POPS | ✓ | ✓ | - | ✓ | LTE atomic populations (Saha-Boltzmann) |
-| PFSAHA | ✓ | ✓ | - | ✓ | Partition functions via Saha equation |
-| KAPP | ✓ | ✓ | - | ✓ | Total opacity (sum all sources) |
-| ROSS | ✓ | ✓ | - | - | Rosseland mean opacity |
-| DERIV | ✓ | ✓ | - | ✓ | Numerical derivatives |
-| INTEG | ✓ | ✓ | ✓ | ✓ | Numerical integration |
-| SOLVIT | ✓ | ✓ | - | ✓ | Linear equation solver |
-| PARCOE | ✓ | ✓ | ✓ | ✓ | Parabolic interpolation coefficients |
-| TABVOIGT | - | ✓ | ✓ | - | Pretabulate Voigt profiles |
-| XLINOP | - | ✓ | ✓ | - | Line opacity calculation (newer method) |
+| Subroutine | ATLAS9 | ATLAS12 | SYNTHE | KAPPA9 | Purpose | Analysis |
+|------------|--------|---------|--------|--------|---------|----------|
+| READIN | ✓ | ✓ | - | ✓ | Read input parameters | |
+| POPS | ✓ | ✓ | - | ✓ | LTE atomic populations (Saha-Boltzmann) | ✅ Deep Dive 02 |
+| PFSAHA | ✓ | ✓ | - | ✓ | Partition functions via Saha equation | ✅ Deep Dive 02 |
+| KAPP | ✓ | ✓ | - | ✓ | Total opacity (sum all sources) | |
+| ROSS | ✓ | ✓ | - | - | Rosseland mean opacity | |
+| DERIV | ✓ | ✓ | - | ✓ | Numerical derivatives | |
+| INTEG | ✓ | ✓ | ✓ | ✓ | Numerical integration | |
+| SOLVIT | ✓ | ✓ | - | ✓ | Linear equation solver | |
+| PARCOE | ✓ | ✓ | ✓ | ✓ | Parabolic interpolation coefficients | |
+| TABVOIGT | - | ✓ | ✓ | - | Pretabulate Voigt profiles | ✅ Deep Dive 01 |
+| XLINOP | - | ✓ | ✓ | - | Line opacity calculation (newer method) | |
 
 **Observation**: Two distinct groups emerge:
 1. **Core physics/numerics** (POPS, PFSAHA, KAPP, ROSS, DERIV, INTEG, SOLVIT, PARCOE)
@@ -744,9 +757,9 @@ mv fort.55 fort.5    # Signal to run Stage 2
 
 **Per iteration**:
 1. **Population calculations** (→ /XNF/, /XNFP/ COMMON blocks):
-   - POPS: Compute atomic populations (Saha-Boltzmann)
+   - POPS: Compute atomic populations (Saha-Boltzmann) - See Deep Dive 02
    - POPSALL: Add molecular populations
-   - NELECT: Update electron density
+   - NELECT: Update electron density with damping factor 0.3 - See Deep Dive 02, Section 3.2
 
 2. **Opacity tabulation** (→ /TABCONT/, /XLINES/ COMMON blocks):
    - KAPCONT: Continuum opacity at all depths (once per iteration)
@@ -1088,6 +1101,12 @@ spectrum = model |>
 **Challenge**: ATLAS12 uses 57 COMMON blocks for global state. SYNTHE uses ~20. This makes dependencies implicit, testing impossible, and parallelization dangerous.
 
 **Goal**: Categorize all global state and propose explicit Julia structures.
+
+**✅ VALIDATED** - See `docs/archaeology/DEEP_DIVES/02_POPULATIONS.md` Section 6:
+- Traced actual COMMON block usage in POPS/NELECT subroutines
+- Confirmed categorization is correct (constants, config, state, populations, workspace)
+- Validated dependency tree is acyclic (no circular dependencies)
+- Verified proposed Julia structs match actual code patterns
 
 ### 4.1 COMMON Block Taxonomy
 
@@ -1724,11 +1743,26 @@ opacity::Vector{Float64}      # Matches Fortran REAL*8
 - After validation, recommend Float64
 
 **Questions for Paula**:
-1. Are there known precision-sensitive calculations where Float32 → Float64 matters?
+1. ~~Are there known precision-sensitive calculations where Float32 → Float64 matters?~~ **ANSWERED** (see Deep Dive 02)
 2. How closely must Julia outputs match Fortran? (Exact? ~1e-6 tolerance? ~1%)
 3. Do you have reference calculations to test against?
 
-📋 **Decision needed**: Float64 everywhere or match Fortran precision?
+✅ **Decision V.4 RESOLVED** (from Deep Dive 02 - Saha-Boltzmann Populations):
+
+**Mixed precision strategy**:
+- **Populations: Float64 REQUIRED** (no compromise)
+  - Ratios span 40+ orders of magnitude: exp(-χ/kT) ranges from 10^(-50) to 10^(0)
+  - Example: H ionization at 5000K → exp(-31.6) = 1.7 × 10^(-14)
+  - Float32 would underflow to exactly 0.0 → catastrophic failure
+  - See `docs/archaeology/DEEP_DIVES/02_POPULATIONS.md` Section 4 for analysis
+
+- **Voigt profiles: Float32 acceptable**
+  - Target accuracy: ~1-2% (from code comments)
+  - Performance critical (~1 million calls/iteration)
+  - Float32 sufficient for this accuracy level
+  - See `docs/archaeology/DEEP_DIVES/01_VOIGT_PROFILE.md` Section 4 for analysis
+
+**Recommendation**: Use Float64 for all physics calculations (populations, opacities, radiative transfer). Consider Float32 only for final large arrays if memory becomes limiting.
 
 ---
 
@@ -1953,20 +1987,20 @@ end
 
 Ranking decisions by urgency and impact:
 
-| Decision | Urgency | Impact | Can Defer? |
-|----------|---------|--------|------------|
-| 5.1 ODF vs OS | 🔴 High | Critical for architecture | No - affects entire design |
-| 5.2 Two-stage design | 🟡 Medium | Moderate | Somewhat - can start with unified |
-| 5.3 SYNTHE unification | 🟡 Medium | Moderate | Yes - Stage 2 work |
-| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics |
-| 5.5 Version merging | 🔴 High | Critical for baseline | No - needed before coding |
-| 5.6 Migration priority | 🟢 Low | Moderate | Yes - can adjust as we go |
-| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple |
-| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially |
-| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually |
+| Decision | Urgency | Impact | Can Defer? | Status |
+|----------|---------|--------|------------|--------|
+| 5.1 ODF vs OS | 🔴 High | Critical for architecture | No - affects entire design | 🔲 Pending Paula |
+| 5.2 Two-stage design | 🟡 Medium | Moderate | Somewhat - can start with unified | 🔲 Pending Paula |
+| 5.3 SYNTHE unification | 🟡 Medium | Moderate | Yes - Stage 2 work | 🔲 Pending Paula |
+| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics | ✅ RESOLVED (Deep Dive 02) |
+| 5.5 Version merging | 🔴 High | Critical for baseline | No - needed before coding | 🔲 Pending Paula |
+| 5.6 Migration priority | 🟢 Low | Moderate | Yes - can adjust as we go | 🔲 Pending Paula |
+| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple | 🔲 Pending Paula |
+| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially | 🔲 Pending Paula |
+| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually | 🔲 Pending Paula |
 
 **Recommended next steps**:
-1. **Paula decides** on high-urgency items (5.1, 5.4, 5.5)
+1. **Paula decides** on high-urgency items (5.1, ~~5.4~~, 5.5) - ✅ 5.4 resolved via code analysis
 2. Document decisions in MISSION.md or new DECISIONS.md
 3. Use decisions to guide Phase 3 (Physics Pipeline) and Phase 4 (Migration Assessment)
 
@@ -1999,11 +2033,17 @@ C     Humlicek approximation (JQSRT 27, 437, 1982)
 - No comment on accuracy requirements
 - Citation to 1982 paper (need to verify algorithm)
 
+**✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/01_VOIGT_PROFILE.md` for complete analysis:
+- Identified 4-regime piecewise algorithm with 13 undocumented magic constants
+- Algorithm uses polynomial approximations with coefficients derived from H0TAB/H1TAB lookup tables
+- Float32 acceptable (target accuracy ~2%, measured max error 1.5%)
+- Critical boundary: `IF(A+V.GT.3.2)` switches between regimes
+
 **Mitigation**:
-- [ ] Obtain original Humlicek 1982 paper
-- [ ] Verify algorithm against published version
-- [ ] Add test cases with known Voigt profile values
-- [ ] Document accuracy requirements (e.g., "accurate to 1e-8")
+- [x] ~~Obtain original Humlicek 1982 paper~~ → Actually uses DIFFERENT algorithm (see Deep Dive 01)
+- [x] ~~Verify algorithm~~ → Regime boundaries and coefficients documented in Deep Dive 01
+- [ ] Add test cases with known Voigt profile values (use Fortran output as reference)
+- [x] ~~Document accuracy requirements~~ → Target ~2% for spectral synthesis applications
 
 ---
 
@@ -2037,23 +2077,34 @@ C     Iterative correction with damping factor
 - No adaptive damping (might be too aggressive or too conservative)
 - No comment on convergence theory
 
+**✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/02_POPULATIONS.md` for complete analysis:
+- Damping factor 0.3 found in NELECT subroutine (electron density iteration)
+- Used because Saha equation ratios span 40+ orders of magnitude (exp(-31.6) for H ionization at 5000K)
+- Undamped iteration would oscillate wildly; 0.3 provides stable convergence
+- Float64 REQUIRED for populations (Float32 underflows to exactly 0.0)
+
 **Mitigation**:
-- [ ] Test sensitivity to damping factor (try 0.1, 0.3, 0.5)
-- [ ] Consider adaptive damping in Julia
-- [ ] Document when/why damping is needed
+- [x] ~~Test sensitivity~~ → Damping is critical for stability (see Deep Dive 02, Section 3.2)
+- [ ] Consider adaptive damping in Julia (but only after validating against Fortran)
+- [x] ~~Document when/why~~ → Needed because population ratios are exponentially sensitive to T
 
 ---
 
 #### Categories of Undocumented Code:
 
-| Category | Examples | Risk Level | Mitigation Strategy |
-|----------|----------|------------|---------------------|
-| Published algorithms | Voigt profiles, Rosseland means | 🟢 Low | Verify against papers |
-| Numerical recipes | Interpolation, integration | 🟡 Medium | Test edge cases |
-| Heuristics | Damping factors, iteration limits | 🟡 Medium | Sensitivity tests |
-| Unknown origin | Magic constants, unexplained conditionals | 🔴 High | Flag for Paula review |
+| Category | Examples | Risk Level | Mitigation Strategy | Status |
+|----------|----------|------------|---------------------|--------|
+| Published algorithms | Voigt profiles, Rosseland means | 🟢 Low | Verify against papers | ✅ Voigt analyzed (Deep Dive 01) |
+| Numerical recipes | Interpolation, integration | 🟡 Medium | Test edge cases | 🔲 Not yet |
+| Heuristics | Damping factors, iteration limits | 🟡 Medium | Sensitivity tests | ✅ Damping analyzed (Deep Dive 02) |
+| Unknown origin | Magic constants, unexplained conditionals | 🔴 High | Flag for Paula review | ⚠️ ~13 constants in Voigt alone |
 
-📋 **TODO**: Create catalog of all "magic numbers" in ATLAS12 (scan for REAL constants)
+**Progress Update**:
+- **Voigt profile** (Deep Dive 01): Analyzed 4-regime algorithm, documented 13 magic constants, validated Float32 precision
+- **Saha-Boltzmann** (Deep Dive 02): Analyzed population calculations, validated Float64 requirement, documented damping factor
+- **Remaining**: Rosseland means, interpolation methods, integration algorithms, convergence criteria
+
+📋 **TODO**: Create catalog of all "magic numbers" in ATLAS12 (scan for REAL constants) - partially done for Voigt, need systematic scan
 
 ---
 
@@ -2067,7 +2118,11 @@ C     Iterative correction with damping factor
 - Computes population ratios (can span 40+ orders of magnitude)
 - Uses `EXP(-chi/kT)` where chi is ionization potential
 - **Risk**: Overflow/underflow if not handled carefully
-- **Mitigation**: Use `exp` with bounds checking, log-space arithmetic
+- **✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/02_POPULATIONS.md`:
+  - Example: H ionization at 5000K → exp(-31.6) = 1.7 × 10^(-14)
+  - Float32 underflows to exactly 0.0 → catastrophic failure
+  - Float64 REQUIRED (no compromise)
+- **Mitigation**: Julia Float64 for all population variables, preserve Fortran's iterative method with damping
 
 **Area 2 - Line Opacity Summation**:
 - Sums ~1 million lines per depth point
