@@ -100,7 +100,7 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 - ODF generation pipeline
 
 **Notes**:
-Phase 2 successfully completed with **eleven major deliverables** (5 + 6 deep dives):
+Phase 2 successfully completed with **twelve major deliverables** (5 + 7 deep dives):
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -170,6 +170,15 @@ Phase 2 successfully completed with **eleven major deliverables** (5 + 6 deep di
     - No early-exit convergence test: always runs NUMITS iterations
     - Convection coupling: DTFLUX includes radiative+convective energy transport
     - Migration strategy: expose diagnostics, optional early exit, preserve Fortran fixed-iteration default
+
+12. **DEEP_DIVES/07_CONVECTIVE_TRANSPORT.md** (1,178 lines) - Deep analysis of convective energy transport:
+    - CONVEC subroutine: Mixing length theory (MLT) implementation
+    - Numerical thermodynamic derivatives: 4× POPS calls for ∂E/∂T, ∂E/∂P, ∂ρ/∂T, ∂ρ/∂P
+    - Iterative opacity convergence: 30-iteration loop for convective opacity self-consistency
+    - Mihalas optically-thin bubble correction: τ_b^2/(2+τ_b^2) factor
+    - Convective overshooting: spatial averaging over ±0.5 H_P (but 0.5D-5 factor suspicious - potential typo)
+    - Finite difference perturbations: ±0.1% in T and P, central differences
+    - Migration strategy: start with FD (match Fortran), transition to AD for efficiency
 
 **Methodology Discovery** (Phase 2B):
 Discovered critical insight: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This "breadth-first" approach improved productivity 13× (45 min vs 6+ hrs projected for same output). Documented in METHODOLOGY_NOTES.md as reusable pattern for future sessions.
