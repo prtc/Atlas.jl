@@ -111,6 +111,13 @@ Phase 2A successfully completed with two major deliverables:
 
 Phase 2B (current session) focuses on drilling deeper into subroutine-level architecture for ATLAS12 and SYNTHE core computational engines.
 
+**Methodology Discovery** (Phase 2B):
+During this session, we discovered an important lesson about legacy code archaeology: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This is documented in **METHODOLOGY_NOTES.md** and represents a significant improvement in human-AI collaboration strategy for complex legacy codebases. See `docs/archaeology/METHODOLOGY_NOTES.md` for details.
+
+Phase 2B deliverables:
+3. **ARCHITECTURE_DETAILS.md** (592 lines) - Documents ATLAS12's 80 subroutines, 57 COMMON blocks, main execution flow, and migration implications. Uses "breadth-first" approach: comprehensive survey with explicit TODOs for deeper analysis.
+4. **METHODOLOGY_NOTES.md** (in progress) - Captures lessons learned about effective legacy code documentation strategies during Phase 2B.
+
 ---
 
 ### Phase 3: Physics Pipeline Documentation ✱ NOT STARTED
