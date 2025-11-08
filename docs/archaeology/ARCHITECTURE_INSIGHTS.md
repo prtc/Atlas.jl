@@ -2516,12 +2516,12 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 
 | Rank | Code Section | Risk Type | Likelihood | Impact | Mitigation Priority | Deep Dive |
 |------|--------------|-----------|------------|--------|---------------------|-----------|
-| 1 | Saha-Boltzmann population calculation | Precision, Overflow | High | Critical | 🔴 Highest | ✅ Deep Dive 02 |
-| 2 | Voigt profile evaluation | Algorithm, Performance | Medium | High | 🔴 Highest | ✅ Deep Dive 01 |
-| 3 | Line opacity summation | Precision, Performance | Medium | High | 🔴 Highest | 🔲 Pending |
-| 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest | 🔲 Pending |
-| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | ✅ Partial (DD02) |
-| 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High | 🔲 Pending |
+| 1 | Saha-Boltzmann population calculation | Precision, Overflow | High | Critical | 🔴 Highest | 🐲✨ Deep Dive 02 |
+| 2 | Voigt profile evaluation | Algorithm, Performance | Medium | High | 🔴 Highest | 🐲✨ Deep Dive 01 |
+| 3 | Line opacity summation | Precision, Performance | Medium | High | 🔴 Highest | 🐲✨ Deep Dive 03 |
+| 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest | 🐲✨ Deep Dive 04 |
+| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | 🐲✨ Deep Dive 06 |
+| 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High | 🐲✨ Deep Dive 05 |
 | 7 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High | 🔲 Pending |
 | 8 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium | 🔲 Pending |
 | 9 | Input file parsing | Format assumptions | High | Low | 🟢 Medium | 🔲 Pending |
@@ -2540,11 +2540,14 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 - [x] Document architecture (ARCHITECTURE_DETAILS.md)
 - [x] Identify critical decision points (Section V)
 - [x] Map high-risk areas (this section)
-- [x] Deep dive on Rank #1 risk (Populations) - Deep Dive 02
-- [x] Deep dive on Rank #2 risk (Voigt) - Deep Dive 01
-- [ ] Paula decides on critical questions (Section V) - 8 remaining (V.4 resolved)
+- [x] 🐲✨ Deep dive on Rank #1 risk (Populations) - Deep Dive 02
+- [x] 🐲✨ Deep dive on Rank #2 risk (Voigt) - Deep Dive 01
+- [x] 🐲✨ Deep dive on Rank #3 risk (Line Opacity) - Deep Dive 03
+- [x] 🐲✨ Deep dive on Rank #4 risk (Binary I/O) - Deep Dive 04
+- [x] 🐲✨ Deep dive on Rank #5 risk (Iteration Damping/TCORR) - Deep Dive 06
+- [x] 🐲✨ Deep dive on Rank #6 risk (RT Integration/JOSH) - Deep Dive 05
+- [x] Paula decides on critical questions (Section V) - 5/10 resolved (5.1-5.5)
 - [ ] Generate Fortran reference outputs for test cases
-- [ ] Document binary file formats (Rank #4 risk)
 - [x] ~~Obtain cited papers (Humlicek, etc.)~~ - Deep Dive 01 shows algorithm differs from citation
 
 #### During Migration:
