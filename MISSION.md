@@ -100,7 +100,7 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 - ODF generation pipeline
 
 **Notes**:
-Phase 2 successfully completed with **ten major deliverables** (5 + 5 deep dives):
+Phase 2 successfully completed with **eleven major deliverables** (5 + 6 deep dives):
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -161,6 +161,15 @@ Phase 2 successfully completed with **ten major deliverables** (5 + 5 deep dives
     - MAP1 parabolic interpolation analysis
     - Mixed Float32/Float64 precision: weights Float32, source functions Float64
     - Migration strategy: validate COEFJ/COEFH, expose iteration limits
+
+11. **DEEP_DIVES/06_ITERATION_DAMPING.md** (1,117 lines) - Deep analysis of Rank #5 highest-risk code section:
+    - TCORR subroutine: Multi-mechanism temperature correction
+    - Fixed limiting: ±T_eff/25 temperature, ±τ/4 optical depth corrections
+    - Adaptive damping: oscillation detection (0.5×) vs convergence acceleration (1.25×)
+    - Temperature smoothing (3-point weighted), monotonicity enforcement
+    - No early-exit convergence test: always runs NUMITS iterations
+    - Convection coupling: DTFLUX includes radiative+convective energy transport
+    - Migration strategy: expose diagnostics, optional early exit, preserve Fortran fixed-iteration default
 
 **Methodology Discovery** (Phase 2B):
 Discovered critical insight: **"Document what's clear, flag the mess, move on"** beats **"understand everything before documenting anything"**. This "breadth-first" approach improved productivity 13× (45 min vs 6+ hrs projected for same output). Documented in METHODOLOGY_NOTES.md as reusable pattern for future sessions.
