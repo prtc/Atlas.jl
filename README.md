@@ -116,7 +116,7 @@ The timeline and scope will evolve based on available resources and community in
 <figure>
   <img src="media/14537.png" alt="Here be dragons" width="500"/>
   <figcaption>
-    Kurucz's logic confuses _even_ Claude...
+    Kurucz's logic confuses even Claude...
   </figcaption>
 </figure>
 
