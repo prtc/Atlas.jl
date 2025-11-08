@@ -17,11 +17,21 @@ This file tracks the processing of reference papers and manuals for archaeologic
 
 ### Core ATLAS Documentation
 
-- [ ] **atlas12.pdf** - ATLAS12 stellar atmosphere program
-  - Date processed:
-  - Related components: ATLAS12
-  - Archaeology docs updated:
+- [x] **atlas12.pdf** - ATLAS12 stellar atmosphere program (Castelli 2005)
+  - Date processed: 2025-11-08
+  - Related components: ATLAS12, opacity sampling method, control cards
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md, VERSION_COMPARISON.md
   - Key findings:
+    - 30000 frequency points, logarithmically spaced (Δlog λ = 0.0001)
+    - 344 continuum opacity frequencies (337 from ATLAS9 + 6 new)
+    - Extended wavelength range: 9.09 nm to 400000 nm
+    - Two-stage workflow explicitly documented
+    - Six line list files: nltelines, lowlines, highlines, diatomicsiwl, schwenke, h2ofast
+    - Control card details (ABUNDANCE SCALE is Castelli extension)
+    - CONVECTION nconv parameter is Castelli extension for cool stars
+    - ⚠️ SURFACE FLUX warning: Not accurate for observations, use SYNTHE
+    - ATLAS9 vs ATLAS12 temperature differences increase with Teff
+    - ⚠️ Filename discrepancy: doc uses different names than execution scripts
 
 - [ ] **atlas1970.pdf** - Original 1970 ATLAS paper
   - Date processed:
