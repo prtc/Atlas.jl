@@ -1553,7 +1553,15 @@ These decisions require **Paula's astrophysics domain knowledge**. Programming c
 3. Is computation time a limiting factor?
 4. Are Kurucz's ODF tables still scientifically valid?
 
-📋 **Decision needed**: Which opacity method for initial migration?
+✅ **Decision 5.1 RESOLVED** - Opacity Sampling (Option B: ATLAS12 route)
+
+**Paula's answers**:
+1. OS accuracy is **almost always essential**
+2. **Yes**, non-standard abundances needed
+3. Computation time is a factor, but not limiting
+4. ODF tables exist but **are not primary targets** for migration
+
+**Recommendation**: Implement Opacity Sampling (ATLAS12 method) as primary approach. ODF support can be deferred or skipped entirely.
 
 ---
 
@@ -1608,7 +1616,20 @@ atmosphere = atlas12(config, line_databases, initial_guess;
 2. Or do you usually run the full pipeline end-to-end?
 3. Would automatic caching be preferable to manual file management?
 
-📋 **Decision needed**: Two-stage or unified architecture?
+✅ **Decision 5.2 RESOLVED** - Unified Architecture (Option B)
+
+**Paula's workflow**:
+- **Grid-based parallelization**: Creates parameter grids, runs N models in parallel (each on different core)
+- **Occasional parameter iteration**: Sometimes tweaks parameters and re-runs, but less common
+- **Preference**: Unified architecture with automatic caching
+
+**Recommendation**: Implement unified single-program design. Line selection caching should be automatic and transparent. Users shouldn't need to manage intermediate files manually.
+
+```julia
+# Clean unified API
+atmosphere = atlas12(config, line_databases, initial_guess;
+                     cache_dir="~/.atlas_cache")  # Automatic caching
+```
 
 ---
 
@@ -1688,7 +1709,28 @@ run_stage!(pipeline, :calculate_spectrum)
 2. Do you ever run non-standard SYNTHE workflows (skipping steps)?
 3. Would a unified interface meet 90% of your needs?
 
-📋 **Decision needed**: Unified SYNTHE or preserve pipeline stages?
+✅ **Decision 5.3 RESOLVED** - Unified with Flexibility (Option C)
+
+**Paula's answers**:
+1. **Occasionally** needs to inspect/debug individual stages
+2. **Yes**, variations at instrumental broadening stage (e.g., adding/skipping rotation)
+3. **Yes**, understands trade-offs
+
+**Recommendation**: Provide both high-level unified API (for 90% of use cases) and low-level stage-by-stage interface (for debugging and non-standard workflows).
+
+```julia
+# High-level (most common)
+spectrum = synthesize_spectrum(atmosphere, line_lists, wavelength_range,
+                               vsini=10.0, instrumental_profile=:gaussian)
+
+# Low-level (debugging/flexibility)
+pipeline = SynthePipeline(atmosphere, line_lists, wavelength_range)
+run_stage!(pipeline, :accumulate_lines)
+# ... inspect intermediate results ...
+spectrum = run_stage!(pipeline, :calculate_spectrum)
+spectrum = apply_rotation(spectrum, vsini=10.0)  # Optional
+spectrum = apply_broadening(spectrum, :gaussian)  # Flexible
+```
 
 ---
 
@@ -1808,7 +1850,21 @@ opacity::Vector{Float64}      # Matches Fortran REAL*8
 2. Do you have test cases that fail in one version but not the other?
 3. Are the expanded molecules in Kurucz version scientifically important?
 
-📋 **Decision needed**: Which code version(s) for migration base?
+✅ **Decision 5.5 RESOLVED** - Merged Base (Option C)
+
+**Paula's answers**:
+1. **Not aware** of known numerical differences between versions
+2. **No** bug reports to cross-reference between versions
+3. **Yes**, agrees with hybrid approach rationale
+
+**Recommendation**: Start with **Castelli structure** (proven stable, documented bug fixes) as base. Incorporate **Kurucz molecule data** (39→139 molecules expansion). Cross-check both versions during validation phase to catch any divergent bug fixes.
+
+**Migration strategy**:
+1. Use Castelli atlas12.for as primary reference (better documented bug fix history)
+2. Merge Kurucz molecule database expansions
+3. Create dual validation: test Julia output against **both** Fortran versions
+4. If outputs diverge, investigate which version is more physically accurate
+5. Document any differences discovered during migration
 
 ---
 
@@ -1989,19 +2045,24 @@ Ranking decisions by urgency and impact:
 
 | Decision | Urgency | Impact | Can Defer? | Status |
 |----------|---------|--------|------------|--------|
-| 5.1 ODF vs OS | 🔴 High | Critical for architecture | No - affects entire design | 🔲 Pending Paula |
-| 5.2 Two-stage design | 🟡 Medium | Moderate | Somewhat - can start with unified | 🔲 Pending Paula |
-| 5.3 SYNTHE unification | 🟡 Medium | Moderate | Yes - Stage 2 work | 🔲 Pending Paula |
-| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics | ✅ RESOLVED (Deep Dive 02) |
-| 5.5 Version merging | 🔴 High | Critical for baseline | No - needed before coding | 🔲 Pending Paula |
-| 5.6 Migration priority | 🟢 Low | Moderate | Yes - can adjust as we go | 🔲 Pending Paula |
-| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple | 🔲 Pending Paula |
-| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially | 🔲 Pending Paula |
-| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually | 🔲 Pending Paula |
+| 5.1 ODF vs OS | 🔴 High | Critical for architecture | No - affects entire design | ✅ RESOLVED (OS) |
+| 5.2 Two-stage design | 🟡 Medium | Moderate | Somewhat - can start with unified | ✅ RESOLVED (Unified) |
+| 5.3 SYNTHE unification | 🟡 Medium | Moderate | Yes - Stage 2 work | ✅ RESOLVED (Unified + stages) |
+| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics | ✅ RESOLVED (Mixed Float64/32) |
+| 5.5 Version merging | 🔴 High | Critical for baseline | No - needed before coding | ✅ RESOLVED (Castelli + Kurucz) |
+| 5.6 Migration priority | 🟢 Low | Moderate | Yes - can adjust as we go | 🔲 Deferred |
+| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple | 🔲 Deferred |
+| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially | 🔲 Deferred |
+| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually | 🔲 Deferred |
+
+**Status Update (2025-11-08)**:
+- ✅ **All high-urgency decisions resolved** (5.1, 5.4, 5.5)
+- ✅ **Medium-urgency architectural decisions resolved** (5.2, 5.3)
+- 🔲 **Lower-priority decisions deferred** (5.6-5.9) - can be decided during implementation
 
 **Recommended next steps**:
-1. **Paula decides** on high-urgency items (5.1, ~~5.4~~, 5.5) - ✅ 5.4 resolved via code analysis
-2. Document decisions in MISSION.md or new DECISIONS.md
+1. ✅ ~~Paula decides on high-urgency items~~ - **COMPLETE**
+2. Document decisions in MISSION.md ✱ **IN PROGRESS**
 3. Use decisions to guide Phase 3 (Physics Pipeline) and Phase 4 (Migration Assessment)
 
 ---
