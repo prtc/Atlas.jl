@@ -14,7 +14,7 @@
 - Spent hours trying to trace every GOTO path
 - Got lost in COMMON block usage patterns
 - Tried to fully understand each subroutine before writing a single line of documentation
-- Result: 4 hours spent, zero documentation produced
+- Result: 13 hours spent, zero documentation produced
 
 **The trap**: Believing that documentation requires complete understanding first.
 
@@ -27,7 +27,7 @@
 ### What Works: "Document What's Clear, Flag the Mess"
 
 **Paula's insight** (successful):
-> "Do you really need to understand all call chains before documenting anything? How much can we learn by a 'this part is messy, what I can get without entering the maze is XYZ, add todo to enter the maze later' kind of thing?"
+> "Do you really need to understand all call chains before documenting anything? How much can we learn by a 'this part is messy, what I can get without entering the maze is XYZ, add to-do to enter the maze later' kind of thing?"
 
 **New approach**:
 1. **Document what's immediately visible** (inputs, outputs, purpose)
@@ -40,7 +40,7 @@
 
 **Before** (what Claude was trying to do):
 ```
-[Spending 2 hours tracing GOTO paths in PUTOUT subroutine]
+[Spending hours tracing GOTO paths in PUTOUT subroutine]
 [Still not writing anything because "I don't understand the full logic yet"]
 ```
 
@@ -180,7 +180,7 @@ Each commit is useful, even if incomplete.
 - Flag what we don't
 - Future sessions can dive deeper
 
-**Expected outcome**: Useful SYNTHE architecture document in ~2 hours, not 6+ hours stuck in analysis paralysis.
+**Expected outcome**: Useful SYNTHE architecture document in ~2 hours, not 10+ hours stuck in analysis paralysis.
 
 ---
 
@@ -229,11 +229,11 @@ Each commit is useful, even if incomplete.
 ## Metrics of Success
 
 ### Old Approach (failed)
-- **Time spent**: 4 hours
+- **Time spent**: in total 13 hours with three check-ins from Paula until intervention "Let's stop and reevaluate please"
 - **Documentation produced**: 0 lines
 - **Understanding gained**: Significant but lost/unfocused
 - **Commits**: 0
-- **Human frustration**: High
+- **Human frustration**: High (**Paula here**: Not "frustation", I was genuinely worried and we are both learning")
 
 ### New Approach (successful)
 - **Time spent**: 45 minutes
