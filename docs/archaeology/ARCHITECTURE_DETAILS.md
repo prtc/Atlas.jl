@@ -358,27 +358,221 @@ Subroutines using this pattern:
 
 ---
 
-## II. SYNTHE Architecture
+## II. SYNTHE Pipeline Architecture
 
 ### Overview
 
-SYNTHE is documented in WORKFLOW_ANALYSIS.md as an 11-program pipeline. Here we focus on the internal architecture of key programs.
+SYNTHE is an **11-program sequential pipeline** for synthetic spectrum calculation, documented in detail in WORKFLOW_ANALYSIS.md. This section provides program-by-program internal architecture using breadth-first documentation approach.
 
-### SYNTHE Main Program (synthe.for)
+**Pipeline summary**: ATLAS model → xnfpelsyn → synbeg → line readers (×N) → synthe → spectrv → rotate → broaden → spectrum
 
-**Location**: `upstream/castelli/source_codes/synthe/synthe.for`
-**Lines**: 2,993 (Castelli) / 2,985 (Kurucz)
-**Subroutines**: 7 embedded
+---
 
-#### Subroutine List
+### SYNTHE Pipeline Programs - Quick Reference
+
+| # | Program | Lines | Subs | Purpose | Complexity |
+|---|---------|-------|------|---------|------------|
+| 1 | xnfpelsyn | 317 | 1 | Atmosphere processor (+ atlas7v) | Medium |
+| 2 | synbeg | 133 | 0 | Initialize wavelength grid | Simple |
+| 3 | rgfalllinesnew | 648 | 1 | Read atomic line lists | Simple |
+| 4 | rpredict | 450 | ? | Read predicted lines (optional) | Simple |
+| 5 | rmolecasc | 569 | 0 | Read molecular lines | Simple |
+| 6 | rschwenk | 222 | 1 | Read TiO lines (special format) | Simple |
+| 7 | rh2ofast | 190 | 1 | Read H2O lines (binary) | Simple |
+| 8 | synthe | 2,993 | 9 | Calculate line opacity | Complex |
+| 9 | spectrv | 438 | 4 | Solve radiative transfer (+ atlas7v) | Medium |
+| 10 | rotate | 360 | 2 | Rotational broadening | Simple |
+| 11 | broaden | 221 | 0 | Instrumental broadening | Simple |
+| 12 | converfsynnmtoa | 78 | 0 | Binary to ASCII conversion (optional) | Simple |
+
+**Total**: ~6,600 lines (excluding atlas7v library which is 17K lines)
+
+---
+
+### Program 1: xnfpelsyn
+
+**Purpose**: Compute atomic/molecular number densities and continuum opacities from ATLAS atmosphere model
+
+**File**: `xnfpelsyn.for` (317 lines)
+**Subroutines**: 1 embedded (name TBD)
+**Links with**: ATLAS7V library (17K lines)
+
+**Input**:
+- stdin: ATLAS atmosphere model (.mod format)
+- fort.2: molecules.dat (molecular equilibrium constants)
+- fort.17: continua.dat (continuum opacity data)
+
+**Output**:
+- fort.10: Binary file with number densities, temperatures, pressures at each depth
+
+**Key functions**:
+- Calls ATLAS7V to interpolate atmosphere structure
+- Computes Saha equation for ionization fractions
+- Computes molecular equilibrium abundances
+- Calculates continuum opacity (H⁻, H₂⁺, Rayleigh, etc.)
+
+⚠️ **TODO**: Document ATLAS7V interface (which subroutines called, what they do)
+
+---
+
+### Program 2: synbeg
+
+**Purpose**: Initialize synthetic spectrum calculation (wavelength range, resolution, control parameters)
+
+**File**: `synbeg.for` (133 lines)
+**Subroutines**: 0 (simple main program)
+**Complexity**: ✅ Simple
+
+**Input** (stdin control card):
+```
+AIR       700.0     721.0     500000.   0.     0          10 .001         0   00
+AIRorVAC  WLBEG     WLEND     RESOLU    TURBV  IFNLTE LINOUT CUTOFF        NREAD
+```
+
+**Parameters**:
+- WLBEG, WLEND: Wavelength range (Angstroms)
+- RESOLU: Resolution R = λ/Δλ (e.g., 500000 for high-res)
+- TURBV: Additional turbulent velocity (km/s, usually 0)
+- IFNLTE: NLTE flag (0=LTE, 1=NLTE)
+- LINOUT: Line output limit (also controls line data saving)
+- CUTOFF: Line strength cutoff (0.001 = ignore lines <0.1% of continuum)
+- NREAD: Number of atmosphere models (0 for single model)
+
+**Output**:
+- fort.12: Binary file header for line list accumulation
+- fort.14: Control parameters for subsequent programs (via fort.93 in some versions)
+
+**What it does**:
+- Reads control parameters from stdin
+- Initializes binary file structures
+- Passes parameters to next programs via fort unit files
+
+**Documentation quality**: ✅ Excellent - Source has detailed comments explaining pipeline flow and line reader conventions
+
+---
+
+### Programs 3-7: Line List Readers
+
+All follow same pattern: Read specific line list format, select lines in wavelength range, append to fort.12
+
+#### Program 3: rgfalllinesnew (Atomic Lines)
+
+**File**: `rgfalllinesnew.for` (648 lines)
+**Subroutines**: 1 embedded
+**Called**: Multiple times for different wavelength ranges (gf0800.100, gf1200.100, etc.)
+
+**Input**:
+- fort.11: Atomic line list (Kurucz gf*.100 ASCII format)
+- fort.12: Line list being built (read + append)
+- fort.14: Control parameters from synbeg
+
+**Output**:
+- fort.12: Updated line list (original + new lines in wavelength range)
+
+**Line format** (gf*.100):
+Fixed-format ASCII: wavelength, log(gf), element.ion, E_lower, J_lower, E_upper, J_upper, etc.
+
+**Filtering**: Selects lines with:
+- Wavelength in [WLBEG, WLEND]
+- Strength > CUTOFF threshold
+- Correct ionization stage format
+
+#### Program 4: rpredict (Predicted Lines - Optional)
+
+**File**: `rpredict.for` (450 lines)
+**Input**: fort.11 (predicted lines from energy levels - different format than gf*.100)
+**Purpose**: Add predicted lines for elements with incomplete experimental data
+
+⚠️ **Note**: Only use if IFPRED=1 in synbeg. Predicted lines have uncertain wavelengths - not suitable for detailed line-by-line abundance analysis.
+
+#### Program 5: rmolecasc (Molecular Lines)
+
+**File**: `rmolecasc.for` (569 lines)
+**Subroutines**: 0 (main program only)
+**Called**: Multiple times for different molecules (CH, MgH, NH, OH, etc.)
+
+**Input**: fort.11 (molecular line list - ASCII format, molecule-specific)
+**Output**: fort.12 (updated with molecular lines)
+
+**Molecules typically read** (each requires separate execution):
+CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO
+
+**Note**: Each molecule has its own line list file format (slightly different headers/columns)
+
+#### Program 6: rschwenk (TiO Lines)
+
+**File**: `rschwenk.for` (222 lines)
+**Subroutines**: 1 embedded
+
+**Input**:
+- fort.11: tioschwenke.bin (TiO lines - **binary format**, Schwenke database)
+- fort.48: eschwenke.bin (TiO energy levels - binary)
+
+**Output**: fort.12 (updated)
+
+**Why separate**: TiO has special binary format and requires separate energy level file. TiO line lists are enormous (millions of lines) - binary storage essential.
+
+#### Program 7: rh2ofast (H2O Lines)
+
+**File**: `rh2ofast.for` (190 lines)
+**Subroutines**: 1 embedded
+
+**Input**: fort.11 (h2ofastfix.bin - **binary**, Partridge & Schwenke database)
+**Output**: fort.12 (updated)
+
+**Why separate**: H2O has millions of lines, binary format for efficiency. Critical for cool stars (T < 4000K).
+
+**Summary of line reading phase**:
+- Fort.12 starts with header from synbeg
+- Each reader program appends lines within wavelength range
+- Final fort.12 contains complete line list (atomic + molecular)
+- Typical line count: tens to hundreds of thousands
+
+⚠️ **TODO for migration**: Define unified line list format in Julia. Provide conversion utilities for Kurucz/Castelli formats. Consider using Arrow or HDF5 for binary storage instead of Fortran UNFORMATTED.
+
+---
+
+### Program 8: synthe (Main Synthesis Engine)
+
+**File**: `synthe.for` (2,993 lines Castelli / 2,985 Kurucz)
+**Subroutines**: 9 embedded
+**Complexity**: ⚠️ High - This is the computational core
+
+#### Embedded Subroutines
 
 1. **TABVOIGT** - Pretabulate Voigt profiles (shared with ATLAS12)
-2. **XLINOP** - Line opacity for synthesis (shared with ATLAS12)
-3. **MAP1** - Map opacity to frequency grid
+2. **XLINOP** - Line opacity calculation (shared with ATLAS12)
+3. **MAP1** - Map opacity to wavelength/frequency grid
 4. **INTEG** - Numerical integration (shared with ATLAS12)
-5. **PARCOE** - Parabolic coefficients (shared with ATLAS12)
+5. **PARCOE** - Parabolic coefficients for interpolation (shared with ATLAS12)
 6. **READBCS** - Read boundary conditions from ATLAS model
 7. **EXIT** - Program termination
+8-9. ❓ **Two more** (not yet identified - require source inspection)
+
+#### Input
+
+- fort.10: Atmosphere structure from xnfpelsyn
+- fort.12: Complete line list from line readers
+- fort.14: Control parameters from synbeg
+- fort.18: he1tables.dat (Stark broadening tables for He I specific lines: 4026, 4387, 4471, 4922 Å)
+
+#### Output
+
+- fort.16 (or fort.18 in some versions): Line opacities vs wavelength vs depth (internal binary format)
+
+#### What it does
+
+For each spectral line in fort.12:
+1. Calculate line profile (Voigt function = thermal + damping broadening)
+2. Include microturbulence broadening
+3. Include van der Waals broadening (temperature-dependent)
+4. Compute line opacity κ_line(λ, depth) at each wavelength point and depth
+5. Store in compressed format
+
+**Computational intensity**: This is the **slowest step** in the pipeline. Calculating profiles for tens of thousands of lines takes 10-60 minutes depending on:
+- Wavelength range (longer = more lines)
+- Resolution (higher = finer grid)
+- Number of molecules included
 
 #### COMMON Blocks (15 total)
 
@@ -391,31 +585,370 @@ From DEPENDENCY_MAP.md:
 - `/BHYD/` - Hydrogen data
 
 **Line Data**:
-- `/LINDAT/` - Line parameters
+- `/LINDAT/` - Line parameters (wavelength, gf, E_lower, etc.)
 - `/NLINES/` - Number of lines
-- `/BUFFER/` - I/O buffer
+- `/BUFFER/` - I/O buffer for line reading
 
 **Opacity**:
-- `/EXTAB/` - Extinction tables
-- `/H1TAB/` - Hydrogen tables
-- `/CONTIN/` - Continuum opacity
+- `/EXTAB/` - Exponential extinction tables (pretabulated)
+- `/H1TAB/` - Hydrogen opacity tables
+- `/CONTIN/` - Continuum opacity from xnfpelsyn
 
-(Additional 6 blocks not yet cataloged - requires further investigation)
+**(6 additional blocks not yet cataloged - require source inspection)**
+
+⚠️ **TODO**:
+- Map full COMMON block structure
+- Identify two unnamed subroutines
+- Document line-by-line calculation algorithm details
+- Understand fort.16 vs fort.18 output differences (version-dependent?)
+
+---
+
+### Program 9: spectrv
+
+**Purpose**: Solve radiative transfer equation, compute emergent intensities or flux
+
+**File**: `spectrv.for` (438 lines)
+**Subroutines**: 4 embedded (names TBD)
+**Links with**: ATLAS7V library (17K lines)
+
+#### Input
+
+- stdin: ATLAS atmosphere model (.mod format - same as xnfpelsyn input)
+- fort.2: molecules.dat
+- fort.25: Partial redistribution control parameters (ASCII, usually zeros for LTE)
+- fort.16 (or fort.18): Line opacities from synthe
+
+#### Output
+
+- fort.7: Emergent intensity I(λ,μ) or flux F(λ)
+  - If computing intensity: I(λ,μ) at 17 angles (μ = cos θ)
+  - If computing flux: F(λ) = ∫ I(λ,μ) dμ
+
+#### What it does
+
+For each wavelength:
+1. Solve radiative transfer equation: dI/dτ = I - S
+2. Source function S = B_ν (Planck function for LTE)
+3. Use opacity from synthe + continuum from xnfpelsyn
+4. Integrate over atmosphere depth to get surface intensity/flux
+5. Optionally compute intensity at multiple angles (disk center to limb)
+
+**Calls ATLAS7V** for atmosphere interpolation (same as xnfpelsyn)
+
+⚠️ **TODO**:
+- Identify the 4 embedded subroutines
+- Document which ATLAS7V routines are called
+- Understand partial redistribution parameters (fort.25 - used for NLTE?)
+
+---
+
+### Program 10: rotate
+
+**Purpose**: Apply rotational broadening (stellar v sin i)
+
+**File**: `rotate.for` (360 lines)
+**Subroutines**: 2 embedded (names TBD)
+**Complexity**: ✅ Simple - Straightforward convolution
+
+#### Input
+
+- fort.1: Intensity or flux spectrum from spectrv (linked from fort.7)
+- stdin: Rotation parameters
+  ```
+      1          # Number of rotation velocities
+  2.             # v sin i (km/s)
+  ```
+
+#### Output
+
+- ROT1 (or ROT2, ROT3, etc.): Rotationally broadened spectrum (can output multiple rotation velocities)
+
+#### Algorithm
+
+Convolves spectrum with rotational broadening kernel:
+- Kernel shape: G(Δλ) ∝ √(1 - (Δλ/Δλ_max)²)
+- Accounts for limb darkening
+- Can compute multiple v sin i values in one run
+
+**Physics**: Rotation broadens lines because different parts of stellar disk have different Doppler shifts. Limb darkening means edge of disk contributes less flux than center.
+
+---
+
+### Program 11: broaden
+
+**Purpose**: Apply instrumental or macroturbulent broadening
+
+**File**: `broaden.for` (221 lines)
+**Subroutines**: 0 (main program only)
+**Complexity**: ✅ Very simple - Just convolution
+
+#### Input
+
+- fort.21: Rotationally broadened spectrum from rotate (linked from ROT1)
+- stdin: Broadening parameters
+  ```
+  GAUSSIAN  48000.    RESOLUTION
+  ```
+  or
+  ```
+  LORENTZIAN  0.15    FWHM_ANGSTROMS
+  ```
+
+#### Output
+
+- fort.22: Final broadened spectrum (binary format)
+
+#### Algorithm
+
+Convolve spectrum with instrumental profile:
+- **GAUSSIAN**: Typical for spectrographs (resolution R = λ/Δλ or FWHM)
+- **LORENTZIAN**: For macroturbulence broadening
+
+**Simple convolution**: ∫ spectrum(λ') × kernel(λ - λ') dλ'
+
+---
+
+### Program 12: converfsynnmtoa (Optional)
+
+**Purpose**: Convert binary spectrum output to ASCII format + unit conversion
+
+**File**: `converfsynnmtoa.for` (78 lines)
+**Subroutines**: 0 (main program only)
+**Complexity**: ✅ Trivial - Just format conversion
+
+#### Input
+
+- fort.1: Binary spectrum from broaden (fort.22)
+
+#### Output
+
+- fort.2: ASCII spectrum
+
+#### Conversion
+
+**Binary format**: H_ν (erg/s/cm²/Hz) vs λ (nm)
+**ASCII format**: F_λ (erg/s/cm²/Å) vs λ (Å)
+
+**Unit conversions**:
+- λ (nm) → λ (Å): multiply by 10
+- H_ν → F_λ: F_λ = H_ν × (c/λ²) conversion
+
+---
 
 ### ATLAS7V Library
 
-**Purpose**: Atmosphere interpolation routines for SYNTHE pipeline
+**Purpose**: Atmosphere interpolation routines shared by xnfpelsyn and spectrv
 
-**Linked into**:
-- xnfpelsyn (Program 1 of SYNTHE pipeline)
-- spectrv (Program 9 of SYNTHE pipeline)
+**File**: `atlas7v.for` (17,336 lines Castelli / 17,304 Kurucz)
+**Complexity**: ⚠️ Very High - This is a massive library
 
-**Location**: 4 copies identified in repository
-- `upstream/castelli/source_codes/synthe/atlas7v.for` (17,334 lines)
-- `upstream/kurucz/source_codes/programs/SYNTHE/atlas7v.for` (17,304 lines)
-- (2 additional copies in other directories)
+#### Where used
 
-**Architecture**: Requires detailed analysis (deferred - out of scope for this initial document)
+- **xnfpelsyn** (Program 1): Compile together with atlas7v.o
+  ```bash
+  gfortran -c xnfpelsyn.for
+  gfortran -c atlas7v.for
+  gfortran xnfpelsyn.o atlas7v.o -o xnfpelsyn.exe
+  ```
+
+- **spectrv** (Program 9): Compile together with atlas7v.o
+  ```bash
+  gfortran -c spectrv.for
+  gfortran -c atlas7v.for
+  gfortran spectrv.o atlas7v.o -o spectrv.exe
+  ```
+
+#### What ATLAS7V provides
+
+❓ **UNCERTAIN** - Requires detailed analysis of 17K-line file. From context:
+- Atmosphere structure interpolation (T, P, ρ vs depth)
+- Reading ATLAS model files
+- Partition function calculations
+- Possibly molecular equilibrium routines
+- Possibly continuum opacity calculations
+
+⚠️ **CRITICAL TODO**: Document ATLAS7V interface
+- List all SUBROUTINEs exported
+- Identify which ones are called by xnfpelsyn vs spectrv
+- Determine if any ATLAS7V code is duplicated in ATLAS12 (potential shared migration target)
+- Check if ATLAS7V has its own COMMON blocks that need documentation
+
+**Migration strategy**: ATLAS7V is complex enough that it should be migrated as a separate Julia module, then imported by SYNTHE pipeline programs.
+
+---
+
+### SYNTHE Pipeline Data Flow Summary
+
+```
+ATLAS12 model (.dat) ──┐
+                       ├──> xnfpelsyn + atlas7v ──> fort.10 (atmosphere)
+molecules.dat ─────────┘                    ↓
+continua.dat ──────────────────────────────┘
+
+Control parameters ──> synbeg ──> fort.12 (header), fort.14 (params)
+
+Line lists:             Line Readers:
+  gf*.100 ────────────> rgfalllinesnew ───┐
+  predicted.asc ─────> rpredict ──────────┤
+  CH.asc etc. ───────> rmolecasc ─────────┤──> fort.12 (complete line list)
+  tioschwenke.bin ──> rschwenk ───────────┤
+  h2ofastfix.bin ───> rh2ofast ───────────┘
+
+fort.10 + fort.12 + fort.14 ──> synthe ──> fort.16 (line opacities)
+
+ATLAS12 model (.mod) ──┐
+fort.16 ───────────────┼──> spectrv + atlas7v ──> fort.7 (intensity/flux)
+molecules.dat ─────────┘
+
+fort.7 ──> rotate ──> ROT1 (rotational broadening)
+
+ROT1 ──> broaden ──> fort.22 (final spectrum, binary)
+
+fort.22 ──> converfsynnmtoa ──> fort.2 (ASCII spectrum)
+```
+
+**Key fort unit summary**:
+- fort.2: molecules.dat (input, reused by multiple programs)
+- fort.10: Atmosphere from xnfpelsyn → used by synthe
+- fort.12: Accumulated line list → used by synthe
+- fort.14: Control parameters (passed between programs)
+- fort.16/18: Line opacities from synthe → used by spectrv
+- fort.7: Spectrum from spectrv → renamed to fort.1 for rotate
+- ROT1: From rotate → renamed to fort.21 for broaden
+- fort.22: Final spectrum (binary)
+- fort.2: Final spectrum (ASCII, reuses unit number)
+
+---
+
+### Migration Implications for SYNTHE
+
+#### Pipeline vs Monolithic
+
+**Current**: 11 separate executables communicating via fort.X files
+
+**Julia Option 1**: Preserve modularity (11 separate programs/scripts)
+```julia
+# Separate programs, call sequentially
+run(`xnfpelsyn < model.mod`)
+run(`synbeg < params.txt`)
+run(`rgfalllinesnew`)
+# ... etc
+```
+**Pro**: Matches current workflow
+**Con**: Lots of file I/O overhead
+
+**Julia Option 2**: Unified function pipeline (Paula's preference per WORKFLOW_ANALYSIS.md Q4)
+```julia
+function synthe_pipeline(
+    atmosphere_model::AtmosphereModel,
+    line_lists::Vector{LineList},
+    wavelength_range::Tuple{Float64, Float64},
+    resolution::Float64;
+    rotation_vsini::Float64 = 0.0,
+    instrumental_broadening::Float64 = 0.0
+) ::Spectrum
+
+    # In-memory data structures replace fort.X files
+    atm_data = process_atmosphere(atmosphere_model)
+    lines = accumulate_lines(line_lists, wavelength_range)
+    opacities = calculate_line_opacities(atm_data, lines)
+    spectrum = solve_radiative_transfer(atm_data, opacities)
+
+    if rotation_vsini > 0
+        spectrum = apply_rotation(spectrum, rotation_vsini)
+    end
+
+    if instrumental_broadening > 0
+        spectrum = apply_broadening(spectrum, instrumental_broadening)
+    end
+
+    return spectrum
+end
+```
+**Pro**: Clean interface, no intermediate files, much faster
+**Con**: Requires more upfront design work
+
+**Recommendation**: Start with Option 2 (unified pipeline). Much cleaner for Julia. Can add Option 1 wrapper later if needed for compatibility.
+
+#### Fort Units → Named I/O
+
+Replace hardcoded fort.X with explicit data structures:
+
+```julia
+struct AtmosphereData
+    rhox::Vector{Float64}
+    temperature::Vector{Float64}
+    pressure::Vector{Float64}
+    electron_density::Vector{Float64}
+    # ... etc
+end
+
+struct LineList
+    wavelength::Vector{Float64}
+    log_gf::Vector{Float64}
+    element::Vector{Int}
+    ionization::Vector{Int}
+    E_lower::Vector{Float64}
+    # ... etc
+end
+```
+
+#### ATLAS7V Library
+
+**Critical dependency**: Both xnfpelsyn and spectrv require ATLAS7V (17K lines)
+
+**Migration strategy**:
+1. First, create standalone Julia module for ATLAS7V functionality
+2. Then, migrate xnfpelsyn and spectrv to use this module
+3. Investigate: Does ATLAS12 duplicate any ATLAS7V code? If so, share common implementation.
+
+**Priority**: HIGH - This is a blocker for completing SYNTHE migration
+
+#### Binary Format Compatibility
+
+**Current**: Fortran UNFORMATTED I/O (fort.10, fort.12, fort.16, fort.22, ROT1)
+- Machine-dependent byte ordering
+- Fortran record headers
+- Not portable across compilers or platforms
+
+**Julia migration**:
+- Use HDF5 or Arrow for binary storage (portable, self-describing)
+- Or: Keep intermediate results in memory (no files at all for unified pipeline)
+- Provide conversion utilities for reading legacy Fortran UNFORMATTED files (for validation against old outputs)
+
+---
+
+### Questions for Further Investigation
+
+1. **synthe.for**: What are the other 2 subroutines (besides the 7 identified)? Check source.
+
+2. **spectrv.for**: What are the 4 embedded subroutines? Check source.
+
+3. **ATLAS7V interface**: Which subroutines are exported and called by xnfpelsyn vs spectrv? Are they the same or different?
+
+4. **Fort.16 vs fort.18**: Some documentation mentions fort.16, some fort.18 for synthe output. Version-dependent or mode-dependent?
+
+5. **Partial redistribution** (fort.25 in spectrv): Is this used only for NLTE? What parameters are actually needed?
+
+6. **Line list formats**: How many different molecular line formats exist? Can they be unified?
+
+7. **Performance bottleneck**: Is synthe (line opacity) always the slowest step? Or does spectrv (radiative transfer) dominate for certain parameter ranges?
+
+8. **Molecule priority** (from WORKFLOW_ANALYSIS.md Q6): Paula wants to start with molecules sharing common format (excluding TiO and H2O initially). Need to document which molecules share format with CH, MgH, etc.
+
+---
+
+**Status**: SYNTHE pipeline survey complete (breadth-first approach)
+
+**Coverage**:
+- ✅ All 11 programs cataloged with purpose, I/O, complexity
+- ✅ Data flow mapped end-to-end
+- ✅ Migration strategies outlined
+- ⚠️ Internal subroutine details deferred (flagged as TODOs)
+- ⚠️ ATLAS7V library interface needs dedicated analysis session
+
+**Next**: Commit this section, then decide: continue with ATLAS7V deep-dive, or move to Phase 3 (physics documentation)?
 
 ---
 
