@@ -2453,18 +2453,18 @@ end
 
 Based on all above analysis, here are the highest-risk areas requiring extra care:
 
-| Rank | Code Section | Risk Type | Likelihood | Impact | Mitigation Priority |
-|------|--------------|-----------|------------|--------|---------------------|
-| 1 | Saha-Boltzmann population calculation | Precision, Overflow | High | Critical | 🔴 Highest |
-| 2 | Voigt profile evaluation | Algorithm, Performance | Medium | High | 🔴 Highest |
-| 3 | Line opacity summation | Precision, Performance | Medium | High | 🔴 Highest |
-| 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest |
-| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High |
-| 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High |
-| 7 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High |
-| 8 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium |
-| 9 | Input file parsing | Format assumptions | High | Low | 🟢 Medium |
-| 10 | Output formatting | Compatibility | Low | Low | 🟢 Low |
+| Rank | Code Section | Risk Type | Likelihood | Impact | Mitigation Priority | Deep Dive |
+|------|--------------|-----------|------------|--------|---------------------|-----------|
+| 1 | Saha-Boltzmann population calculation | Precision, Overflow | High | Critical | 🔴 Highest | ✅ Deep Dive 02 |
+| 2 | Voigt profile evaluation | Algorithm, Performance | Medium | High | 🔴 Highest | ✅ Deep Dive 01 |
+| 3 | Line opacity summation | Precision, Performance | Medium | High | 🔴 Highest | 🔲 Pending |
+| 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest | 🔲 Pending |
+| 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | ✅ Partial (DD02) |
+| 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High | 🔲 Pending |
+| 7 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High | 🔲 Pending |
+| 8 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium | 🔲 Pending |
+| 9 | Input file parsing | Format assumptions | High | Low | 🟢 Medium | 🔲 Pending |
+| 10 | Output formatting | Compatibility | Low | Low | 🟢 Low | 🔲 Pending |
 
 **High-priority validation** (do these first):
 - Items ranked 1-4 above
@@ -2479,10 +2479,12 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 - [x] Document architecture (ARCHITECTURE_DETAILS.md)
 - [x] Identify critical decision points (Section V)
 - [x] Map high-risk areas (this section)
-- [ ] Paula decides on critical questions (Section V)
+- [x] Deep dive on Rank #1 risk (Populations) - Deep Dive 02
+- [x] Deep dive on Rank #2 risk (Voigt) - Deep Dive 01
+- [ ] Paula decides on critical questions (Section V) - 8 remaining (V.4 resolved)
 - [ ] Generate Fortran reference outputs for test cases
-- [ ] Document binary file formats
-- [ ] Obtain cited papers (Humlicek, etc.)
+- [ ] Document binary file formats (Rank #4 risk)
+- [x] ~~Obtain cited papers (Humlicek, etc.)~~ - Deep Dive 01 shows algorithm differs from citation
 
 #### During Migration:
 - [ ] Implement in order of dependency (constants → config → iteration)
