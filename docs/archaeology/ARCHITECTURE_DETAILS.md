@@ -27,6 +27,8 @@ This document provides subroutine-level architectural details for ATLAS12 and SY
 **Total lines**: 23,247
 **Structure**: Main PROGRAM followed by 80 embedded SUBROUTINEs
 
+**Reference**: Castelli, F. 2005, "ATLAS12: how to use it", Mem. S.A.It. Suppl. Vol. 8, 25
+
 ```
 Lines 1-400:     PROGRAM ATLAS12 (main program)
 Lines 401+:      80 embedded SUBROUTINE definitions
@@ -311,6 +313,33 @@ Listed in order of appearance in source code (lines 37-95):
 
 ---
 
+### Line List Files (from Castelli 2005)
+
+**Six binary line list files used by ATLAS12**:
+
+| File | Content | Source |
+|------|---------|--------|
+| **nltelines.bin** | H I, He I, He II, C I, C II, O I, Na I, Mg I, Mg II, Al I, Si I, Si II, K I, Ca I, Ca II | NLTELINE.DAT (Kurucz CD-ROM No 1) |
+| **lowlines.bin** | All elements, first 5 ionization stages (excludes nltelines) | LOWLINES.DAT (Kurucz CD-ROM No 1) |
+| **highlines.bin** | Ionization stages n>5 up through Zn | HILINES.DAT (Kurucz CD-ROM No 1) |
+| **diatomicsiwl.bin** | CH, NH, OH, MgH, SiH, CO, SiO, CN, C₂ (ordered by wavelength) | DIATOMIC.DAT (Kurucz CD-ROM No 16) |
+| **schwenke.bin** | TiO lines (Schwenke 1998 database) | SCHWENKE.BIN (Kurucz CD-ROM No 24) |
+| **h2ofast.bin** | H₂O lines (Partridge & Schwenke 1997) | H2OFAST.BIN (Kurucz CD-ROM No 26) |
+
+⚠️ **DISCREPANCY NOTED**:
+- **Per documentation**: Filenames listed above from Castelli's website naming convention
+- **Per code archaeology** (WORKFLOW_ANALYSIS.md): Names like `fclowlines.bin`, `fchighlines.bin` in execution scripts
+- **Likely**: Different users/installations use different naming conventions for same data files
+
+**Line list organization**:
+- Stage 1 reads: lowlines, highlines, diatomicsiwl, schwenke, h2ofast (fort.11, 21, 31, 41, 51)
+- Stage 2 reads: nltelines (fort.19) + preselected lines from Stage 1 (fort.12)
+
+**Molecular line details** (from Kurucz 1992a, 1994):
+- Diatomic molecules include multiple bands and isotopes
+- Each molecule has specific partition function data
+- Temperature-dependent dissociation equilibria
+
 ### ATLAS12 Key Algorithms
 
 #### Two-Stage Line Selection
@@ -355,6 +384,207 @@ Subroutines using this pattern:
 - TCORR - Temperature correction
 - STATEQ - NLTE statistical equilibrium
 - PUTOUT - Output (different modes: 1=header, 4=frequency, 5=summary)
+
+---
+
+### Control Cards (from Castelli 2005)
+
+ATLAS12 reads control parameters via control cards from unit 5 (stdin). Key cards:
+
+#### ABUNDANCE Cards
+
+**Purpose**: Set elemental abundances
+
+```
+ABUNDANCE CHANGE iz abund(iz)
+ABUNDANCE RELATIVE iz xrelative(iz)
+ABUNDANCE ABSOLUTE iz xabund(iz)
+ABUNDANCE TABLE
+  [99-element table with abund(iz) and xrelative(iz)]
+ABUNDANCE SCALE xscale
+```
+
+**Formula**: `xabund(iz) = abund(iz) + xrelative(iz)`
+
+⚠️ **IMPORTANT DISCREPANCY**:
+- **Per documentation** (Castelli 2005): "Starting abundances are those of the input model. If it is an ATLAS12 model both abund(iz) and xrelative(iz) are read from ABUNDANCE TABLE. If the input model is an ATLAS9 model only abund(iz) is given in input and all the xrelative(iz) values are zero."
+- **Implication**: ATLAS12 stores both base abundance AND scaling factor
+- **ATLAS9 compatibility**: Can read ATLAS9 models (which lack xrelative) and sets xrelative=0
+
+**ABUNDANCE SCALE** (Castelli extension):
+- Scales entire abundance pattern from Li (iz=3) to Es (iz=99)
+- **Not in original Kurucz code**, implemented by Castelli
+- Used for quick [M/H] changes when starting from ATLAS9 model
+
+#### CONVECTION Cards
+
+```
+CONVECTION OFF
+CONVECTION ON n1
+CONVECTION OVER n1 overwt [nconv]
+```
+
+**Parameters**:
+- `n1` = mixing length / pressure scale height (l/Hp, typically 1.25)
+- `overwt` = overshooting weight (0=none, 1=full, typically 0)
+- `nconv` = layer where Schwarzschild criterion reliable (default 36)
+
+**Castelli extension**:
+- `nconv` parameter added to handle cool models (Teff < 4000 K)
+- Original Kurucz code: hardcoded at layer 36
+- Issue: Convection zone may occur above layer 36 in very cool stars
+
+#### OPACITY Cards
+
+```
+OPACITY ON names
+OPACITY OFF names
+OPACITY IFOP switches
+```
+
+**Critical for Stage 2**:
+```
+OPACITY ON XLINES    ! Read nltelines.bin (fort.19)
+OPACITY ON LINES     ! Read preselected lines (fort.12)
+```
+
+**For Stage 1**:
+- OPACITY settings read from input model
+- Use `READ LINES` control card instead to trigger line selection
+
+#### READ Cards
+
+```
+READ PUNCH           ! Read input model (fort.3)
+READ MOLECULES       ! Read molecular partition functions (fort.2)
+READ LINES          ! Read line databases (Stage 1 only)
+```
+
+**Stage distinction**:
+- Stage 1: Use `READ LINES` → triggers SELECTLINES
+- Stage 2: Use `OPACITY ON XLINES` and `OPACITY ON LINES` → reads selected lines
+
+#### Other Important Cards
+
+```
+TEFF value
+GRAVITY value
+ITERATIONS n
+MOLECULES ON
+PRINT flags...
+PUNCH flags...
+LTE
+NLTE
+BEGIN
+END
+VTURB value
+TURBULENCE
+SCALE MODEL ndepths rhoxmin steplog teff grav
+```
+
+**SCALE MODEL**: Redefines depth grid and stellar parameters
+- `ndepths` = number of depth points (typically 72)
+- `rhoxmin` = log10(minimum column density) (e.g., -6.875)
+- `steplog` = step in log10(rhox) (e.g., 0.125)
+- `teff`, `grav` = new effective temperature and surface gravity
+
+### Energy Distributions and SURFACE FLUX
+
+⚠️ **CRITICAL WARNING** (from Castelli 2005, Section 8):
+
+**SURFACE FLUX control card**: Computes emergent flux F(λ)
+
+**Problem**: "This flux is not accurate enough to be compared with the observations. In fact, it is only computed at the 30000 sampling points, with gaps that increase with increasing wavelengths. As a consequence, the details between two consecutive points are lost."
+
+**Recommendation**: "Energy distributions for ATLAS12 models should be computed with the SYNTHE code at a resolving power of 500000, using the same line lists that were used for the model calculation. The high resolution spectrum should then be instrumentally broadened at the resolution of the observed energy distribution."
+
+**Implication for Julia migration**:
+- ATLAS12's built-in SURFACE FLUX should be documented as diagnostic only
+- Warn users to use SYNTHE for actual spectral synthesis
+- 30000-point sampling is sufficient for atmosphere structure but not for detailed spectra
+
+---
+
+### Opacity Sampling Method Details (from Castelli 2005)
+
+#### Frequency Integration
+
+**Method**: Trapezoidal rule over evenly-spaced frequency points
+
+**Grid specification**:
+- **30000 sampling points** in wavelength range λ₁ to λN
+- **Logarithmic spacing**: Δlog(λn) = 0.0001
+- **Weights**: wi = ½(νi-1 - νi+1) (trapezoidal rule)
+- **Range**: log(λN) - log(λ₁) = 3 (factor of 1000 in wavelength)
+
+**Integration limits** (Table 1 from Castelli 2005):
+
+| Teff (K) | λ₁ (nm) | log λ₁ | λN (nm) | log λN |
+|----------|---------|--------|---------|--------|
+| ≤ 50000 | 10 | 1.0 | 10000 | 4.0 |
+| < 30000 | 22.788 | 1.358 | 22782.43 | 4.357 |
+| < 13000 | 50.431 | 1.703 | 50419.67 | 4.703 |
+| < 7250 | 91.180 | 1.960 | 91159.09 | 4.960 |
+| < 4500 | 144.577 | 2.160 | 144544.0 | 5.16 |
+
+**Note**: λ₁ and λN shift to longer wavelengths for cooler stars to cover peak of Planck function.
+
+#### Continuous Opacity Frequencies
+
+**Per Castelli 2005 documentation**:
+- **344 total frequencies** for continuum opacity calculation
+- **337 frequencies**: Same as ATLAS9 (for BIG ODFs compatibility)
+- **6 additional frequencies**: Added in ATLAS12
+
+⚠️ **DISCREPANCY NOTED**:
+- **Per documentation** (Castelli 2005): "In ATLAS12 six more frequencies were added, so that the whole wavelength range from 9.09 nm to 400000 nm is covered"
+- **Extended range**: 9.09 nm to 400000 nm (vs ATLAS9 range)
+- **Per code analysis**: Need to verify actual implementation in atlas12.for
+
+**Purpose of 344 frequencies**:
+- Used to extract lines from line lists
+- Lines stronger than 0.001 × continuum at any depth are selected
+- Uses specific abundances of the model
+
+**Wavelength coverage verification needed**: Code inspection should confirm the 9.09-400000 nm range claim.
+
+#### Total Absorption Coefficient
+
+At each layer and frequency:
+
+```
+κtot(ν, τ) = ltot(ν, τ) + κc(ν, τ) + σ(ν, τ)
+```
+
+Where:
+- ltot = Total line absorption (sum over all contributing lines)
+- κc = Continuum (bound-free) opacity
+- σ = Scattering opacity (free-free)
+
+**Line absorption**:
+```
+ltot(ν, τ) = Σn ln(0) × V(vn, αn) × (1 - e^(-hν/kT))
+```
+
+Where:
+- ln(0) = Line center absorption coefficient
+- V(vn, αn) = Voigt function
+- Stimulated emission factor: (1 - e^(-hν/kT))
+
+**Voigt function**:
+```
+V(v, α) = (1/√π ΔνD) × H(Δλ/ΔλD, γ/4πΔνD)
+```
+
+**Doppler width**:
+```
+ΔνD = (ν₀/c) × √(2kT/μmH + ξ²)
+```
+
+Where:
+- T = temperature
+- μ = atomic mass
+- ξ = microturbulent velocity
 
 ---
 
