@@ -203,13 +203,16 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
 - Where is precision loss acceptable for memory savings?
 - Are there accumulated rounding errors we must match?
 
-**✅ PARTIALLY RESOLVED** - See Deep Dives 01 & 02 for precision analysis:
+**✅ PARTIALLY RESOLVED** - See Deep Dives 01-05 for precision analysis:
 - **Populations (Deep Dive 02)**: Float64 REQUIRED - ratios span 40+ orders of magnitude, Float32 underflows
 - **Voigt profiles (Deep Dive 01)**: Float32 acceptable - target accuracy ~2%, measured error <1.5%
-- **Remaining**: Line arrays (XLINES), opacity sums, RT integration (need testing)
+- **Line opacity accumulation (Deep Dive 03)**: Float32 adequate (<0.01% error typical), Float64 recommended as "cheap insurance"
+- **Binary I/O (Deep Dive 04)**: Mixed Float32/Float64 in file format, must preserve exactly for validation
+- **RT integration (Deep Dive 05)**: Mixed precision - weights Float32, source functions Float64
+- **Remaining**: Convection derivatives (Deep Dive 07), full atmosphere validation needed
 
 **Julia Approach** (validated by code analysis):
-1. **~~Analyze first~~**: ✅ Done for populations & Voigt (see deep dives)
+1. **~~Analyze first~~**: ✅ Done for top 6 computational kernels (see deep dives)
 2. **Parameterize**: Use type parameters for flexibility
    ```julia
    struct AtmosphereState{T<:AbstractFloat}
@@ -218,9 +221,10 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
        # ...
    end
    ```
-3. **Mixed precision strategy** (from Deep Dive 02):
-   - Float64: populations, electron density, partition functions
-   - Float32: Voigt profiles, possibly line arrays (need validation)
+3. **Mixed precision strategy** (from Deep Dives 02-05):
+   - Float64: populations, electron density, partition functions, RT source functions
+   - Float64 recommended: Line opacity accumulation (Deep Dive 03)
+   - Float32 acceptable: Voigt profiles, RT pretabulated weights, large working arrays
 
 **Migration risk**: ⚠️ If we change precision, we may get subtly different results that are hard to debug.
 
@@ -230,6 +234,12 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
 
 **The Problem**:
 Many algorithms are poorly documented, with unexplained constants and thresholds.
+
+**✅ PARTIALLY RESOLVED** - See Deep Dive 01 (Voigt Profile) for detailed example:
+- 13 undocumented magic constants in HVOIGT algorithm
+- 4 regime boundaries (ν = 0, 3, 8, 15) unexplained
+- Pretabulated H0TAB, H1TAB, H2TAB (200-point tables) with unknown derivation
+- Algorithm differs from Humlicek citation (empirical modifications)
 
 **Examples from ARCHITECTURE_DETAILS.md**:
 
@@ -711,7 +721,7 @@ USER INPUTS → STAGE 1 (Line Selection) → INTERMEDIATE STATE → STAGE 2 (Ite
    - Select ~0.1-1% of input lines (millions → hundreds of thousands)
 
 **Outputs**:
-- **fort.12** (selected lines - binary, much smaller than fort.11)
+- **fort.12** (selected lines - binary, much smaller than fort.11) - See Deep Dive 04 for binary format
 - **fort.55** (completion flag - tells user Stage 1 finished)
 
 **Data that does NOT persist to Stage 2**:
@@ -763,19 +773,19 @@ mv fort.55 fort.5    # Signal to run Stage 2
 
 2. **Opacity tabulation** (→ /TABCONT/, /XLINES/ COMMON blocks):
    - KAPCONT: Continuum opacity at all depths (once per iteration)
-   - XLINOP: Line opacity from fort.12 at all wavelengths
+   - XLINOP: Line opacity from fort.12 at all wavelengths - See Deep Dive 03
 
 3. **Frequency integration** (30,000 wavelengths):
    For each λ:
    - KAPP: Total opacity = continuum + line
-   - JOSH: Solve radiative transfer (→ JNU, HNU, SNU)
+   - JOSH: Solve radiative transfer (→ JNU, HNU, SNU) - See Deep Dive 05
    - Accumulate: RADIAP, ROSS, TCORR (weighted sums)
 
 4. **Apply corrections**:
    - RADIAP: Update radiative acceleration → affects pressure structure
    - ROSS: Rosseland mean → affects temperature correction
-   - TCORR: Adjust temperatures for radiative equilibrium
-   - CONVEC: Add convective energy transport (if needed)
+   - TCORR: Adjust temperatures for radiative equilibrium - See Deep Dive 06
+   - CONVEC: Add convective energy transport (if needed) - See Deep Dive 07
 
 5. **Check convergence**: Compare T, P, XNE to previous iteration
 
@@ -1804,7 +1814,23 @@ opacity::Vector{Float64}      # Matches Fortran REAL*8
   - Float32 sufficient for this accuracy level
   - See `docs/archaeology/DEEP_DIVES/01_VOIGT_PROFILE.md` Section 4 for analysis
 
-**Recommendation**: Use Float64 for all physics calculations (populations, opacities, radiative transfer). Consider Float32 only for final large arrays if memory becomes limiting.
+- **Line opacity summation: Float32 adequate, Float64 recommended**
+  - XLINES accumulates opacity from millions of lines
+  - Float32 tested adequate (Deep Dive 03), but Float64 safer
+  - See `docs/archaeology/DEEP_DIVES/03_LINE_OPACITY_SUMMATION.md` Section 5 for analysis
+
+- **Binary I/O: Mixed precision by design**
+  - Fort.12 uses Integer*4 wavelength encoding + Integer*2 line data
+  - Coefficients stored as Float32, wavelengths as Float64 (via RATIOLG)
+  - Migration must preserve exact format for validation
+  - See `docs/archaeology/DEEP_DIVES/04_BINARY_IO.md` Section 3 for analysis
+
+- **RT integration (JOSH): Mixed precision internal**
+  - Pretabulated weights (COEFJ/COEFH) stored as Float32
+  - Source function and intensity as Float64
+  - See `docs/archaeology/DEEP_DIVES/05_RT_INTEGRATION.md` Section 4 for analysis
+
+**Recommendation**: Use Float64 for all physics calculations (populations, opacities, radiative transfer). Match Fortran's Float32 only where explicitly required (binary I/O formats, pretabulated coefficients). Consider Float32 for final large output arrays if memory becomes limiting.
 
 ---
 
@@ -2186,24 +2212,39 @@ C     Iterative correction with damping factor
 - **Mitigation**: Julia Float64 for all population variables, preserve Fortran's iterative method with damping
 
 **Area 2 - Line Opacity Summation**:
-- Sums ~1 million lines per depth point
-- Each line: strength × profile × damping
+- Sums ~100K to 500M lines per depth point × wavelength
+- Each line: strength × Voigt profile × damping
 - **Risk**: Catastrophic cancellation, accumulation of rounding errors
-- **Mitigation**: Kahan summation or compensated summation in Julia
+- **✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/03_LINE_OPACITY_SUMMATION.md`:
+  - Float32 accumulation with NO compensated summation (simple `SUM += CV`)
+  - Analysis shows Float32 adequate (typical error <0.01%)
+  - Early exit optimization critical (600 GFLOP XLINOP, 3 PFLOP LINOP1)
+  - Float64 recommended for Julia as "cheap insurance"
+- **Mitigation**: Preserve early exit logic (TABCONT threshold), use Float64 accumulation
 
 **Area 3 - Radiative Transfer Integration**:
-- Integrates source function over optical depth
-- Uses trapezoidal rule over 50-100 depth points
-- **Risk**: Different numerical integration → different flux
-- **Mitigation**: Match Fortran integration method exactly initially
+- JOSH subroutine: Feautrier-like RT solver with pretabulated weights
+- Uses 51×51 COEFJ/COEFH matrices over fixed τ grid (τ=0 to τ=20)
+- **Risk**: Different numerical integration → different flux, wrong pretabulated data → catastrophic errors
+- **✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/05_RADIATIVE_TRANSFER.md`:
+  - Gauss-Seidel iteration with 51-iteration limit (arbitrary, no convergence warning)
+  - Mixed precision: COEFJ/COEFH Float32, source functions Float64
+  - MAP1 parabolic interpolation for grid remapping (3-point stencil)
+  - Silent failure modes identified (negative source functions clamped to 1e-37)
+- **Mitigation**: Validate COEFJ/COEFH generation, expose iteration limits, add convergence diagnostics
 
-**Area 4 - Convergence Tests**:
+**Area 4 - Iteration Damping and Convergence**:
 ```fortran
 IF(ABS((TNEW-TOLD)/TOLD).LT.1.0E-4)THEN
 ```
-- Relative change tolerance 1e-4
-- **Risk**: Float32 vs Float64 affects when this triggers
-- **Mitigation**: Use same precision for iteration variables as Fortran
+- Relative change tolerance 1e-4, but NO early-exit convergence test (always runs NUMITS iterations)
+- **Risk**: Adaptive damping depends on sign changes → Float precision affects oscillation detection
+- **✅ ANALYZED** - See `docs/archaeology/DEEP_DIVES/06_ITERATION_DAMPING.md`:
+  - TCORR implements 6 damping mechanisms: ±τ/4, ±T_eff/25, adaptive (1.25×/0.5×), smoothing, monotonicity, grid adjustment
+  - Adaptive damping detects oscillation (sign flip → 0.5× damp) vs steady convergence (same sign, decreasing → 1.25× accelerate)
+  - Convection coupling via Deep Dive 07 (FLXCNV from CONVEC)
+  - No early exit: must run all NUMITS iterations for exact Fortran match
+- **Mitigation**: Expose diagnostics, optional early exit, preserve fixed-iteration default for validation
 
 ---
 
@@ -2260,6 +2301,12 @@ IF(ABS((TNEW-TOLD)/TOLD).LT.1.0E-4)THEN
 | File I/O (binary) | ~1 GB/min | Match | 🔴 High |
 
 **Why file I/O is critical**: SYNTHE reads multi-GB line databases. If Julia I/O is 10× slower, pipeline becomes unusable.
+
+**See deep dives for detailed performance analysis**:
+- **Deep Dive 01 (Voigt Profiles)**: Target ~2% accuracy sufficient, allowing optimizations vs exact calculation
+- **Deep Dive 03 (Line Opacity)**: Float32 accumulation adequate for line opacity summation
+- **Deep Dive 04 (Binary I/O)**: Fort.12 format and efficient binary reading strategies
+- **Deep Dive 07 (CONVEC)**: 4× POPS calls for numerical derivatives (expensive, potential for AD optimization)
 
 ---
 
@@ -2373,6 +2420,22 @@ end
 
 ---
 
+#### Testing Strategies from Deep Dives
+
+Each deep dive includes comprehensive testing strategies. See consolidated testing approach in `docs/archaeology/DEEP_DIVES/00_INDEX.md` and individual deep dives:
+
+- **Deep Dive 01 (Voigt)**: Unit tests against exact calculation, performance benchmarks, accuracy validation
+- **Deep Dive 02 (Populations)**: Ideal gas tests, Saha equation validation, partition function tests
+- **Deep Dive 03 (Line Opacity)**: Energy conservation tests, opacity accumulation validation, precision tests
+- **Deep Dive 04 (Binary I/O)**: Format validation, round-trip tests, cross-platform compatibility
+- **Deep Dive 05 (JOSH/RT)**: Flux conservation, boundary condition tests, optical depth validation
+- **Deep Dive 06 (TCORR)**: Convergence diagnostics, damping mechanism validation, iteration count tests
+- **Deep Dive 07 (CONVEC)**: Thermodynamic derivative validation, MLT physics tests, convection zone detection
+
+**Recommended testing order**: Follow migration dependency graph (Binary I/O → Populations → Voigt → Line Opacity → CONVEC → JOSH → TCORR)
+
+---
+
 ### 6.5 File I/O and Format Compatibility Risks
 
 **Risk**: Julia can't read/write Fortran's binary fort.X files → can't validate or interoperate.
@@ -2442,6 +2505,13 @@ function read_fort19(path::String)
 end
 ```
 
+**See Deep Dive 04** for comprehensive fort.12 binary format analysis:
+- **16-byte IIIIIII record structure** documented
+- **Wavelength log-encoding (RATIOLG)** to compress Float64 → Integer*4
+- **TABLOG compression** for line data (Integer*2 indices)
+- **Mixed precision** (Float32 coefficients, Float64 wavelengths)
+- **Migration strategy**: Single implementation for both ATLAS12 and SYNTHE fort.12
+
 📋 **TODO**: Document binary format for ALL fort.X files used in ATLAS12/SYNTHE pipeline
 
 ---
@@ -2470,6 +2540,10 @@ Fortran binaries may be big-endian or little-endian depending on system.
 3. **Oscillation reports** (anecdotal from documentation):
    - Some models oscillate between two solutions
    - Requires manual intervention (adjust damping, change initial guess)
+
+**See deep dives for convergence analysis**:
+- **Deep Dive 06 (TCORR - Iteration Damping)**: 6 damping mechanisms documented, no early-exit convergence, adaptive damping strategies
+- **Deep Dive 07 (CONVEC - Convective Transport)**: 30-iteration opacity convergence with SOR damping (ω=0.7), potential overshooting bug identified
 
 ---
 
@@ -2522,10 +2596,11 @@ Based on all above analysis, here are the highest-risk areas requiring extra car
 | 4 | Fort.X binary I/O | Format compatibility | High | High | 🔴 Highest | 🐲✨ Deep Dive 04 |
 | 5 | Iteration damping logic | Convergence | Medium | High | 🟡 High | 🐲✨ Deep Dive 06 |
 | 6 | RT integration (JOSH) | Algorithm, Precision | Low | High | 🟡 High | 🐲✨ Deep Dive 05 |
-| 7 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High | 🔲 Pending |
-| 8 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium | 🔲 Pending |
-| 9 | Input file parsing | Format assumptions | High | Low | 🟢 Medium | 🔲 Pending |
-| 10 | Output formatting | Compatibility | Low | Low | 🟢 Low | 🔲 Pending |
+| 7 | Convective transport (CONVEC) | Precision, Convergence | Medium | Medium | 🟡 High | 🐲✨ Deep Dive 07 |
+| 8 | ODF interpolation (if used) | Algorithm | Low | Medium | 🟡 High | 🔲 Pending |
+| 9 | Convergence criteria | Stability | Medium | Medium | 🟢 Medium | 🔲 Pending |
+| 10 | Input file parsing | Format assumptions | High | Low | 🟢 Medium | 🔲 Pending |
+| 11 | Output formatting | Compatibility | Low | Low | 🟢 Low | 🔲 Pending |
 
 **High-priority validation** (do these first):
 - Items ranked 1-4 above
@@ -2648,9 +2723,10 @@ This document provides the **architectural foundation** for migrating ATLAS12 an
 
 1. **Don't translate line-by-line** - the COMMON block architecture must be redesigned
 2. **57 COMMON blocks → 5 clean struct types** (Section IV)
-3. **10 critical decisions require Paula's input** (Section V)
-4. **Validation strategy is critical** - need comprehensive Fortran reference data
-5. **Risks are manageable** - if we validate continuously and test rigorously
+3. **10 critical decisions require Paula's input** (Section V) - 5/10 resolved (5.1-5.5)
+4. **7 Deep Dives completed** - All major ATLAS12 computational kernels analyzed (see `docs/archaeology/DEEP_DIVES/`)
+5. **Validation strategy is critical** - need comprehensive Fortran reference data
+6. **Risks are manageable** - if we validate continuously and test rigorously
 
 ### Next Steps for Paula:
 
@@ -2667,14 +2743,26 @@ This document provides the **architectural foundation** for migrating ATLAS12 an
 
 ---
 
-**Document Status**: ✅ COMPLETE - All 6 sections finished
+**Document Status**: ✅ COMPLETE - All 6 sections finished, cross-referenced with 7 Deep Dives
 
-**Total Length**: ~2,000 lines (estimated)
+**Total Length**: ~2,750 lines
 
 **Created**: 2025-11-08, Phase 2B
+**Last Updated**: 2025-11-08 (added Deep Dive cross-references throughout)
 **Authors**: Claude (AI assistant) + Paula (astrophysicist, guide)
 **Purpose**: Guide architectural decisions for ATLAS Julia migration
 **Audience**: Future-Claude (migration implementation), Paula (decision-making), Peer reviewers (A&C paper)
+
+**Deep Dive Integration**: This document is now cross-referenced with:
+- Deep Dive 01 (Voigt Profiles) - Sections I.4, I.5, VI.1, VI.2
+- Deep Dive 02 (Populations) - Sections I.4, III.1, V.4, VI.2
+- Deep Dive 03 (Line Opacity) - Sections I.4, III.1, VI.2, VI.3
+- Deep Dive 04 (Binary I/O) - Sections I.4, III.1, V.4, VI.5
+- Deep Dive 05 (JOSH/RT) - Sections I.4, III.1, V.4, VI.2
+- Deep Dive 06 (TCORR) - Sections III.1, VI.2, VI.6, VI.7
+- Deep Dive 07 (CONVEC) - Sections III.1, VI.3, VI.6, VI.7
+
+See `docs/archaeology/DEEP_DIVES/00_INDEX.md` for consolidated deep dive overview.
 
 ---
 
