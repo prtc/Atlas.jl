@@ -164,19 +164,26 @@ Discovered critical insight: **"Document what's clear, flag the mess, move on"**
 **Target**: Days 10-12 | **Status**: ⬜ Not started
 
 #### Tasks:
-- [ ] 4.1 - Categorize all modules by difficulty (Easy/Medium/Hard)
-- [ ] 4.2 - Identify "quick wins" (standalone utilities)
-- [ ] 4.3 - Flag high-risk areas
-- [ ] 4.4 - Document external dependencies
-- [ ] 4.5 - Create prioritized migration roadmap
-- [ ] 4.6 - Write `docs/archaeology/MIGRATION_ASSESSMENT.md`
+- [ ] 4.1 - **COMMON block usage mapping** (CRITICAL - must do before migration)
+  - Map which COMMON blocks are read-only vs read-write in each subroutine
+  - Identify initialization order dependencies
+  - Document implicit data flow between subroutines
+  - Create dependency graph: subroutine → COMMON blocks → subroutines
+  - Flag circular dependencies or problematic patterns
+  - Output: `docs/archaeology/COMMON_BLOCK_MAP.md`
+- [ ] 4.2 - Categorize all modules by difficulty (Easy/Medium/Hard)
+- [ ] 4.3 - Identify "quick wins" (standalone utilities)
+- [ ] 4.4 - Flag high-risk areas (✅ started in ARCHITECTURE_INSIGHTS.md Section VI)
+- [ ] 4.5 - Document external dependencies
+- [ ] 4.6 - Create prioritized migration roadmap
+- [ ] 4.7 - Write `docs/archaeology/MIGRATION_ASSESSMENT.md`
 
 **Difficulty Criteria**:
 - **Easy**: Standalone, well-documented, standard algorithms
 - **Medium**: Some dependencies, moderate complexity
 - **Hard**: Complex algorithms, precision-sensitive, undocumented behavior, many dependencies
 
-**Notes**: [Claude Code Web adds notes here]
+**Notes**: Task 4.1 (COMMON block mapping) is CRITICAL per ARCHITECTURE_INSIGHTS.md Section I.1. Must be completed before translating any subroutines to understand implicit dependencies.
 
 ---
 
