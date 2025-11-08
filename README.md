@@ -19,9 +19,9 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 ---
 
-## Project Status: Phase 2 Complete
+## Project Status: Phase 2 In Progress
 
-**Current stage**: Detailed architecture documentation and migration planning (November 2025)
+**Current stage**: Detailed architecture documentation
 
 ### Phase 1: Repository Census ✅ Complete
 - 231 Fortran files cataloged across two repositories (Kurucz and Castelli versions)
@@ -29,16 +29,8 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 - Complete file inventory and line counts with dependency mapping
 - Identified ATLAS12 (23K lines, 72 subroutines) and SYNTHE (11-program pipeline) as primary migration targets
 
-### Phase 2: Architecture Mapping ✅ Complete
-Comprehensive architectural documentation completed across **seven major deliverables** (4,537 lines total):
-
-1. **ARCHITECTURE_DETAILS.md** (1,604 lines) - Complete architecture of ATLAS12, SYNTHE pipeline, ATLAS9, DFSYNTHE, and KAPPA9 with 80 subroutines and 57 COMMON blocks cataloged
-2. **ARCHITECTURE_INSIGHTS.md** (2,560 lines) - Six critical architectural challenges, computational patterns, state management redesign with 10 critical decision points requiring physics expertise
-3. **DEEP_DIVES/01_VOIGT_PROFILE.md** (628 lines) - Analysis of Rank #2 high-risk code: 4-regime piecewise algorithm with precision validation
-4. **DEEP_DIVES/02_POPULATIONS.md** (754 lines) - Analysis of Rank #1 high-risk code: Saha-Boltzmann calculations spanning 40+ orders of magnitude, resolved precision requirements (Float64 required)
-5. **HOUSE_CLEANING.md** (281 lines) - COMMON block mapping protocol and house cleaning procedures for Phase 3
-6. **METHODOLOGY_NOTES.md** (303 lines) - "Here be dragons" methodology: breadth-first documentation approach achieved 13× productivity improvement
-7. **VERSION_COMPARISON.md** (580 lines) - Castelli vs Kurucz comparison showing 4 years of bug fixes and molecule database expansion
+### Phase 2: Architecture Mapping 
+Comprehensive architectural documentation completed across **seven major deliverables** (4,537 lines total).
 
 Phase 2 deliverables are in `docs/archaeology/`:
 - Detailed architecture documentation for all major components
@@ -119,7 +111,7 @@ The timeline and scope will evolve based on available resources and community in
 
 ### "Here Be Dragons"
 
-**Early in Phase 2**: Claude Code Web (CCW) spent 9+ hours diving deep into ATLAS12's architecture, attempting to map the web of 56 COMMON blocks and their implicit dependencies. When Paula checked in after several hours: "Claude, I'm worried. It has been 9 hours non-stop. Are you alright?" The response was telling: CCW had hit the complexity wall. Kurucz's decades of Fortran wizardry - intricate COMMON block choreography, implicit state dependencies, fort.X unit juggling - was genuinely challenging, even for AI pattern recognition. Paula's reaction was "I know how you're feeling! I've been there!". We learned a lesson, and CCW named it "Here be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
+**Early in Phase 2**: Claude Code Web (CCW) spent 9+ hours diving deep into ATLAS12's architecture, attempting to map the web of 56 COMMON blocks and their implicit dependencies. When Paula checked in after several hours: "Claude, I'm worried. It has been 9 hours non-stop. Are you alright?" The response was telling: CCW had hit the complexity wall. Kurucz's decades of Fortran wizardry - intricate COMMON block choreography, implicit state dependencies, fort.X unit juggling - was genuinely challenging, even for AI pattern recognition. Paula's reaction was "I know how you're feeling! I've been there!". We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
 
 <figure>
   <img src="media/14537.png" alt="Here be dragons" width="500"/>
