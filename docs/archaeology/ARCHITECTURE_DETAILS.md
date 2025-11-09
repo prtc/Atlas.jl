@@ -2960,3 +2960,822 @@ STEP 5: Throw out any lines you don't understand to 95% level
 ---
 
 **Section status**: Kurucz 2005 overview processed - provides author's perspective on design philosophy, practical limitations, and usage recommendations.
+## IX. Line Data Infrastructure (Kurucz 2016)
+
+**Source**: "Including all the lines: data releases for spectra and opacities"  
+**Author**: Robert L. Kurucz  
+**Published**: Canadian Journal of Physics, 2016 (cjp-2016-0794)  
+**Context**: Progress report on comprehensive atomic/molecular line data for opacities
+
+---
+
+### 9.1 Executive Summary
+
+Kurucz reports on the "Including all the lines" project - a comprehensive effort to compute atomic and molecular line lists for stellar atmosphere opacity calculations. This represents a **10× expansion** over the 1988 breakthrough work, driven by:
+- 3× more configurations included in calculations
+- Better laboratory data from NIST and recent literature  
+- Higher energy levels (n=9,10) now systematically included
+- Systematic coverage of heavier elements
+
+**Impact**: Increased opacity accuracy will improve stellar atmosphere, pulsation, interior, asteroseismology, nova, supernova, and radiation-hydrodynamics calculations.
+
+---
+
+### 9.2 Current Data Scope (2016 Status)
+
+#### Atomic Lines
+- **544 million** total atomic lines computed (H through Zn)
+- **2.11 million** lines with good wavelengths (between known energy levels)
+- Coverage: First 6 ions through K, first 9-10 ions for Ca-Zn
+- Expected to **double** when remaining elements completed
+
+**Table 1 statistics** (partial sample from 30 ions):
+
+| Element | Ion | Configurations | Energy Levels | E1 Lines (Total) | Good λ | Date |
+|---------|-----|----------------|---------------|------------------|--------|------|
+| Li | I | 35 even, 32 odd | 59 even, 59 odd | 938 | 938 | 9 Feb 15 |
+| F | I-VI | Up to 64 even/odd | Up to 2,214 | 1,305,681 total | 29,753 | Oct 16 |
+| Ar | I-VI | Up to 61 even/odd | Up to 1,790 | 1,748,976 total | 36,856 | Sep 16 |
+| Cr | I-IX | Up to 61 even/odd | Up to 18,842 | 20,091,874 total | 144,734 | Apr 16 |
+| Zn | I-IX | Up to 72 even/odd | Up to 19,517 | 88,156,037 total | 32,795 | Jul 16 |
+| Y | II | 69 even, 65 odd | 806 even, 930 odd | 145,597 | 7,213 | 30 Sep 11 |
+
+**Still to compute**:
+- 4d group: Sr-Cd (partial, mostly Sr/Y/Zn done)
+- Post-transition metals: Ga-Y, In-Ba
+- Lanthanides (rare earths)
+- Heavy elements beyond lanthanides
+- Higher ionization states for 3d group
+
+**Complete list**: Available at kurucz.harvard.edu/atoms/completed.txt
+
+---
+
+### 9.3 Historical Evolution: The Path to Completeness
+
+#### Phase 1: Building the Foundation (1965-1988)
+**Goal**: Collect atomic/molecular line data for model atmosphere opacities and spectrum synthesis to determine stellar Teff, log g, abundances.
+
+**Problem**: "For 23 years I put in more and more lines but I could never get a solar model to look right, to reproduce the observed energy distribution."
+
+#### Phase 2: 1988 Breakthrough
+
+**Semiempirical calculation** of first nine ions of iron group elements:
+- Uses Cowan atomic structure codes
+- Least-squares fitting to Sugar & Corliss (1985) energy level compilation
+- **42 million** iron group lines
+
+**Combined with**:
+- 1 million lines from lighter/heavier elements + literature
+- 15 million molecular lines (H₂, CH, NH, OH, MgH, SiH, C₂, CN, CO, SiO, TiO)
+
+**Total: 58 million lines**
+
+**Computed**: 2 nm resolution opacity distribution functions (ODFs)
+- Temperature range: 2000-200,000 K
+- Pressure range suitable for stellar atmospheres
+- Solar model computed with Teff, log g, Anders & Grevesse (1989) abundances
+- Mixing-length convection: l/H = 1.25
+- Constant microturbulence: 1.5 km/s
+
+**Result**: Generally matched Neckel & Labs (1984) observed solar energy distribution
+
+**Quote**: "They made observers happy. However, agreement with low resolution observations of integrated properties does not imply correctness."
+
+#### Phase 3: The Problems Discovered
+
+**In 1988, everything was wrong, but balanced**:
+
+1. **Abundances wrong**: Fe abundance 1.66× higher than 2016 values
+   - Solar abundance determinations varied by factor of 10 since 1965
+   - Modern values significantly lower
+
+2. **Microturbulence wrong**: Constant 2 km/s throughout atmosphere
+   - Should be depth-dependent, tied to convection
+   - 2016: Scales with convective velocity
+   - 3D models use actual Doppler shifts from cellular convection (no V_turb)
+
+3. **Convection wrong**: Mixing-length theory
+   - Exaggerated effect with free parameter l/H
+   - Modern: 3D cellular convection without microturbulence
+
+4. **Opacities wrong**: Systematically too low
+   - **Missing high configurations** (n=9,10) due to computer limitations + lack of lab data
+   - Higher energy levels produce:
+     - Series of lines merging into UV continua
+     - Huge numbers of weaker lines filling gaps between strong lines
+   - **Missing heavier elements** (not systematically included)
+   - **Missing hyperfine/isotopic splitting** (additional broadening)
+
+**The compensation**:
+- Low opacities → compensated by high abundances (stronger lines)
+- Low opacities → compensated by high microturbulence (broader lines)
+- **Result**: Wrong for the right reasons - model matched observations
+
+#### Phase 4: Current Status (2016)
+
+**Quote**: "Now the abundances, the convection, and the opacities are still wrong, but they have improved. I am concentrating on filling out the line lists."
+
+**Progress**:
+- 544 million lines (10× increase over 1988)
+- Higher configurations systematically included
+- Better laboratory data from NIST
+- Depth-dependent microturbulence
+- But still incomplete element coverage
+
+---
+
+### 9.4 Why 10× More Lines?
+
+**Five key factors**:
+
+1. **3× more configurations** included in calculations
+   - Now extending to n=9,10 systematically
+   - 1988: Limited to lower n due to computer/data constraints
+
+2. **Better laboratory data**
+   - NIST Atomic Spectra Database (continuously updated)
+   - Recent literature (2000s-2010s)
+   - More energy levels with accurate measurements
+
+3. **Higher energy levels create UV continua**
+   - Series of lines converging to ionization limit
+   - Merge into continuum opacity
+   - Critical for UV radiation field
+
+4. **Gap filling by weak lines**
+   - Higher configurations produce enormous numbers of weak lines
+   - Fill spaces between strong lines in visible/IR
+   - Cumulative effect: significantly increased opacity
+
+5. **Systematic heavy element inclusion**
+   - 1988: Opportunistic (what was available in literature)
+   - 2016: Systematic semiempirical calculations for all ions
+
+**Additional when available**:
+- Hyperfine splitting (nuclear spin effects)
+- Isotopic splitting (mass effects)
+- Both broaden effective line profiles
+
+---
+
+### 9.5 Computational Methodology
+
+#### Semiempirical Approach
+
+**Tools**: Kurucz's versions of Cowan atomic structure programs
+
+**Process**:
+1. Compute energy levels for even/odd configurations
+2. Least-squares fit to laboratory energy levels (measured values)
+3. Calculate transition probabilities (Einstein A, gf values)
+4. Replace eigenvalues with measured energies where available
+   - Lines between known levels → accurate wavelengths
+   - Lines involving predicted levels → uncertain wavelengths
+
+**Data sources**:
+- NIST Atomic Spectra Database (primary)
+- Recent literature (ion-specific studies)
+- Sugar & Corliss (1985) compilation (historical baseline)
+
+#### Output Files for Each Ion
+
+Located in `/atoms/` directory on kurucz.harvard.edu:
+
+**Least-squares fitting**:
+- Input files: configuration lists, energy levels, fitting parameters
+- Output files: fitted parameters, residuals, eigenvector compositions
+
+**Energy level tables** include:
+- Energy (cm⁻¹)
+- J (total angular momentum)
+- Identification (configuration, term)
+- Strongest eigenvector components (composition)
+- Lifetime τ (radiative)
+- A-sum (total transition probability out of level)
+- C₄, C₆ (van der Waals broadening coefficients)
+- Landé g factor (Zeeman splitting)
+
+**Note**: Sums are complete up to first n=10 energy level not included in calculation
+
+**Line lists** (three types):
+- **E1**: Electric dipole transitions (dominant, strongest)
+- **M1**: Magnetic dipole transitions (forbidden, metastable levels)
+- **E2**: Electric quadrupole transitions (very forbidden)
+
+**Per-line data** automatically computed:
+- Wavelength (air and vacuum)
+- gf value (oscillator strength × statistical weight)
+- Radiative damping constant (natural broadening)
+- Stark broadening constant (electron collisions)
+- van der Waals damping constant (neutral atom collisions)
+- Landé g values (upper and lower levels)
+- Branching fractions (A_ij / A-sum)
+
+**Partition functions**: Tabulated for range of densities
+
+**Hyperfine and isotopic splitting**: Included when data exist, but not automatic
+
+#### Quality Tiers and Validation
+
+**Low configurations** (well-studied in laboratory):
+- Good lifetimes
+- Reliable gf values
+- Small scatter
+
+**High configurations** (poorly observed, strongly mixed):
+- Not well constrained in least-squares fit
+- Poorer results
+- Large scatter in gf values
+
+**Two versions provided** when laboratory data exist:
+1. Pure semiempirical calculations
+2. Hybrid: semiempirical with laboratory replacements
+
+**Iterative validation approach**:
+1. Compute spectrum with current gf values
+2. Compare to observed high-quality stellar atlases
+3. Adjust gf values to make spectra match
+4. Search for patterns in adjustments
+5. Suggest corrections to least-squares fits
+6. Recompute improved line lists
+
+**Quote**: "My hope is that the predicted energy levels can help laboratory spectroscopists to identify more levels and further constrain the least squares fits."
+
+**Symbiotic relationship**: Theoretical predictions guide lab → lab data improve theory
+
+---
+
+### 9.6 Data Organization at kurucz.harvard.edu
+
+#### Individual Ion Data: `/atoms/` Directory
+
+For each computed ion:
+- Least-squares input/output files
+- Energy level tables (with all properties)
+- E1, M1, E2 line lists
+- Laboratory data tables (NIST + literature) when available
+
+**Two line list versions**:
+1. Semiempirical only (consistent theoretical framework)
+2. Hybrid with laboratory data (best accuracy for known transitions)
+
+#### Merged Line Lists: Good Wavelengths
+
+**Directory**: `/linelists/gfnew/`
+
+**Source**: All lines with good wavelengths from Table 1 + old `/linelists/gfall` literature data
+
+**Files** (three sort orders):
+- `gfall.dat` - sorted by **air wavelength**
+- `gfallvac.dat` - sorted by **vacuum wavelength**
+- `gfallwn.dat` - sorted by **wavenumber** (cm⁻¹)
+
+**Content**: Includes laboratory gf values where available (preferred over semiempirical)
+
+**Update frequency**: "These files may be updated frequently when I compute new ions or fix errors."
+
+**Update check**:
+```
+IF (date of /atoms/completed.txt) > (date of gfall.dat)
+   THEN new ions in /atoms/ waiting to be merged
+```
+
+#### Merged Line Lists: Predicted Wavelengths
+
+**Directory**: `/linelists/gfpred/`
+
+**File**: `gfall.predall-gz` (compressed)
+- Uncompressed size: **88 GB**
+- All predicted wavelength lines from Table 1
+- Can be used directly for spectrum/opacity calculations
+
+**Critical requirement**: "Both files must be used to include all the lines."
+- gfall.dat (good λ) + gfall.predall (predicted λ) = complete line list
+
+**Future formats**:
+- 48-byte packed ASCII format (vacuum wavelengths)
+- 16-byte binary format (memory-mappable)
+
+**Usage**: Directly compatible with SYNTHE/ATLAS for computing spectra and opacities
+
+---
+
+### 9.7 Molecular Line Lists
+
+#### Current Philosophy
+**Quote**: "I am concentrating on atomic lines first, but since molecules are present in the spectra, they have to be included just to verify the atomic data."
+
+**Why molecules matter**:
+- Present in cool star spectra (Teff < 6000 K for some, < 4000 K for TiO)
+- Contribute to opacity (especially in red/IR)
+- Must be included to isolate atomic line features
+- Validation requires matching observed molecular bands
+
+#### Historical Data (1970s-1980s)
+
+**Directory**: `/molecules/old/`
+
+**Molecules**: C₂, CO, H₂, MgH, NH, SiO
+
+**Status**: Original Kurucz computations, now superseded by better data
+
+#### Updated Data with Modern Measurements
+
+**Directory**: `/molecules/`
+
+**Molecules** (Kurucz format):
+- AlO, C₂, CaH, CaO, CN, CO, CrH, FeH
+- H₂, H₂O, H₃⁺
+- NaH, OH, SiH, TiO, VO
+
+**Data sources**:
+- FTS (Fourier Transform Spectroscopy) measurements
+- ExoMol database (Tennyson group, University College London)
+- Various literature sources (references in .readme files)
+
+**Conversion**: All converted to Kurucz format for compatibility
+
+**Merged file**: `diatomics.asc` in `/molecules/oldandnew/`
+- Combines old lists with new data
+- Best available line positions
+- Fills gaps in coverage (bands, isotopologues)
+
+#### Future Molecular Work
+
+**When time permits**:
+- Update all diatomics with new data + old combined
+- Add missing molecular ions (CO⁺, CN⁺, etc.)
+- Add triatomics (H₂O, CO₂, HCN, C₃, etc.)
+  - Critical for carbon stars (C₂, CN, C₃ dominant)
+
+**Current gaps**:
+- Band coverage incomplete for some molecules
+- Missing isotopologues for many species
+- Triatomics needed for complete cool star modeling
+
+---
+
+### 9.8 Novel Technique: Stellar Spectra as Laboratory Source
+
+#### The Fundamental Problem
+
+**Laboratory spectroscopy limitations**:
+- Difficult to achieve high excitation in controlled conditions
+- Higher energy levels (n > 7-8) rarely populated
+- Short-lived plasmas limit observation time
+- Complexity of spectra from many species
+
+**Stellar atmosphere advantages**:
+- High temperatures naturally populate high levels
+- Long path lengths (scale heights ~100 km)
+- Clean single-element signatures in chemically peculiar stars
+- Stable conditions over observation time
+
+#### Chemically Peculiar (CP) Stars: Natural Laboratories
+
+**Characteristics**:
+- Early-type stars (A, F spectral types)
+- Large over/underabundances (factors of 10-1000)
+- Very small projected rotation velocities (v sin i < 10 km/s)
+- **Result**: Extremely narrow lines (~0.01-0.1 Å)
+
+**Why ideal**:
+- Enhanced element → stronger lines from that species
+- Narrow lines → reduced blending, cleaner features
+- Can isolate weak transitions from high energy levels
+- Resolution-limited rather than rotationally broadened
+
+**Proposal**: "It would make sense to use a large amount of telescope time to make high-resolution, high-signal-to-noise atlases in the UV, visible, and infrared of selected CP stars so that as many elements as possible can be analyzed to higher energies than are feasible in the lab."
+
+#### Fiorella Castelli's CP Star Analyses
+
+**HR6000** (CP star):
+- **Result**: 126 new 4d, 5d, 6d, 4f levels of Fe II
+- **Impact**: Added more than 18,000 Fe II lines to line lists
+- **Reference**: Castelli & Kurucz 2010, A&A 520, A57
+
+**HD175460** (CP star):
+- **Result**: 73 new Mn II energy levels
+- **Impact**: Thousands of new Mn II lines
+- **Reference**: Castelli, Kurucz, & Cowley 2015, A&A 580, A10
+
+**Method**: Use Kurucz's semiempirical predictions + high-resolution CP star spectra to identify previously unknown energy levels
+
+#### Ruth Peterson's UV Technique with HST
+
+**Strategy**: Use low-abundance stars to reduce blending
+
+**Sample**:
+- Multiple stars with various Teff and log g
+- Low metallicities ([Fe/H] ~ -2 to -4)
+- Hubble Space Telescope UV spectra (high resolution, high S/N)
+
+**Method**:
+1. **Find unidentified features** in UV spectra
+2. **Determine behavior** across stellar sample:
+   - Ionization stage (correlation with Teff)
+   - Boltzmann excitation (correlation with line strength)
+3. **Search predicted line list** for candidate transitions
+4. **Shift in wavenumber** to determine implied energy level
+5. **Validate**: If ≥3 other significant lines from same upper level match throughout entire spectrum → level is real
+6. **Recompute** line list using new energy levels → improved predictions for all transitions
+
+**Why low abundances work**:
+- Reduced line blending (fewer strong lines)
+- Cleaner identification of weak features
+- Isolated transitions easier to assign
+- Can see weak lines from high excitation
+
+**Results published**:
+
+**Peterson & Kurucz 2015** (ApJS 216, 1):
+- **65 new Fe I energy levels** discovered
+- Thousands of new Fe I lines added
+- UV features previously unidentified now explained
+
+**Peterson, Kurucz, & Ayres (submitted 2017)**:
+- **59 additional Fe I energy levels**
+- Continuing work funded by Space Telescope Science Institute
+
+**Ongoing**: Systematic analysis of HST UV archive for more elements
+
+**Impact**: Laboratory-quality energy levels from astrophysical sources, extending atomic data to regimes inaccessible in terrestrial labs
+
+---
+
+### 9.9 File Formats and Usage
+
+#### Line List Format (gfall.dat and variants)
+
+**Columns** (Kurucz format - standard across ATLAS/SYNTHE):
+
+Typical structure (exact format in documentation):
+```
+  λ_air    log(gf)   E_low   J_low  E_up  J_up  Γ_rad  Γ_Stark  Γ_vdW  Ref  Ion  Notes
+```
+
+Where:
+- λ_air: Wavelength in air (Å)
+- log(gf): Logarithm of oscillator strength × statistical weight
+- E_low, E_up: Lower and upper energy levels (cm⁻¹)
+- J_low, J_up: Total angular momentum quantum numbers
+- Γ_rad: Radiative damping parameter
+- Γ_Stark: Stark broadening parameter
+- Γ_vdW: van der Waals broadening parameter
+- Ion: Elemental and ionization identification
+
+**Sorting**:
+- gfall.dat: Air wavelength (SYNTHE default)
+- gfallvac.dat: Vacuum wavelength (UV work)
+- gfallwn.dat: Wavenumber (cm⁻¹) (some theoretical work)
+
+#### Predicted Line Format
+
+**File**: gfall.predall (88 GB uncompressed)
+
+**Same format** as gfall.dat but:
+- Wavelengths are uncertain (connect predicted levels)
+- Useful for opacity calculations (wavelength binned anyway)
+- Less useful for high-resolution spectrum synthesis
+- Essential for UV opacity (high-n series)
+
+#### Binary Formats (Future)
+
+**Motivation**: 88 GB ASCII → slow I/O, large memory footprint
+
+**Planned**:
+- 48-byte packed ASCII format (all necessary data, reduced precision)
+- 16-byte binary format (memory-mappable)
+  - Critical data only: λ, log(gf), E_low, damping
+  - Lookup tables for ion identification
+  - Can fit in RAM on modern workstations
+
+**Performance target**: Entire line list accessible for opacity/synthesis without disk I/O bottleneck
+
+---
+
+### 9.10 Impact on Stellar Physics Calculations
+
+#### Improved Opacity → Better Models
+
+**Applications benefiting from complete line lists**:
+
+1. **Stellar atmospheres**:
+   - More accurate temperature stratification T(τ)
+   - Correct UV opacity → correct backwarming
+   - Better limb darkening (transit/eclipse modeling)
+   - Accurate emergent flux distribution
+
+2. **Stellar pulsations**:
+   - Opacity-driven instabilities (κ-mechanism)
+   - Mode stability depends on opacity bumps
+   - Driving regions determined by dκ/dT
+   - Classical Cepheids, δ Scuti, β Cephei stars
+
+3. **Stellar interiors**:
+   - Radiative zone opacity determines T gradient
+   - Convection zone boundary location
+   - Energy transport (radiative vs. convective)
+   - Helioseismology and asteroseismology mode frequencies
+
+4. **Asteroseismology**:
+   - Frequency separations depend on interior structure
+   - Interior structure depends on opacity
+   - Current "opacity problem" in solar/stellar modeling
+   - Missing UV opacity may be part of solution
+
+5. **Novae and supernovae**:
+   - Radiative acceleration of ejecta
+   - Light curve shape (depends on opacity)
+   - Spectral evolution (line-driven winds)
+   - Shock breakout (UV flash)
+
+6. **Radiation-hydrodynamics**:
+   - Any time-dependent calculation with radiation
+   - Accretion shocks, stellar winds, jets
+   - Radiation pressure in massive stars
+   - Line-driven mass loss
+
+#### Improved Spectra → Better Parameters
+
+**Spectroscopic applications**:
+
+1. **More accurate stellar parameters**:
+   - Teff (from temperature-sensitive lines)
+   - log g (from pressure-sensitive lines)
+   - [M/H] (from all metal lines)
+
+2. **Detailed abundance analysis**:
+   - More lines → better statistics
+   - Weak lines reduce NLTE effects
+   - Can use many weak lines instead of few strong lines
+   - Hyperfine splitting → isotope ratios
+
+3. **Precision from 1D to 3D**:
+   - 1D LTE models (simplest)
+   - 1D NLTE models (some elements)
+   - 3D LTE models (hydrodynamic)
+   - 3D NLTE models (future, most realistic)
+   - **All require complete line lists**
+
+---
+
+### 9.11 Critical Implications for Atlas.jl
+
+#### Data Infrastructure Requirements
+
+**Essential components**:
+
+1. **Line list parser**
+   - Read Kurucz gfall.dat format exactly
+   - Handle both air and vacuum wavelengths
+   - Parse ion identification correctly
+   - Extract damping parameters
+
+2. **Dual line list handling**
+   - Good wavelengths (gfall.dat): spectrum synthesis
+   - Predicted wavelengths (gfall.predall): opacity only
+   - Merge strategy for combined calculations
+   - Flag to distinguish quality
+
+3. **Memory architecture for massive datasets**
+   - 544M lines × (λ, gf, E, γ_rad, γ_Stark, γ_vdW, ion) = large memory
+   - Binary format design (16-48 bytes per line)
+   - Memory-mapped file access
+   - Wavelength-indexed access (only load relevant λ range)
+
+4. **Opacity calculation routines**
+   - Frequency grid integration
+   - Line profile functions (Voigt, with damping)
+   - Partition functions (temperature/density dependent)
+   - Stimulated emission factors
+
+5. **Version control for line data**
+   - Track data source (year, version)
+   - Document which ions included
+   - Update mechanism for new releases
+   - Regression testing (spectra shouldn't change unexpectedly)
+
+#### Validation Strategy
+
+**Do NOT rely on low-resolution integrated properties alone**:
+- Quote: "Agreement with low resolution observations of integrated properties does not imply correctness."
+- 1988 solar model matched observations despite wrong abundances, convection, opacities
+
+**Required validation**:
+
+1. **High-resolution stellar atlases**:
+   - Solar spectrum (Kurucz, Delbouille, etc.)
+   - Vega (A0 V standard)
+   - Arcturus (K1.5 III cool giant)
+   - Procyon (F5 IV-V metal-weak)
+
+2. **Line-by-line comparison**:
+   - Identify individual features
+   - Check wavelengths (line IDs)
+   - Match line strengths (abundances, gf values)
+   - Profile shapes (damping, turbulence)
+
+3. **CP stars for extreme tests**:
+   - Large abundance variations
+   - Strong lines from unusual ions
+   - Weak lines from high excitation
+   - Test completeness of line lists
+
+4. **Iterative refinement**:
+   - Compute spectrum → compare → adjust gf → find patterns → recompute
+   - Same approach Kurucz uses
+   - Build adjustment tools into pipeline
+
+#### Performance Considerations
+
+**Computational challenge**:
+- 544M lines × 72 depth points × 30,000 frequency points = ~10¹⁵ opacity calculations per model
+- Even with sampling/ODF: still billions of calculations
+
+**Required optimizations**:
+
+1. **Line selection**:
+   - Only include lines with significant opacity at each depth
+   - Wavelength range culling (opacity calculation domain)
+   - Opacity threshold (ignore very weak lines)
+
+2. **Opacity Distribution Functions** (ODF):
+   - Group lines by opacity level (1988 approach)
+   - Statistical representation (12 levels: DFSYNTHE)
+   - Memory: 40 GB → 400 MB (100× compression)
+   - Speed: 1000× faster
+
+3. **Efficient profile evaluation**:
+   - Pretabulated Voigt functions (TABVOIGT)
+   - Lookup tables vs. computation
+   - SIMD/GPU acceleration potential
+
+4. **Binary formats**:
+   - Fast I/O (memory-mapped)
+   - Compact representation
+   - Cache-friendly access patterns
+
+#### Data Management Strategy
+
+**Storage**:
+- Plan for **~100 GB** line data storage
+  - 88 GB predicted wavelengths
+  - 2-10 GB good wavelengths
+  - Molecular data
+  - Future updates (expected to double)
+
+**Access patterns**:
+- Rarely: Load entire line list
+- Often: Load specific wavelength ranges
+- Very often: Pre-binned opacity tables (ODF)
+
+**Development vs. production**:
+- Development: ASCII for debugging, verification, human inspection
+- Production: Binary for performance, memory efficiency
+- Keep both formats synchronized
+
+**Update mechanism**:
+- Check kurucz.harvard.edu/atoms/completed.txt
+- Download new ion data as computed
+- Merge into local line lists
+- Regression test (spectra should improve, not break)
+- Version control (tag data versions with Git)
+
+#### Molecular Data Integration
+
+**From the start**:
+- Include molecular line handling
+- Cool stars (Teff < 6000 K) require molecules
+- Even hot star validation needs molecular subtraction
+
+**Priority molecules** (in order):
+1. TiO (dominant in M stars)
+2. CN, C₂, CO (carbon stars)
+3. H₂O (cool stars, planets)
+4. MgH, CaH, FeH (metal hydrides in cool stars)
+5. OH, SiH, NH (additional hydrides)
+6. H₂ (UV opacity in hot stars)
+
+**Data sources**:
+- kurucz.harvard.edu/molecules/ (ready to use)
+- ExoMol (comprehensive, hot bands)
+- HITRAN (telluric, but some stellar)
+
+---
+
+### 9.12 Key Quotes and Philosophy
+
+**On the incompleteness problem** (1965-1988):
+> "For 23 years I put in more and more lines but I could never get a solar model to look right, to reproduce the observed energy distribution."
+
+**On the 1988 success**:
+> "In 1988 I finally produced enough lines, I thought."
+> "They made observers happy. However, agreement with low resolution observations of integrated properties does not imply correctness."
+
+**On balanced errors**:
+> "In 1988 the opacities were low but were balanced by high abundances that made the lines stronger and high microturbulent velocity that made the lines broader."
+
+**On current status**:
+> "Now the abundances, the convection, and the opacities are still wrong, but they have improved. I am concentrating on filling out the line lists."
+
+**On validation approach**:
+> "From my side, I check the computed gf values in spectrum calculations by comparing to observed spectra. I adjust the gf values so that the spectra match. Then I search for patterns in the adjustments that suggest corrections in the least squares fits."
+
+**On stellar spectra as lab source**:
+> "My hope is that the predicted energy levels can help laboratory spectroscopists to identify more levels and further constrain the least squares fits."
+
+**On data availability**:
+> "Data for each ion and merged line lists are available on my website kurucz.harvard.edu."
+
+---
+
+### 9.13 References from This Paper
+
+**Kurucz's own work**:
+- Kurucz & Peytremann 1975 (SAO Special Report 362) - original semiempirical calculations
+- Kurucz 1988 (Trans. IAU XXB, 168) - 42 million line calculation
+- Kurucz 1992 (Rev. Mexicana Astron. Astrofis. 23, 181) - ODFs
+- Kurucz 1992 (in Stellar Populations, Barbuy & Renzini eds., 225) - solar model
+- Kurucz 2011 (Can. J. Phys. 89, 417) - ASOS 10 previous report
+
+**Collaborations on stellar spectroscopy**:
+- Castelli & Kurucz 2010 (A&A 520, A57) - Fe II levels in HR6000
+- Castelli, Kurucz, & Cowley 2015 (A&A 580, A10) - Mn II levels in HD175460
+- Peterson & Kurucz 2015 (ApJS 216, 1) - 65 new Fe I levels from HST UV spectra
+- Peterson, Kurucz, & Ayres 2017 (in prep) - 59 additional Fe I levels
+
+**Laboratory data sources**:
+- Cowan atomic structure codes (basis for Kurucz modifications)
+- Sugar & Corliss 1985 (J. Phys. Chem. Ref. Data 14, suppl. 2) - energy levels
+- NIST Atomic Spectra Database (http://physics.nist.gov/asd) - ongoing reference
+
+**Solar/stellar data**:
+- Anders & Grevesse 1989 (Geochim. Cosmochim. Acta 53, 197) - solar abundances (1988 baseline)
+- Neckel & Labs 1984 (Solar Phys. 90, 205) - solar energy distribution
+
+---
+
+### 9.14 Summary: Line Data Architecture for Atlas.jl
+
+**What this paper reveals**:
+
+1. **Line lists are constantly evolving** (1988: 58M → 2016: 544M → future: ~1000M)
+   - Need version control, update mechanism, data provenance tracking
+
+2. **Two complementary datasets required**:
+   - Good wavelengths (2.11M lines): high-resolution synthesis
+   - Predicted wavelengths (542M lines): opacity calculations
+   - Must handle both, flag quality
+
+3. **Massive data volume** (88+ GB):
+   - Binary formats essential for production
+   - Memory-mapped file access
+   - Wavelength-indexed queries
+
+4. **Validation is iterative** (compute → compare → adjust → recompute):
+   - Build adjustment tools into pipeline
+   - Use high-resolution atlases (Sun, Vega, Arcturus)
+   - CP stars for extreme testing
+
+5. **Kurucz format is standard**:
+   - Must parse exactly (air vs. vacuum λ, ion codes, damping)
+   - Compatibility with existing atlases and literature
+   - Direct use of kurucz.harvard.edu data releases
+
+6. **Performance critical**:
+   - 544M lines × 72 depths × 30k frequencies = too many calculations
+   - Opacity Distribution Functions (ODF) essential (1000× speedup)
+   - Line selection, pre-tabulation, efficient profiles
+
+7. **Molecular data from start**:
+   - Required for cool stars (Teff < 6000 K)
+   - Needed to isolate atomic features even in hot stars
+   - diatomics.asc ready to use
+
+8. **CP stars and UV spectra enable discovery**:
+   - 124 new Fe I levels from Peterson's HST work
+   - 126 Fe II levels from Castelli's HR6000 work
+   - Stellar atmospheres as extensions of laboratory
+
+**Implementation priority for Atlas.jl**:
+
+| Priority | Component | Rationale |
+|----------|-----------|-----------|
+| 1 | Kurucz format parser (gfall.dat) | Nothing works without line data |
+| 2 | Binary format design (16-48 bytes/line) | 88 GB ASCII too slow for production |
+| 3 | Line opacity routines (Voigt profiles) | Core physics for spectra/opacities |
+| 4 | Opacity Distribution Functions (ODF) | 1000× speedup essential for models |
+| 5 | Partition functions (temperature/density) | Required for level populations |
+| 6 | Molecular line handling (diatomics.asc) | Cool stars + atomic line isolation |
+| 7 | Validation suite (Sun, Vega, Arcturus) | Catch errors early, build confidence |
+| 8 | Update mechanism (check completed.txt) | Benefit from ongoing Kurucz work |
+
+**Key architectural principle**: Line data infrastructure is foundational. Everything else (models, synthesis, analysis) depends on correct, complete, performant line handling.
+
+**Development priority**: Get line data infrastructure right first. Don't replicate 1988's compensating errors (low opacity + high abundances + high microturbulence = accidentally correct). Use modern data from the start.
+
+---
+
+**Section status**: Kurucz 2016 line data paper processed - critical infrastructure requirements identified for Atlas.jl implementation.
