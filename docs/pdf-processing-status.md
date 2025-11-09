@@ -13,6 +13,24 @@ This file tracks the processing of reference papers and manuals for archaeologic
 
 ---
 
+## Progress Summary
+
+**Status**: 6 of 15 PDFs processed (40% complete)
+
+**Completed**:
+- ✅ atlas12.pdf → ARCHITECTURE_DETAILS.md (ATLAS12 documentation)
+- ✅ atlas9+synthe.pdf → SYNTHE_JAUREGI_2005.md (dedicated SYNTHE user guide)
+- ✅ atlaslinux.pdf → ARCHITECTURE_DETAILS.md Section VII (Linux porting)
+- ✅ kurucz_codes05.pdf → ARCHITECTURE_DETAILS.md Section VIII (suite overview)
+- ✅ kurucz05.pdf → ARCHITECTURE_DETAILS.md (SYNTHE/DFSYNTHE optimization)
+- ✅ cjp-2016-0794.pdf → ARCHITECTURE_DETAILS.md Section IX (line data infrastructure)
+
+**Remaining**: 9 PDFs (atlas1970, atlas_synthe_manuals, atlasodfnew, kurucz06, kurucz11, kurucz1996fka, kurucz79, kurucz96, kurucz_avrett81)
+
+**Last updated**: 2025-11-09
+
+---
+
 ## PDFs to Process (15 total)
 
 ### Core ATLAS Documentation
@@ -88,11 +106,23 @@ This file tracks the processing of reference papers and manuals for archaeologic
 
 ### Kurucz Papers and Conference Proceedings
 
-- [ ] **cjp-2016-0794.pdf** - Recent publication (2016)
-  - Date processed:
-  - Related components: TBD
-  - Archaeology docs updated:
+- [x] **cjp-2016-0794.pdf** - "Including all the lines" project progress report (Kurucz 2016)
+  - Date processed: 2025-11-09
+  - Related components: Line data infrastructure, atomic/molecular line lists, opacity calculations
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (Section IX - comprehensive line data documentation)
   - Key findings:
+    - **544 million atomic lines** (H through Zn, 2016 status, expected to double)
+    - **10× expansion**: 58M (1988) → 544M (2016) lines from better configurations and lab data
+    - **Historical insight**: 1988 model matched observations despite all wrong (Fe abundance 1.66× high, etc.) - compensating errors
+    - **Data organization**: /atoms/, /linelists/gfnew/ (good λ), /linelists/gfpred/ (88 GB predicted λ)
+    - **Must use BOTH**: gfall.dat (good wavelengths) + gfall.predall (predicted) for completeness
+    - **Novel discovery method**: CP stars as laboratory (narrow lines, extreme abundances reveal high-n levels)
+    - **Binary format critical**: 88 GB ASCII too slow, need 16-48 bytes/line compressed format
+    - **Memory architecture**: 544M lines requires memory-mapping, wavelength-indexing
+    - **ODF essential**: 1000× speedup required (544M × 72 depths × 30k frequencies = 10¹⁵ calculations)
+    - **Validation strategy**: High-res atlases (Sun, Vega, Arcturus), NOT just integrated properties
+    - **Key quote**: "Agreement with low resolution observations does not imply correctness"
+    - **Bottom line**: Line data infrastructure is foundational - get it right first, don't replicate compensating errors
 
 - [x] **kurucz05.pdf** - 2005 paper "Rapid computation of line opacity in SYNTHE and DFSYNTHE"
   - Date processed: 2025-11-09
@@ -183,3 +213,87 @@ This file tracks the processing of reference papers and manuals for archaeologic
 - **Chronological context**: Earlier papers (1970s-1980s) describe initial implementations
 - **Evolution tracking**: Later papers may document changes and extensions
 - **Cross-references**: Note when multiple PDFs discuss the same feature
+
+---
+
+## Synthesis of Key Findings (6 PDFs Processed)
+
+### Recurring Themes Across Manuscripts
+
+**1. Honest Assessment of Limitations**
+- Kurucz consistently acknowledges code limitations and approximations
+- "ATLAS12 still does not work as originally advertised" (kurucz_codes05.pdf)
+- "Spectra do not reproduce real high-resolution observations" - use differential analysis
+- 1988 model matched observations despite ALL parameters wrong (compensating errors!)
+- Lesson: Don't assume agreement means correctness
+
+**2. Opacity is Everything**
+- 544M atomic lines and growing (cjp-2016-0794.pdf)
+- 1000× speed-up essential via ODFs (kurucz05.pdf)
+- Binary formats critical: 88 GB ASCII too slow
+- Line data infrastructure is foundational - get it right first
+
+**3. Binary Format Challenges**
+- Fortran "unformatted" is compiler-specific (atlas9+synthe.pdf)
+- VMS → ASCII → Linux conversion required (atlaslinux.pdf)
+- Plan JSON/HDF5 for Julia migration
+- Validation: perfect agreement possible (atlaslinux: T, ne indistinguishable from VMS)
+
+**4. The Full Ecosystem is ~25 Programs**
+- Not just ATLAS12 + SYNTHE (kurucz_codes05.pdf)
+- Complete pipeline: model → synthesis → rotation → tellurics → broadening → photometry
+- Many components unimplemented (interstellar, telluric emission)
+- Atlas.jl must decide scope vs. compatibility
+
+**5. Performance Realities**
+- 1 day for ODF opacity tables (kurucz_codes05.pdf)
+- 1 day for model atmosphere grid
+- SYNTHE 6.9× faster on 2004 Linux vs VMS (atlaslinux.pdf)
+- Memory-mapped architecture needed for 544M lines (cjp-2016-0794.pdf)
+
+**6. Critical Bugs and Workarounds**
+- SURFACE FLUX + ROTATE = crash (atlas9+synthe.pdf)
+- Workaround: always use SURFACE INTENSITY with ROTATE
+- GF1200.100 covers 800-1200 nm (not 1200-1300 nm!) - naming exception
+- TiO optimization: skip schwenke.bin for Teff > 4500 K
+
+### Atlas.jl Migration Priorities (from manuscripts)
+
+**Phase 1 - Data Infrastructure** (before any physics):
+1. Line list parsers (gfall.dat format - nothing works without this)
+2. Binary format design (16-48 bytes/line, memory-mapped)
+3. Dual handling: good λ (synthesis) + predicted λ (opacity)
+
+**Phase 2 - Core Physics** (validated separately):
+4. Opacity calculations with ODF support
+5. Saha-Boltzmann populations
+6. Voigt profile computation
+
+**Phase 3 - Integration**:
+7. ATLAS12 atmosphere iteration
+8. SYNTHE synthesis pipeline
+9. Validation vs. high-res atlases (Sun, Vega, Arcturus)
+
+### Questions Resolved by Manuscripts
+
+**Q: Why so many format variations?**
+A: Evolution from VMS to Linux, compiler changes, disk space constraints (atlaslinux.pdf)
+
+**Q: Can we simplify the line data?**
+A: No - need BOTH gfall.dat AND gfall.predall for completeness (cjp-2016-0794.pdf)
+
+**Q: What precision is needed?**
+A: Kurucz philosophy: "0.1% accuracy sufficient" (kurucz05.pdf)
+
+**Q: Why 30,000 frequency points?**
+A: Accurate for total flux, NOT intermediate-band photometry - use SYNTHE for colors (kurucz_codes05.pdf)
+
+### Warnings for Atlas.jl Development
+
+⚠️ **Don't replicate compensating errors**: 1988 code had FOUR major errors that canceled out
+⚠️ **Validation traps**: Low-res integrated properties hide problems
+⚠️ **EOS/partition functions**: 1960s data "still wrong in 2005" - use modern data
+⚠️ **Binary compatibility**: Fortran UNFORMATTED is compiler-specific, plan alternative
+⚠️ **Scope creep**: 25+ programs in full ecosystem - define minimum viable product first
+
+**Last synthesis update**: 2025-11-09
