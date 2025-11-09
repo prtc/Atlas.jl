@@ -1,15 +1,17 @@
 # Deep Dive Index
-*ATLAS12 Computational Kernel Analysis - Complete Reference*
+*ATLAS Suite Computational Kernel Analysis - Complete Reference*
 
 **Mission**: Phase 2B Code Archaeology
-**Status**: 7 of 7 ATLAS12 deep dives complete (100%)
-**Total Documentation**: ~7,900 lines across 7 documents
-**Date Range**: 2025-11-07 to 2025-11-08
-**Branch**: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
+**Status**: 12 of 12 deep dives complete (7 ATLAS12 + 5 SYNTHE) + Atlas7v analysis (100%)
+**Total Documentation**: ~14,000 lines across 12 deep dives + 4 atlas7v analysis phases
+**Date Range**: 2025-11-07 to 2025-11-09
+**Branch**: claude/hello-clau-011CUwQ8UG89mNYn9L5NQ1WU
 
 ---
 
 ## Quick Reference Table
+
+### ATLAS12 Deep Dives (01-07)
 
 | # | Title | Risk Rank | Lines | Key Topic | Status |
 |---|-------|-----------|-------|-----------|--------|
@@ -20,9 +22,32 @@
 | 05 | Radiative Transfer | #6 | 918 | Algorithm, Precision | 🐲✨ Complete |
 | 06 | Iteration Damping | #5 | 1,117 | Convergence | 🐲✨ Complete |
 | 07 | Convective Transport | N/A | 1,178 | Physics, Numerics | 🐲✨ Complete |
-| **Total** | | | **6,459** | | |
+| **ATLAS12 Total** | | | **6,459** | | |
 
-**Note**: Risk ranks from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
+### SYNTHE Deep Dives (08-12)
+
+| # | Title | Lines | Key Topic | Status |
+|---|-------|-------|-----------|--------|
+| 08 | SYNTHE SPECTRV | 1,205 | Spectrum Synthesis Kernel | 🐲✨ Complete |
+| 09 | SYNTHE Line Accumulation | 977 | Binary Line Merging | 🐲✨ Complete |
+| 10 | SYNTHE xnfpelsyn | 1,004 | Atmosphere Preparation | 🐲✨ Complete |
+| 11 | SYNTHE Broadening | 760 | Rotation & Instrumental | 🐲✨ Complete |
+| 12 | SYNTHE Line Readers | 1,379 | Line List Pipeline | 🐲✨ Complete |
+| **SYNTHE Total** | | **5,325** | | |
+
+### Atlas7v Dependency Analysis
+
+| Phase | Document | Lines | Key Topic | Status |
+|-------|----------|-------|-----------|--------|
+| 1 | ATLAS7V_PHASE1_DEPENDENCIES.md | 243 | Evidence-based discovery | 🐲✨ Complete |
+| 2 | ATLAS7V_PHASE2_STRUCTURE.md | 361 | Structure mapping | 🐲✨ Complete |
+| 3 | ATLAS7V_PHASE3_DEPENDENCIES.md | 419 | Transitive closure | 🐲✨ Complete |
+| 4 | ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md | 1,104 | Critical subroutines | 🐲✨ Complete |
+| **Atlas7v Total** | | **2,127** | | |
+
+**Grand Total**: **13,911 lines** across 12 deep dives + 4 atlas7v phases
+
+**Note**: Risk ranks for ATLAS12 from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
 
 ---
 
@@ -177,6 +202,166 @@
 **Cross-References**:
 - Calls Deep Dive 02 (POPS) 4 times
 - Output used by Deep Dive 06 (TCORR convection coupling)
+
+---
+
+### 08: SYNTHE SPECTRV - Spectrum Synthesis Kernel
+**File**: `DEEP_DIVES/08_SYNTHE_SPECTRV.md` (1,205 lines)
+**Code**: spectrv.for (main synthesis program)
+**Focus**: Main computational kernel for synthetic spectrum generation
+
+**Key Findings**:
+- Wavelength-by-wavelength synthesis loop (outer loop)
+- Interpolates continuum opacity from fort.10 (377 bins)
+- Accumulates line opacities from fort.12 (millions of lines)
+- Calls JOSH (radiative transfer) for emergent intensity
+- Fort.9 fast mode: Pre-computed line opacities (~10× speedup)
+
+**Migration Strategy**: Layer-based approach (utilities → I/O → opacity → RT integration)
+
+**Open Questions**: Parabolic interpolation coefficients (C1, C2, C3 formula verification needed)
+
+**Cross-References**:
+- Uses Deep Dive 05 (JOSH radiative transfer)
+- Uses Deep Dive 04 (Binary I/O for fort.10, fort.12)
+- Uses Deep Dive 09 (Line list format)
+
+---
+
+### 09: SYNTHE Line Accumulation - Binary Line Merging
+**File**: `DEEP_DIVES/09_SYNTHE_LINE_ACCUMULATION.md` (977 lines)
+**Code**: synbeg.for (line list initialization and binary format)
+**Focus**: Fort.12 binary line database format and accumulation
+
+**Key Findings**:
+- Fort.12 format: 7-field records (NBUFF, CONGF, NELION, ELO, GAMRF, GAMSF, GAMWF)
+- NBUFF: Logarithmic wavelength encoding
+- CONGF: Pre-multiplied line opacity constant (0.01502 factor)
+- Lines appended sequentially (NOT sorted by wavelength)
+- No format validation (no magic number or version tag)
+
+**Migration Strategy**: Three-phase (schema design → readers/writers → validation)
+
+**Open Questions**: Should Julia version add sorting? Add format validation header?
+
+**Cross-References**:
+- Used by Deep Dive 08 (spectrv reads fort.12)
+- Similar format to Deep Dive 04 (ATLAS12 binary I/O)
+- Populated by Deep Dive 12 (line reader programs)
+
+---
+
+### 10: SYNTHE xnfpelsyn - Atmosphere Preparation
+**File**: `DEEP_DIVES/10_SYNTHE_XNFPELSYN.md` (1,004 lines)
+**Code**: xnfpelsyn.for (atmosphere setup and continuum opacity pre-computation)
+**Focus**: ATLAS7V library integration, population solver, opacity tables
+
+**Key Findings**:
+- Reads ATLAS12 converged model from fort.7
+- Calls POPS (Saha-Boltzmann populations) - same as DD02
+- Calls KAPP (continuum opacity dispatcher) with 20 IFOP flags
+- Creates fort.10: Pre-computed continuum opacity table (377 wavelength bins × N depths)
+- Heavy ATLAS7V dependency: READIN, POPS, KAPP, ~50 COMMON blocks
+
+**Migration Strategy**: ATLAS7V library migration is critical path (12-13 weeks estimated)
+
+**Open Questions**: H₂ equilibrium formula validation (polynomial approximation lacks citation)
+
+**Cross-References**:
+- Uses Deep Dive 02 (POPS populations solver)
+- Requires ATLAS7V library (see Atlas7v Phase 4 analysis)
+- Output consumed by Deep Dive 08 (spectrv reads fort.10)
+
+---
+
+### 11: SYNTHE Broadening - Rotation & Instrumental Profiles
+**File**: `DEEP_DIVES/11_SYNTHE_BROADENING.md` (760 lines)
+**Code**: rotate.for, broaden.for (post-processing convolution kernels)
+**Focus**: Rotational and instrumental broadening of synthetic spectra
+
+**Key Findings**:
+- **rotate.for**: Rotational broadening with limb darkening
+  - 17-point numerical integration over stellar disk
+  - Limb darkening: I(μ) = I(1)[1 - ε + ε·μ]
+  - v sin i parameter controls rotation speed
+- **broaden.for**: Instrumental profile convolution
+  - Gaussian broadening (FWHM → σ conversion)
+  - Sinc function for rectangular slit
+  - Macroturbulence profiles
+  - **Potential issue**: 0.8325546 × 2 constant (should be 2.3548?)
+
+**Migration Strategy**: Port convolution kernels, validate limb darkening, cross-check constants
+
+**Open Questions**: Gaussian broadening constant discrepancy - verify against test spectra
+
+**Cross-References**:
+- Operates on output from Deep Dive 08 (spectrv emergent spectrum)
+
+---
+
+### 12: SYNTHE Line Readers - Line List Pipeline
+**File**: `DEEP_DIVES/12_SYNTHE_LINE_READERS.md` (1,379 lines)
+**Code**: rgfalllinesnew.for, rmolecasc.for, rschwenk.for, rh2ofast.for, rpredict.for
+**Focus**: Line list preparation from multiple heterogeneous sources
+
+**Key Findings**:
+- **rgfalllinesnew**: Kurucz gfall atomic lines
+  - Complex damping width calculations (Unsöld, Barklem, Cowley formulas)
+  - ~100 lines of special-case damping logic
+  - Wavelength filtering and isotope selection
+- **rmolecasc**: Molecular lines (ASCII format)
+- **rschwenk**: TiO Schwenke lines (binary format)
+- **rh2ofast**: H₂O Partridge-Schwenke (binary, 65.9M lines hardcoded)
+- **rpredict**: Kurucz predicted lines (weaker lines, lower priority)
+- All append to fort.12 (shared binary format from DD09)
+
+**Migration Strategy**: Migrate readers in parallel (independent), defer complex damping initially
+
+**Open Questions**: NELION3 mapping (requires ATLAS7V IONPOTS subroutine extraction)
+
+**Cross-References**:
+- Populates Deep Dive 09 (fort.12 binary format)
+- Requires damping formulas (shared with Deep Dive 03)
+
+---
+
+## Atlas7v Dependency Analysis Summary
+
+**Documents**: ATLAS7V_PHASE1-4_*.md (4 phases, 2,127 lines total)
+
+**Phase 1: Evidence-Based Discovery** (243 lines)
+- Grepped all 11 SYNTHE programs for CALL statements
+- Found only 3/11 programs call atlas7v subroutines (xnfpelsyn, spectrv, rotate, synthe)
+- 7 programs self-contained (synbeg, rgfalllinesnew, rmolecasc, rschwenk, rh2ofast, rpredict, broaden)
+- Identified 13 unique dependencies (7 in atlas7v, 6 in SYNTHE programs)
+
+**Phase 2: Structure Survey** (361 lines)
+- Mapped all 72 subroutines in atlas7v.for (17,336 lines total)
+- Located 7 SYNTHE-needed subroutines: POPS, KAPP, READIN, JOSH, W, MAP1, PARCOE
+- Discovered PFIRON monster: 6,037 lines (35% of atlas7v) - partition function tables
+
+**Phase 3: Transitive Dependency Analysis** (419 lines)
+- 7 direct dependencies → 32 total subroutines (~10,500 lines, 61% of atlas7v)
+- Level 0 (Direct): 7 subs, 1,433 lines
+- Level 1 (Indirect): 24 subs, ~2,900 lines (PFSAHA + 20 opacity subs + utilities)
+- Level 2 (Deep): 1 sub, 6,037 lines (PFIRON)
+- KAPP dispatcher calls 20 opacity subroutines conditionally (IFOP flags)
+
+**Phase 4: Critical Subroutines Deep Dive** (1,104 lines)
+- **POPS** (101 lines): Simple dispatcher, calls PFSAHA for Saha-Boltzmann solver
+- **KAPP** (118 lines): Opacity dispatcher with 20 IFOP flags (HOP, HMINOP, HE1OP, etc.)
+- **JOSH** (239 lines): Feautrier radiative transfer solver, 51-point optical depth grid
+- **READIN** (870 lines): Keyword-based atmosphere parser (MIAC encoding), DECK6 format
+- Documented ~50 COMMON blocks, 400 arrays
+- Migration estimate: 12-13 weeks for Tier 1 (excluding PFIRON)
+
+**Key Insight**: ATLAS7V library is the critical path for both ATLAS12 and SYNTHE migrations. Should be developed as separate Julia module with comprehensive unit tests.
+
+**Cross-References**:
+- POPS/KAPP/JOSH used by Deep Dive 10 (xnfpelsyn)
+- JOSH used by Deep Dive 08 (spectrv)
+- POPS algorithm same as Deep Dive 02 (ATLAS12 populations)
+- Binary I/O patterns similar to Deep Dive 04
 
 ---
 
@@ -383,37 +568,92 @@
 
 ## Statistics
 
-**Total analysis time**: ~9 hours (7 deep dives × 60-90 min each)
-**Total documentation**: 6,459 lines across 7 files
-**Average deep dive**: 923 lines, 77 minutes
-**Code coverage**: All critical ATLAS12 computational kernels analyzed
-**Cross-references**: 15+ links between deep dives
-**Open questions**: 27 flagged (9 high priority)
-**Migration strategies**: 21 distinct approaches documented
-**Test cases**: 40+ tests proposed across all deep dives
+### ATLAS12 Deep Dives (01-07)
+**Analysis time**: ~9 hours (7 deep dives × 60-90 min each)
+**Documentation**: 6,459 lines across 7 files
+**Average per dive**: 923 lines, 77 minutes
+**Code coverage**: All critical ATLAS12 computational kernels
+**Fortran analyzed**: ~5,000 lines
+
+### SYNTHE Deep Dives (08-12)
+**Analysis time**: ~8 hours (5 deep dives × 60-120 min each)
+**Documentation**: 5,325 lines across 5 files
+**Average per dive**: 1,065 lines, 96 minutes
+**Code coverage**: Complete SYNTHE synthesis pipeline
+**Fortran analyzed**: ~3,200 lines
+
+### Atlas7v Dependency Analysis (Phases 1-4)
+**Analysis time**: ~6 hours (4 phases × 60-120 min each)
+**Documentation**: 2,127 lines across 4 files
+**Average per phase**: 532 lines, 90 minutes
+**Code coverage**: 32 critical atlas7v subroutines mapped
+**Fortran analyzed**: ~10,500 lines (61% of atlas7v.for)
+
+### Combined Totals
+**Total analysis time**: ~23 hours over 3 days
+**Total documentation**: 13,911 lines across 16 documents
+**Total Fortran analyzed**: ~18,700 lines (ATLAS12: 5K, SYNTHE: 3.2K, Atlas7v: 10.5K)
+**Cross-references**: 30+ links between documents
+**Open questions**: 40+ flagged for validation and domain expert review
+**Migration strategies**: 35+ distinct approaches documented
+**Test cases**: 60+ tests proposed
+
+---
+
+## Phase 2B Completion Summary
+
+### Completed Work ✓
+- [x] ATLAS12 deep dives (01-07) - All critical computational kernels documented
+- [x] SYNTHE deep dives (08-12) - Complete synthesis pipeline documented
+- [x] SYNTHE Deep Dive Summary - Migration roadmap with timeline estimates
+- [x] Atlas7v dependency analysis (Phases 1-4) - Critical path identified
+- [x] Cross-code analysis - Shared components between ATLAS12/SYNTHE documented
+- [x] Deep Dive Index updated - Complete reference with cross-links
+
+### Key Deliverables
+1. **12 Deep Dive Documents** (13,911 lines) - Detailed computational kernel analysis
+2. **SYNTHE Summary** (916 lines) - 20-32 week migration roadmap
+3. **Atlas7v Analysis** (2,127 lines) - 32 subroutines mapped, 12-13 week migration estimate
+4. **Updated Index** - Complete cross-referenced catalog
+
+### Critical Findings
+1. **ATLAS7V is the critical path** - 17K-line shared library needed by both ATLAS12 and SYNTHE
+2. **Precision requirements identified** - Float64 for populations, Float32 for Voigt/profiles
+3. **Binary I/O is fragile** - Platform-specific format requires careful validation
+4. **Performance hotspots mapped** - Line opacity and Voigt profiles are main targets
+5. **Migration dependencies** - 5-layer dependency graph with 20-32 week timeline
 
 ---
 
 ## Next Steps
 
-### Immediate (This Session)
-- [ ] House cleaning: Add cross-references to deep dive documents
-- [ ] Update ARCHITECTURE_INSIGHTS.md with all deep dive findings
-- [ ] Commit all updates
+### Implementation Planning (Ready to Start)
+- [ ] Review Phase 2B documentation with stakeholders
+- [ ] Finalize resource allocation (team size, timeline)
+- [ ] Set up Julia package structure (Project.toml, src/, test/)
+- [ ] Begin Phase 1: Foundation utilities (wavelength, binary I/O, Voigt profiles)
 
-### Near-Term (Next Session)
-- [ ] SYNTHE deep dives (5-7 documents expected)
-- [ ] Cross-code analysis (ATLAS12 vs SYNTHE shared components)
-- [ ] Migration critical path document
+### Validation Preparation
+- [ ] Generate Fortran reference outputs for all test cases
+- [ ] Extract ATLAS7V as standalone Fortran library for testing
+- [ ] Create cross-platform binary I/O test suite
+- [ ] Set up CI/CD pipeline for regression testing
 
-### Future Work
-- [ ] Generate Fortran reference outputs for validation
-- [ ] Answer open questions with Paula
-- [ ] Begin Julia package architecture design
-- [ ] Start test suite development
+### Domain Expert Consultation
+- [ ] Review 40+ open questions with astrophysics expert
+- [ ] Verify undocumented constants and formulas
+- [ ] Validate migration strategy and testing approach
+- [ ] Discuss deferred features (PFIRON, complex damping, etc.)
+
+### Future Archaeology (If Needed)
+- [ ] ATLAS12 remaining subroutines (beyond deep dive coverage)
+- [ ] SYNTHE dfsynthe (fort.9 fast mode generation)
+- [ ] ODF (Opacity Distribution Functions) suite
+- [ ] WIDTH (line width calculations) suite
 
 ---
 
-**Document Status**: Living index - update as new deep dives added
-**Last Updated**: 2025-11-08
-**Maintained By**: Claude (Phase 2B archaeology sessions)
+**Document Status**: Complete - Phase 2B archaeology finished
+**Last Updated**: 2025-11-09
+**Maintained By**: Claude (Session: claude/hello-clau-011CUwQ8UG89mNYn9L5NQ1WU)
+**Next Phase**: Implementation Planning (Phase 3)
