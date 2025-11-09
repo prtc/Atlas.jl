@@ -641,7 +641,13 @@ SYNTHE is an **11-program sequential pipeline** for synthetic spectrum calculati
 - Computes molecular equilibrium abundances
 - Calculates continuum opacity (H⁻, H₂⁺, Rayleigh, etc.)
 
-⚠️ **TODO**: Document ATLAS7V interface (which subroutines called, what they do)
+✅ **ATLAS7V INTERFACE DOCUMENTED** - See:
+- `ATLAS7V_PHASE1_DEPENDENCIES.md` - Evidence-based discovery of SYNTHE→atlas7v dependencies
+- `ATLAS7V_PHASE2_STRUCTURE.md` - Complete atlas7v.for structure map (72 subroutines)
+- `ATLAS7V_PHASE3_DEPENDENCIES.md` - Transitive dependency analysis (7→32 subroutines)
+- `ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md` - Detailed analysis of POPS, KAPP, JOSH, READIN
+- **Key subroutines**: READIN (atmosphere parser), POPS (populations), KAPP (opacity), JOSH (radiative transfer)
+- **Migration estimate**: 12-13 weeks for Tier 1 critical subroutines
 
 ---
 
@@ -991,20 +997,31 @@ Convolve spectrum with instrumental profile:
 
 #### What ATLAS7V provides
 
-❓ **UNCERTAIN** - Requires detailed analysis of 17K-line file. From context:
-- Atmosphere structure interpolation (T, P, ρ vs depth)
-- Reading ATLAS model files
-- Partition function calculations
-- Possibly molecular equilibrium routines
-- Possibly continuum opacity calculations
+✅ **FULLY ANALYZED** - See `ATLAS7V_PHASE1-4_*.md` (4-phase analysis, 2,127 lines):
 
-⚠️ **CRITICAL TODO**: Document ATLAS7V interface
-- List all SUBROUTINEs exported
-- Identify which ones are called by xnfpelsyn vs spectrv
-- Determine if any ATLAS7V code is duplicated in ATLAS12 (potential shared migration target)
-- Check if ATLAS7V has its own COMMON blocks that need documentation
+**Phase 1: Evidence-Based Discovery** (243 lines)
+- Identified 13 unique dependencies (7 in atlas7v, 6 in SYNTHE programs)
+- Only 3/11 SYNTHE programs call atlas7v: xnfpelsyn, spectrv, rotate, synthe
 
-**Migration strategy**: ATLAS7V is complex enough that it should be migrated as a separate Julia module, then imported by SYNTHE pipeline programs.
+**Phase 2: Structure Survey** (361 lines)
+- Mapped all 72 subroutines in atlas7v.for (17,336 lines)
+- Located 7 SYNTHE-needed subroutines: POPS, KAPP, READIN, JOSH, W, MAP1, PARCOE
+- PFIRON: 6,037 lines (35% of file) - massive partition function tables
+
+**Phase 3: Transitive Dependencies** (419 lines)
+- 7 direct → 32 total subroutines via transitive closure (~10,500 lines, 61% of atlas7v)
+- KAPP dispatcher calls 20 opacity subroutines conditionally (IFOP flags)
+
+**Phase 4: Critical Subroutines** (1,104 lines)
+- **POPS** (101 lines): Saha-Boltzmann population solver dispatcher
+- **KAPP** (118 lines): Continuum opacity dispatcher (20 IFOP flags: HOP, HMINOP, HE1OP, etc.)
+- **JOSH** (239 lines): Feautrier radiative transfer solver (51-point optical depth grid)
+- **READIN** (870 lines): Keyword-based atmosphere parser (MIAC encoding, DECK6 format)
+- Documented ~50 COMMON blocks, 400 arrays
+
+**Shared with ATLAS12**: Yes - POPS, KAPP, JOSH, READIN used by both ATLAS12 and SYNTHE
+
+**Migration strategy**: ATLAS7V should be migrated as separate Julia module (`AtlasPhysics.jl`), imported by both ATLAS12 and SYNTHE. Estimated 12-13 weeks for Tier 1 critical subroutines (excluding PFIRON).
 
 ---
 
