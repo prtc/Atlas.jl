@@ -234,6 +234,13 @@ spectrv
 **Priority**: Critical (shared with ATLAS12 migration)
 **Note**: This is the **core physics library** used by both ATLAS and SYNTHE. Should be migrated as a separate module with comprehensive unit tests.
 
+**✅ Detailed Analysis Complete**: See 4-phase atlas7v dependency analysis:
+- `ATLAS7V_PHASE1_DEPENDENCIES.md` - Evidence-based discovery (13 dependencies identified)
+- `ATLAS7V_PHASE2_STRUCTURE.md` - Complete structure map (72 subroutines, 17,336 lines)
+- `ATLAS7V_PHASE3_DEPENDENCIES.md` - Transitive closure (7→32 subroutines, ~10,500 lines)
+- `ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md` - Deep dive on POPS, KAPP, JOSH, READIN (1,104 lines)
+- **Migration estimate refined**: 12-13 weeks for Tier 1 (excluding PFIRON)
+
 ### Layer 3: Atmosphere Preparation (Depends on Layer 0, 2)
 
 ```
