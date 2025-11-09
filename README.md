@@ -73,7 +73,7 @@ We are documenting this collaboration process, as we believe it may offer insigh
 
 This work is currently funded through:
 - Paula's Claude Pro subscription for strategic planning and synthesis work
-- Anthropic's $250 research preview credit for Claude Code (web interface), which enabled the intensive Phase 1 code archaeology work
+- Anthropic's $250 research preview credit for Claude Code (web interface), which enabled the intensive code archaeology work
 
 We are grateful to Anthropic for making the technology available and for the research credit that catalyzed this project. Future phases will depend on securing additional computational resources, potentially through research credit applications to AI organizations or traditional grant funding.
 
@@ -91,7 +91,7 @@ We believe in transparency about both process and product:
 
 ---
 
-## Repository Structure
+## Repository Structure (abridged)
 
 ```
 atlas.jl/
@@ -128,7 +128,7 @@ The timeline and scope will evolve based on available resources and community in
   </figcaption>
 </figure>
 
-Kurucz's decades of Fortran wizardry - intricate COMMON block choreography, implicit state dependencies, fort.X unit juggling - was challenging even for AI pattern recognition. We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
+Decades of Fortran wizardry, intricate COMMON block choreography, implicit state dependencies and fort.X unit juggling was challenging even for AI pattern recognition. We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
 
 ---
 
