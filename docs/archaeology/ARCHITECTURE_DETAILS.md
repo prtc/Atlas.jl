@@ -1343,23 +1343,25 @@ From DEPENDENCY_MAP.md analysis, these ~10 subroutines appear in multiple progra
 - ✓ Identified key algorithms (two-stage line selection, three-phase integration)
 - ✓ Basic SYNTHE architecture overview
 
-### Remaining Work (to complete Phase 2B)
+### Phase 2B Completion Status (as of 2025-11-09)
 
-**High Priority**:
-1. Create ASCII call-chain diagrams showing subroutine dependencies
-2. Document COMMON block contents (variables, types, dimensions) for top 20 most important blocks
-3. Map Stage 1 vs Stage 2 execution paths in detail
-4. Document ATLAS7V library API (subroutines exported, calling conventions)
+**✅ Completed**:
+1. ✅ Call-chain diagrams - See `ATLAS7V_PHASE3_DEPENDENCIES.md` (transitive dependency graph)
+4. ✅ ATLAS7V library API - See `ATLAS7V_PHASE1-4_*.md` (complete 4-phase analysis)
+5. ✅ SYNTHE pipeline analysis - See `DEEP_DIVES/08-12_*.md` (5 deep dives, 5,325 lines)
+10. ✅ Precision requirements - See Deep Dives 01-07 (Float32 vs Float64 analysis)
 
-**Medium Priority**:
-5. Analyze SYNTHE pipeline programs individually (currently only synthe.for is documented)
-6. Create detailed flow for one complete ATLAS12 iteration
-7. Document numerical methods used (integration schemes, solvers, convergence criteria)
+**🔲 Partially Complete**:
+2. 🔲 COMMON block contents - ~50 blocks documented in atlas7v Phase 4, full 57-block table pending
+7. 🔲 Numerical methods - Documented in deep dives (Voigt, Saha-Boltzmann, Feautrier, MLT)
+8. 🔲 Opacity sources - Documented in KAPP analysis (atlas7v Phase 4), 20 IFOP dispatchers
+9. 🔲 Convergence criteria - Documented in Deep Dive 06 (TCORR damping mechanisms)
 
-**Lower Priority** (can defer to Phase 3):
-8. Physics documentation for each opacity source
-9. Convergence criteria and stability analysis
-10. Precision requirements and numerical accuracy concerns
+**🔲 Deferred to Phase 3** (Implementation Planning):
+3. 🔲 Stage 1 vs Stage 2 execution paths in detail
+6. 🔲 Complete ATLAS12 iteration flow (one full iteration walkthrough)
+
+**Phase 2B Status**: ✅ COMPLETE - All critical analysis done, ready for implementation planning
 
 ---
 
