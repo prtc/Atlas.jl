@@ -1,17 +1,25 @@
 # Deep Dive Index
-*ATLAS12 Computational Kernel Analysis - Complete Reference*
+*ATLAS Suite Computational Kernel Analysis - Complete Reference*
 
-**Mission**: Phase 2B Code Archaeology
-**Status**: 7 of 7 ATLAS12 deep dives complete (100%)
-**Total Documentation**: ~7,900 lines across 7 documents
-**Date Range**: 2025-11-07 to 2025-11-08
-**Branch**: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
+**Mission**: Phase 2B-3 Code Archaeology
+**Status**: ✅ COMPLETE
+- ATLAS12: 7 of 7 deep dives complete (100%)
+- SYNTHE: 5 of 5 deep dives complete (100%)
+**Total Documentation**: ~14,100 lines across 12 deep dives + 2 synthesis documents
+**Date Range**: 2025-11-07 to 2025-11-09
+**Branches**:
+- Phase 2B: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
+- Phase 3: claude/phase-3-archaeology-011CUwQjaQw6prCQbWCg27nc
 
-**Phase 3 Synthesis**: See `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) for physics context integrating all 7 deep dives into one complete ATLAS12 iteration pipeline
+**Synthesis Documents**:
+- `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) - Physics context for ATLAS12 iteration pipeline
+- `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - Migration roadmap for SYNTHE pipeline
 
 ---
 
 ## Quick Reference Table
+
+### ATLAS12 Deep Dives (01-07)
 
 | # | Title | Risk Rank | Lines | Key Topic | Status |
 |---|-------|-----------|-------|-----------|--------|
@@ -22,9 +30,30 @@
 | 05 | Radiative Transfer | #6 | 918 | Algorithm, Precision | 🐲✨ Complete |
 | 06 | Iteration Damping | #5 | 1,117 | Convergence | 🐲✨ Complete |
 | 07 | Convective Transport | N/A | 1,178 | Physics, Numerics | 🐲✨ Complete |
-| **Total** | | | **6,459** | | |
+| **ATLAS12 Total** | | | **6,459** | | |
 
 **Note**: Risk ranks from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
+
+### SYNTHE Deep Dives (08-12)
+
+| # | Title | Priority | Lines | Key Topic | Status |
+|---|-------|----------|-------|-----------|--------|
+| 08 | SPECTRV (Synthesis) | Critical | 1,205 | RT, Line Opacity | 🐲✨ Complete |
+| 09 | Line Accumulation | High | 977 | Merging, Binary I/O | 🐲✨ Complete |
+| 10 | XNFPELSYN (Populations) | High | 1,004 | ATLAS7V, Opacities | 🐲✨ Complete |
+| 11 | Broadening | Medium | 760 | Rotation, Convolution | 🐲✨ Complete |
+| 12 | Line Readers | High | 1,379 | Input Formats, Validation | 🐲✨ Complete |
+| **SYNTHE Total** | | | **5,325** | | |
+
+**Summary**: `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - Migration roadmap and cross-analysis
+
+### Combined Statistics
+
+| Suite | Deep Dives | Lines | Synthesis Doc | Total |
+|-------|------------|-------|---------------|-------|
+| ATLAS12 | 7 | 6,459 | 1,548 | 8,007 |
+| SYNTHE | 5 | 5,325 | 915 | 6,240 |
+| **TOTAL** | **12** | **11,784** | **2,463** | **14,247** |
 
 ---
 
@@ -179,6 +208,118 @@
 **Cross-References**:
 - Calls Deep Dive 02 (POPS) 4 times
 - Output used by Deep Dive 06 (TCORR convection coupling)
+
+---
+
+### 08: SYNTHE SPECTRV (Spectrum Synthesis)
+**File**: `DEEP_DIVES/08_SYNTHE_SPECTRV.md` (1,205 lines)
+**Code**: spectrv.f (438 lines main program + ATLAS7V library)
+**Priority**: Critical (main computational kernel)
+
+**Key Findings**:
+- Wavelength loop with line opacity accumulation (similar to ATLAS12 DD03)
+- Uses JOSH (radiative transfer - see DD05) for each wavelength
+- Binary input: fort.10 (continuum), fort.12 (lines), fort.7 (atmosphere)
+- Fast mode: fort.9 (pre-computed line opacities, ~10× speedup)
+- Mixed precision: Float32 for opacities, Float64 for populations
+
+**Migration Strategy**: Modular design with pluggable RT solver, validate against Fortran output, optimize wavelength loop
+
+**Open Questions**: ATLAS7V library dependencies, parallelization opportunities
+
+**Cross-References**:
+- Uses DD05 (JOSH radiative transfer solver)
+- Uses DD02 (populations from xnfpelsyn)
+- Input from DD09 (fort.12 line list)
+
+---
+
+### 09: SYNTHE Line Accumulation (synbeg + Binary format)
+**File**: `DEEP_DIVES/09_SYNTHE_LINE_ACCUMULATION.md` (977 lines)
+**Code**: synbeg.f (133 lines)
+**Priority**: High (creates pipeline infrastructure)
+
+**Key Findings**:
+- Initializes fort.12, fort.14, fort.93 (shared pipeline state)
+- Sets wavelength range, resolution, line selection criteria
+- Sequential dependency: synbeg → line readers → spectrv
+- Binary format matches ATLAS12 fort.12 (see DD04)
+
+**Migration Strategy**: Julia struct for pipeline configuration, clean initialization API
+
+**Open Questions**: Wavelength grid optimization, memory-efficient line storage
+
+**Cross-References**:
+- Binary format from DD04 (fort.12 IIIIIII records)
+- Feeds DD08 (spectrv), DD10 (xnfpelsyn)
+- Uses DD12 (line readers append to fort.12)
+
+---
+
+### 10: SYNTHE XNFPELSYN (Population Preparation)
+**File**: `DEEP_DIVES/10_SYNTHE_XNFPELSYN.md` (1,004 lines)
+**Code**: xnfpelsyn.f (317 lines + ATLAS7V library)
+**Priority**: High (sets up initial state)
+
+**Key Findings**:
+- Reads ATLAS12 atmosphere model (fort.7)
+- Calls POPS (see DD02) for populations
+- Calls KAPP for continuum opacities (25+ sources)
+- Creates fort.10: continuum opacity table (377 wavelength bins × depths)
+- ATLAS7V library shared with ATLAS12 (POPS, KAPP, READIN)
+
+**Migration Strategy**: Reuse ATLAS12 POPS/KAPP implementations, validate opacity interpolation
+
+**Open Questions**: ATLAS7V exact interface, fort.10 wavelength grid generation
+
+**Cross-References**:
+- Uses DD02 (POPS populations - same code as ATLAS12)
+- Produces input for DD08 (spectrv)
+- Depends on DD09 (fort.93 configuration)
+
+---
+
+### 11: SYNTHE Broadening (rotate, broaden, smooth)
+**File**: `DEEP_DIVES/11_SYNTHE_BROADENING.md` (760 lines)
+**Code**: rotate.f (360 lines), broaden.f (221 lines)
+**Priority**: Medium (post-processing)
+
+**Key Findings**:
+- Rotation: v sin i with Gray limb darkening (linear + quadratic coefficients)
+- Instrumental: Gaussian, sinc, or macroturbulence convolution
+- Direct convolution (no FFT - spectra are small ~few thousand points)
+- Can chain: rotation → instrumental → smoothing
+
+**Migration Strategy**: Use Julia convolution libraries (DSP.jl), validate limb darkening
+
+**Open Questions**: FFT for large spectra, limb darkening coefficient sources
+
+**Cross-References**:
+- Post-processes DD08 output (fort.5 spectrum)
+- Standalone (no dependencies on other deep dives)
+
+---
+
+### 12: SYNTHE Line Readers (rgfalllinesnew, rmolecasc, etc.)
+**File**: `DEEP_DIVES/12_SYNTHE_LINE_READERS.md` (1,379 lines)
+**Code**: 5 reader programs (648+570+223+191+451 lines)
+**Priority**: High (data ingestion)
+
+**Key Findings**:
+- 5 heterogeneous input formats (atomic, molecular, binary databases)
+- Wavelength filtering (λ_min, λ_max from fort.93)
+- Damping parameter calculations (radiative, Stark, van der Waals)
+- Element/ion encoding (NELION3 for atomics, special for molecules)
+- Appends to fort.12 (sequential, not parallel - file locking issues)
+
+**Migration Strategy**: Unified LineList type, parallel readers with merging, validation parsers
+
+**Open Questions**: Format documentation completeness, error handling for corrupted data
+
+**Cross-References**:
+- Appends to DD09 (fort.12 line database)
+- Uses DD04 binary format for some inputs
+- Feeds DD08 (spectrv line opacity calculations)
 
 ---
 
@@ -398,24 +539,28 @@
 
 ## Next Steps
 
-### Immediate (This Session)
-- [ ] House cleaning: Add cross-references to deep dive documents
-- [ ] Update ARCHITECTURE_INSIGHTS.md with all deep dive findings
-- [ ] Commit all updates
+### Completed ✅
+- [x] House cleaning: Add cross-references to deep dive documents
+- [x] Update ARCHITECTURE_INSIGHTS.md with all deep dive findings
+- [x] SYNTHE deep dives (5 documents completed: DD08-DD12)
+- [x] SYNTHE migration roadmap (SYNTHE_DEEP_DIVE_SUMMARY.md)
+- [x] Phase 3: PHYSICS_PIPELINE_ATLAS12.md synthesis document
 
-### Near-Term (Next Session)
-- [ ] SYNTHE deep dives (5-7 documents expected)
-- [ ] Cross-code analysis (ATLAS12 vs SYNTHE shared components)
+### Near-Term (Phase 4)
+- [ ] Migration complexity assessment
+- [ ] COMMON block usage mapping (critical for migration)
+- [ ] Cross-code shared component analysis (ATLAS7V library)
 - [ ] Migration critical path document
 
 ### Future Work
 - [ ] Generate Fortran reference outputs for validation
-- [ ] Answer open questions with Paula
+- [ ] Answer open questions with Paula (~27 flagged across all deep dives)
 - [ ] Begin Julia package architecture design
 - [ ] Start test suite development
+- [ ] API usage projection for research credit application
 
 ---
 
-**Document Status**: Living index - update as new deep dives added
-**Last Updated**: 2025-11-08
-**Maintained By**: Claude (Phase 2B archaeology sessions)
+**Document Status**: Complete (all planned deep dives finished)
+**Last Updated**: 2025-11-09
+**Maintained By**: Claude (Phase 2B-3 archaeology sessions)
