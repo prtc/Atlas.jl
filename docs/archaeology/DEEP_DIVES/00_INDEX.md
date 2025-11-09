@@ -5,15 +5,15 @@
 **Status**: ✅ COMPLETE
 - ATLAS12: 7 of 7 deep dives complete (100%)
 - SYNTHE: 5 of 5 deep dives complete (100%)
-**Total Documentation**: ~16,000 lines across 12 deep dives + 3 synthesis documents
+**Total Documentation**: 16,097 lines across 12 deep dives + 3 synthesis documents
 **Date Range**: 2025-11-07 to 2025-11-09
 **Branches**:
 - Phase 2B: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
 - Phase 3: claude/phase-3-archaeology-011CUwQjaQw6prCQbWCg27nc
 
 **Synthesis Documents**:
-- `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) - Physics of ATLAS12 iteration (WHAT/WHY)
-- `PHYSICS_PIPELINE_SYNTHE.md` (1,950 lines) - Physics of SYNTHE synthesis (WHAT/WHY)
+- `PHYSICS_PIPELINE_ATLAS12.md` (1,547 lines) - Physics of ATLAS12 iteration (WHAT/WHY)
+- `PHYSICS_PIPELINE_SYNTHE.md` (1,607 lines) - Physics of SYNTHE synthesis (WHAT/WHY)
 - `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - SYNTHE migration roadmap (HOW)
 
 ---
@@ -25,13 +25,13 @@
 | # | Title | Risk Rank | Lines | Key Topic | Status |
 |---|-------|-----------|-------|-----------|--------|
 | 01 | Voigt Profile | #2 | 628 | Algorithm, Performance | 🐲✨ Complete |
-| 02 | Populations | #1 | 731 | Precision, Overflow | 🐲✨ Complete |
-| 03 | Line Opacity | #3 | 921 | Precision, Performance | 🐲✨ Complete |
+| 02 | Populations | #1 | 754 | Precision, Overflow | 🐲✨ Complete |
+| 03 | Line Opacity | #3 | 934 | Precision, Performance | 🐲✨ Complete |
 | 04 | Binary I/O | #4 | 966 | Format Compatibility | 🐲✨ Complete |
 | 05 | Radiative Transfer | #6 | 918 | Algorithm, Precision | 🐲✨ Complete |
-| 06 | Iteration Damping | #5 | 1,117 | Convergence | 🐲✨ Complete |
-| 07 | Convective Transport | N/A | 1,178 | Physics, Numerics | 🐲✨ Complete |
-| **ATLAS12 Total** | | | **6,459** | | |
+| 06 | Iteration Damping | #5 | 1,132 | Convergence | 🐲✨ Complete |
+| 07 | Convective Transport | N/A | 1,371 | Physics, Numerics | 🐲✨ Complete |
+| **ATLAS12 Total** | | | **6,703** | | |
 
 **Note**: Risk ranks from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
 
@@ -52,9 +52,9 @@
 
 | Suite | Deep Dives | Lines | Synthesis Docs | Total |
 |-------|------------|-------|----------------|-------|
-| ATLAS12 | 7 | 6,459 | 1,548 (physics) | 8,007 |
-| SYNTHE | 5 | 5,325 | 2,865 (physics + migration) | 8,190 |
-| **TOTAL** | **12** | **11,784** | **4,413** | **16,197** |
+| ATLAS12 | 7 | 6,703 | 1,547 (physics) | 8,250 |
+| SYNTHE | 5 | 5,325 | 2,522 (physics + migration) | 7,847 |
+| **TOTAL** | **12** | **12,028** | **4,069** | **16,097** |
 
 ---
 
@@ -527,9 +527,9 @@
 
 ## Statistics
 
-**Total analysis time**: ~9 hours (7 deep dives × 60-90 min each)
-**Total documentation**: 6,459 lines across 7 files
-**Average deep dive**: 923 lines, 77 minutes
+**Total analysis time**: ~18 hours (12 deep dives × 60-120 min each)
+**Total documentation**: 12,028 lines across 12 deep dives
+**Average deep dive**: 1,002 lines, 90 minutes
 **Code coverage**: All critical ATLAS12 computational kernels analyzed
 **Cross-references**: 15+ links between deep dives
 **Open questions**: 27 flagged (9 high priority)
@@ -545,8 +545,8 @@
 - [x] Update ARCHITECTURE_INSIGHTS.md with all deep dive findings
 - [x] SYNTHE deep dives (5 documents completed: DD08-DD12)
 - [x] SYNTHE migration roadmap (SYNTHE_DEEP_DIVE_SUMMARY.md)
-- [x] Phase 3: PHYSICS_PIPELINE_ATLAS12.md synthesis document (1,548 lines)
-- [x] Phase 3 extension: PHYSICS_PIPELINE_SYNTHE.md physics document (1,950 lines)
+- [x] Phase 3: PHYSICS_PIPELINE_ATLAS12.md synthesis document (1,547 lines)
+- [x] Phase 3 extension: PHYSICS_PIPELINE_SYNTHE.md physics document (1,607 lines)
 
 ### Near-Term (Phase 4)
 - [ ] Migration complexity assessment
