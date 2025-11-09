@@ -250,11 +250,85 @@ House cleaning finds and fixes these issues before they confuse future readers (
 
 ---
 
+### Task 9: Merge Conflict Detection (CRITICAL PRE-FLIGHT)
+
+**Goal**: Detect and resolve unresolved merge conflicts BEFORE other house cleaning tasks.
+
+**Why this is critical**: Unresolved conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) corrupt documentation and must be fixed immediately.
+
+**How to do it**:
+1. **FIRST THING**: Search for conflict markers:
+   ```bash
+   grep -r "<<<<<<\|>>>>>>>\|=======" docs/
+   ```
+2. If found, **STOP** and resolve conflicts before continuing
+3. For each conflict:
+   - Read both versions (HEAD vs incoming branch)
+   - Keep the more comprehensive/accurate version
+   - If both have value, merge manually
+   - Remove ALL conflict markers
+4. Verify resolution: re-run grep to confirm no markers remain
+
+**Common causes**:
+- Merging branches with concurrent work
+- Incomplete merge resolution
+- Git operations interrupted mid-merge
+
+**Example from 2025-11-09**:
+- Found 3 unresolved conflicts in 00_INDEX.md after big merge
+- HEAD version was more comprehensive in all cases
+- Removed 152 lines of duplicate/conflicting content
+- Critical fix: document was malformed without this
+
+---
+
+### Task 10: Manuscript/PDF Processing Updates
+
+**Goal**: Keep processing status and cross-references current for academic papers and manuals.
+
+**What to look for**:
+- Progress tracking files (e.g., `docs/archaeology/papers/PROCESSING_STATUS.md`)
+- PDF processing checklists with unmarked completed items
+- Key findings that should link to architecture/decision documents
+- Opportunities to synthesize across multiple related papers
+
+**How to do it**:
+1. **Update progress tracking**:
+   - Mark processed PDFs with checkboxes ✅
+   - Update counts (e.g., "3 of 12 papers processed")
+   - Add one-line summaries of key findings
+
+2. **Cross-reference strategy** (manuscript → code docs):
+   - Decision points in code docs → Background sections in papers
+   - Architecture sections → User guides and manuals
+   - Risk discussions → Practical porting experiences from papers
+   - **Always bidirectional**: If A links to B, B should mention A
+
+3. **Synthesis triggers** - Create synthesis documents when:
+   - 3-5 related papers have been processed
+   - Recurring themes emerge across documents
+   - Papers answer questions from earlier analysis
+   - Before pausing work or handing off to another instance
+
+**Example synthesis opportunities**:
+- After processing 3 opacity papers → Create "Opacity Methods Synthesis"
+- After processing Kurucz user guides → Create "Workflow Best Practices"
+- After processing porting papers → Update "Migration Risk Assessment"
+
+**Example from manuscript sprint** (suggested by previous instance):
+- Processed 4 PDFs about line data and SYNTHE
+- Added cross-references from SYNTHE_DEEP_DIVE_SUMMARY to paper backgrounds
+- Created synthesis linking Jauregi 2005 (SYNTHE guide) to Deep Dive 12 (line readers)
+- Updated ARCHITECTURE_INSIGHTS Decision V.7 with line database details from Kurucz 2016
+
+---
+
 ## House Cleaning Checklist
 
 Use this as a systematic walkthrough:
 
-### Pre-flight
+### Pre-flight (CRITICAL - Do First)
+- [ ] **Merge conflicts**: Search for `<<<<<<<` markers, resolve immediately if found
 - [ ] Read MISSION.md to understand current phase
 - [ ] List all documents created since last house cleaning
 - [ ] Note any major decisions or findings from recent work
@@ -268,6 +342,7 @@ Use this as a systematic walkthrough:
 - [ ] **Multi-phase validation**: Check sequential analysis consistency
 - [ ] **Summary updates**: Update index and summary documents with new work
 - [ ] **Status tables**: Update decision/risk/progress tracking tables
+- [ ] **Manuscript processing** (if applicable): Update PDF processing status, add cross-references
 
 ### Commit and document
 - [ ] Commit changes with descriptive message
@@ -284,7 +359,7 @@ Use this as a systematic walkthrough:
 
 **Don't overthink**: If something is "good enough", move on. Perfect is the enemy of done.
 
-**Time-box it**: Allocate 30-60 minutes per house cleaning session. Don't let this become another analysis paralysis trap.
+**Time-box it**: Keep house cleaning sessions focused and efficient. Don't let this become another analysis paralysis trap. Most sessions complete in under an hour.
 
 **Document patterns**: If you find the same type of issue repeatedly, note it here for future house cleaning sessions.
 
@@ -293,8 +368,6 @@ Use this as a systematic walkthrough:
 ## Example House Cleaning Session (2025-11-08)
 
 **Context**: Just completed Deep Dives 01 & 02 (~1,300 lines of analysis). Need to connect these findings back to earlier documents.
-
-**Time invested**: ~45 minutes
 
 **Changes made**:
 1. **Cross-references** (3 commits):
@@ -324,8 +397,6 @@ Use this as a systematic walkthrough:
 ## Example House Cleaning Session (2025-11-09)
 
 **Context**: Completed SYNTHE deep dives (08-12) and atlas7v dependency analysis (Phases 1-4). Need to update index, verify consistency across multi-phase analysis, and prepare for implementation planning phase.
-
-**Time invested**: ~60 minutes
 
 **Changes made**:
 1. **Protocol improvements** (2 commits):
@@ -357,6 +428,39 @@ Use this as a systematic walkthrough:
 
 ---
 
+## Example House Cleaning Session (2025-11-09 - Merge Conflict Resolution)
+
+**Context**: Just completed big merge between four previous instances. MISSION.md shows Phase 3 complete. Need to check for merge artifacts and statistical consistency.
+
+**Changes made**:
+1. **Critical merge conflict fix** (Task 9 - NEW):
+   - Found 3 unresolved conflicts in 00_INDEX.md using grep
+   - Conflicts in: SYNTHE DD08-12 summaries, Statistics section, Next Steps
+   - Kept HEAD version (more comprehensive) in all cases
+   - Removed 152 lines of duplicate/conflicting content
+
+2. **Statistics corrections** (Task 3):
+   - Measured actual line counts: `wc -l` on all files
+   - Updated total: 18,231 lines (was 18,224)
+   - Fixed breakdown: Deep dives 12,028 + Atlas7v 2,127 + Synthesis 4,076
+   - Changed document count: 19 documents (was listed as 16)
+
+3. **Multi-phase validation** (Task 6):
+   - Verified Atlas7v dependency chain: 13 → 7 → 32 (consistent across all 4 phases)
+   - Confirmed 10,500 lines = 61% of atlas7v.for in all phase documents
+
+4. **Protocol improvements**:
+   - Added Task 9: Merge Conflict Detection (critical pre-flight)
+   - Added Task 10: Manuscript/PDF Processing (from previous instance suggestion)
+   - Removed time estimates (user feedback: inaccurate and not helpful)
+   - Updated checklist to prioritize merge conflict detection
+
+**Outcome**: All merge conflicts resolved, statistics verified against actual files, protocol improved with lessons learned. Documentation now mathematically consistent and ready for use.
+
+**Key lesson**: Always check for merge conflicts FIRST before doing other house cleaning tasks. Unresolved conflicts corrupt the entire document.
+
+---
+
 ## When NOT to House Clean
 
 - **During rapid exploration**: Don't interrupt flow to fix cross-references
@@ -367,6 +471,11 @@ House cleaning is for **quality assurance after major work**, not micro-optimizi
 
 ---
 
-**Version**: 1.1 (2025-11-09)
-**Changes in v1.1**: Added Task 6 (Multi-Phase Validation), Task 7 (Summary Updates), 2025-11-09 example session
-**Next review**: After Phase 3 completion or next major documentation sprint
+**Version**: 1.2 (2025-11-09)
+**Changes in v1.2**:
+- Removed time estimates (inaccurate and not helpful)
+- Added Task 9: Merge Conflict Detection (critical pre-flight check)
+- Added Task 10: Manuscript/PDF Processing (academic papers, manuals)
+- Added manuscript-specific cross-reference strategy
+- Added synthesis triggers for manuscript work
+**Next review**: After Phase 4 completion or next major documentation sprint
