@@ -174,7 +174,59 @@ House cleaning finds and fixes these issues before they confuse future readers (
 
 ---
 
-### Task 6: Status Table Updates
+### Task 6: Multi-Phase Analysis Validation
+
+**Goal**: Ensure consistency across sequential analysis phases.
+
+**What to look for**:
+- Multi-phase analyses (e.g., atlas7v Phases 1→2→3→4) where later conclusions depend on earlier findings
+- Dependency chains that span multiple documents
+- Migration estimates that should be consistent across documents
+- Transitive closures (e.g., "7 direct deps → 32 total deps")
+
+**How to do it**:
+1. Identify analysis sequences (Phase 1 discovery → Phase 2 structure → Phase 3 dependencies → Phase 4 deep dive)
+2. Verify later phases correctly reference earlier findings
+3. Check that dependency counts are consistent (e.g., Phase 1 identifies 13 deps, Phase 3 expands to 32)
+4. Validate migration timeline estimates across summary docs and index
+
+**Example from 2025-11-09 atlas7v analysis**:
+- Phase 1: Identified 13 unique dependencies (7 in atlas7v, 6 elsewhere)
+- Phase 2: Located 7 atlas7v subroutines needed by SYNTHE
+- Phase 3: Traced 7 → 32 subroutines via transitive closure
+- Phase 4: Deep dive on 4 critical subroutines with 12-13 week migration estimate
+
+**Validation checks**:
+- Does Phase 3 count (32 subs) include all Phase 2 targets (7 subs)? ✓
+- Does Phase 4 migration estimate (12-13 weeks) appear in SYNTHE summary? ✓
+- Are line counts consistent (Phase 2: ~10,500 lines = 61% of 17,336)? ✓
+
+---
+
+### Task 7: Summary Document Updates
+
+**Goal**: Ensure high-level summaries reflect detailed analysis.
+
+**What to look for**:
+- Summary documents (e.g., SYNTHE_DEEP_DIVE_SUMMARY.md) that should reference new deep dives
+- Index documents that track completion status
+- Timeline estimates that appear in multiple places
+- Dependency graphs that need updating
+
+**How to do it**:
+1. List all summary/index documents (00_INDEX.md, *_SUMMARY.md, BRIEFING.md)
+2. For each new deep dive or analysis phase, check if summary is updated
+3. Verify completion percentages and status markers
+4. Update "Grand Total" statistics (line counts, analysis time, etc.)
+
+**Example from 2025-11-09**:
+- Updated 00_INDEX.md to include SYNTHE deep dives (08-12) and atlas7v phases (1-4)
+- Added statistics: 13,911 lines total, 23 hours analysis time
+- Updated completion status: 12 deep dives + 4 atlas7v phases = Phase 2B complete
+
+---
+
+### Task 8: Status Table Updates
 
 **Goal**: Keep progress tracking accurate.
 
@@ -213,6 +265,8 @@ Use this as a systematic walkthrough:
 - [ ] **Consistency**: Pick 5 key facts, verify across docs
 - [ ] **Clarity**: Read 2-3 sections fresh, prune redundancy
 - [ ] **Synthesis**: Add progress summaries, update executive summaries
+- [ ] **Multi-phase validation**: Check sequential analysis consistency
+- [ ] **Summary updates**: Update index and summary documents with new work
 - [ ] **Status tables**: Update decision/risk/progress tracking tables
 
 ### Commit and document
@@ -267,6 +321,42 @@ Use this as a systematic walkthrough:
 
 ---
 
+## Example House Cleaning Session (2025-11-09)
+
+**Context**: Completed SYNTHE deep dives (08-12) and atlas7v dependency analysis (Phases 1-4). Need to update index, verify consistency across multi-phase analysis, and prepare for implementation planning phase.
+
+**Time invested**: ~60 minutes
+
+**Changes made**:
+1. **Protocol improvements** (2 commits):
+   - Added Task 6: Multi-Phase Analysis Validation (atlas7v sequential phases)
+   - Added Task 7: Summary Document Updates (index and summary tracking)
+   - Updated house cleaning checklist with new tasks
+   - Added example session documentation (2025-11-09)
+
+2. **Index updates** (1 commit):
+   - Updated 00_INDEX.md with SYNTHE deep dives (08-12) and atlas7v phases (1-4)
+   - Added Quick Reference Tables for SYNTHE and atlas7v sections
+   - Added detailed summaries for all 5 SYNTHE deep dives
+   - Added atlas7v dependency analysis summary
+   - Updated statistics: 13,911 lines, 23 hours, 16 documents
+   - Added Phase 2B Completion Summary section
+   - Updated Next Steps for Implementation Planning phase
+
+3. **Multi-phase validation**:
+   - Verified atlas7v dependency chain: 13 direct → 7 atlas7v → 32 total (with transitive closure)
+   - Confirmed migration estimates consistent: 12-13 weeks (atlas7v) mentioned in both Phase 4 and SYNTHE summary
+   - Validated line counts: 10,500 lines = 61% of 17,336 (atlas7v.for)
+
+4. **Cross-references**:
+   - Linked atlas7v Phase 4 analysis to Deep Dive 10 (xnfpelsyn uses POPS/KAPP)
+   - Linked atlas7v JOSH to Deep Dive 08 (spectrv uses radiative transfer)
+   - Connected atlas7v POPS to Deep Dive 02 (same algorithm, different context)
+
+**Outcome**: Complete Phase 2B documentation ready for stakeholder review and implementation planning. All 16 documents have consistent statistics, cross-references, and migration estimates.
+
+---
+
 ## When NOT to House Clean
 
 - **During rapid exploration**: Don't interrupt flow to fix cross-references
@@ -277,5 +367,6 @@ House cleaning is for **quality assurance after major work**, not micro-optimizi
 
 ---
 
-**Version**: 1.0 (2025-11-08)
-**Next review**: After Phase 3 or 4 completion
+**Version**: 1.1 (2025-11-09)
+**Changes in v1.1**: Added Task 6 (Multi-Phase Validation), Task 7 (Summary Updates), 2025-11-09 example session
+**Next review**: After Phase 3 completion or next major documentation sprint

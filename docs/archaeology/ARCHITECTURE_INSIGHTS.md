@@ -1309,7 +1309,11 @@ From ARCHITECTURE_DETAILS.md, ATLAS12 has 57 COMMON blocks. Full categorization:
 | Workspace | 18 | /WORK/, /SCRATCH/, /BUFFER/ | Local allocation |
 | Control/Mode | 4 | /MODE/, /IOUNIT/, /FLAGS/ | Enums + parameters |
 
-📋 **TODO**: Create detailed mapping table for all 57 COMMON blocks (see ARCHITECTURE_DETAILS.md:300-350).
+📋 **PARTIAL**: COMMON block documentation in progress
+- ✅ ~50 COMMON blocks identified and documented in `ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md`
+- ✅ Dependency analysis for critical subroutines (POPS, KAPP, JOSH, READIN)
+- 🔲 Complete 57-block mapping table still pending (see ARCHITECTURE_DETAILS.md:300-350)
+- **Next step**: Cross-reference ATLAS12 vs ATLAS7V COMMON blocks for unified mapping
 
 ---
 
