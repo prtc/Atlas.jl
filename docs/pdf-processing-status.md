@@ -40,22 +40,22 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Key findings:
 
 - [x] **atlas9+synthe.pdf** - ATLAS9 and SYNTHE combined documentation (Jauregi 2005)
-  - Date processed: 2025-11-09
-  - Related components: ATLAS9, SYNTHE, ROTATE, BROADEN
-  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (ATLAS9 and SYNTHE sections)
-  - Key findings:
-    - Complete ATLAS9 I/O unit structure (Table 2.1): 7 units documented
-    - Comprehensive control card reference (47+ cards documented)
-    - SYNTHE 11-program pipeline with detailed COM file walkthrough
-    - Atomic line format: 30 fields (wavelength, log gf, damping, hyperfine, etc.)
-    - Molecular line format: 10 fields (simpler than atomic)
-    - ⚠️ CRITICAL BUG: SURFACE FLUX crashes with ROTATE - must use SURFACE INTENSITY
-    - Two ATLAS9 executables: atlas9v (radiation fields), atlas9mem (models)
-    - ODF resolutions: BIG=328 divisions (models), LITTLE=1212 divisions (radiation)
-    - Model naming: ap00t6000g45k2nover = abundance/Teff/logg/turb/convection
-    - Line list files: GF0300.100 = upper λ 300nm, range 100nm (except GF1200.100=400nm!)
-    - Complete SYNTHE I/O units across all 11 programs documented
-    - Partial redistribution parameters (fort.25 - NLTE only)
+  - Date processed: 2025-11-09 (SYNTHE-only reprocessing)
+  - Related components: SYNTHE, ROTATE, BROADEN (ATLAS9 content excluded - we track ATLAS12)
+  - Archaeology docs updated: SYNTHE_JAUREGI_2005.md (dedicated SYNTHE user guide)
+  - Key findings (SYNTHE-specific only):
+    - **Model headers mandatory**: Must insert control cards before TEFF line (SURFACE INTENSITY/FLUX + ITERATIONS 1)
+    - **Complete VMS COM file walkthrough**: 11-stage pipeline with detailed I/O unit assignments
+    - **Atomic line format**: 30 fields (WL, GFLOG, CODE, E, XJ, LABEL, EP, XJP, LABELP, damping, hyperfine, isotopes, Landé factors)
+    - **Molecular line format**: 10 fields (simpler: WL, GFLOG, XJ, E, XJP, EP, CODE, LABEL, LABELP, ISO)
+    - **⚠️ CRITICAL BUG**: SURFACE FLUX + ROTATE = crash; workaround: always use SURFACE INTENSITY with ROTATE
+    - **GF file naming exception**: GF1200.100 covers 800-1200 nm (400 nm range, not 100 nm like others!)
+    - **TiO optimization**: Skip schwenke.bin for Teff > 4500 K (saves enormous time)
+    - **BROADEN profiles**: 5 types (MACR, GAUS, SINX, RECT, PROF) with 3 unit systems (KM, RESO, PM)
+    - **Complete Fortran I/O table**: 17 units documented (for001-for093, rot1-rot5)
+    - **Binary format warning**: Fortran "unformatted" is compiler-specific, plan JSON/HDF5 for Julia migration
+    - **File lifecycle**: fort.12 (lines) written by SYNBEG, appended by readers, consumed by SYNTHE
+    - **Migration priorities**: Line parsers → SYNBEG → ROTATE/BROADEN → XNFPELSYN/SYNTHE/SPECTRV (latter 3 need ATLAS7V)
 
 - [ ] **atlas_synthe_manuals.pdf** - Manuals for ATLAS and SYNTHE
   - Date processed:
