@@ -2180,3 +2180,611 @@ This section documents the successful 2004 porting of ATLAS9, SYNTHE, and WIDTH 
 ---
 
 **Status**: Phase 2B complete - ATLAS12, SYNTHE, ATLAS9, DFSYNTHE, KAPPA9 surveyed, Linux porting lessons documented.
+
+---
+
+## VIII. Kurucz 2005 Suite Overview
+
+**Source**: Kurucz, R.L. 2005, "ATLAS12, SYNTHE, ATLAS9, WIDTH9, et cetera", Mem. S.A.It. Suppl. Vol. 8, 14
+**Date processed**: 2025-11-09
+**Type**: Authoritative overview by suite creator
+
+This section documents insights from Kurucz's comprehensive 2005 overview paper, providing the author's perspective on the entire code ecosystem, design philosophy, and practical usage recommendations.
+
+---
+
+### 8.1 The Central Problem
+
+**Quote from paper**: "The problem we address is including the opacity of millions or hundreds of millions of lines in model stellar atmosphere calculations, then generating detailed, realistic spectra from those model atmospheres, then modelling the observation process, and finally comparing the calculated spectra to observed spectra."
+
+**Two approaches implemented**:
+1. **Opacity Distribution Functions (ODFs)**: DFSYNTHE → ATLAS9 → SYNTHE → SPECTR
+2. **Opacity Sampling (OS)**: ATLAS12 (30,000 points) → SYNTHE → SPECTR
+
+**Computational cost without statistical treatment**:
+- Direct line-by-line: ~1 month per model (fastest Alpha workstation)
+- Or: ~1 day using full parallel supercomputer
+- Statistical methods make problem tractable
+
+---
+
+### 8.2 ATLAS12 Design Philosophy and Current Limitations
+
+**Original 1995 vision** (Kurucz 1995, "Stellar Surface Structure"):
+- Handle arbitrary abundances, including isotopes
+- Support depth-dependent abundances (e.g., dredge-ups, diffusion)
+- Enable isotopic splittings of atomic lines
+- Provide flexibility for exotic stellar atmospheres
+
+**Current status** (2005): "ATLAS12 still does not work as originally advertised"
+
+**Two fundamental problems that took years to solve**:
+
+#### Problem 1: Rosseland Opacity for Arbitrary Abundances
+
+**The issue**:
+- All Kurucz models use Rosseland optical depth scale τ_Ross
+- This is the "natural" scale for coupling atmosphere structure to radiation
+- Convective flux also depends on Rosseland opacity
+- **BUT**: For arbitrary/depth-dependent abundances, τ_Ross cannot be pretabulated
+- Must be computed on-the-fly as the model iterates
+
+**Solution** (after "years to figure out"):
+- Generate starting guess for Rosseland opacity
+- Extrapolate from iteration to iteration as temperature changes
+- "The guessing procedure worked and allowed ATLAS12 models to converge"
+
+**Alternative approach** (suggested by Tsymbal & Shulyak 2003):
+- Use continuum monochromatic optical depth scale (e.g., τ_500nm or τ_1000nm)
+- This behaves similarly to τ_Ross but is easier to compute
+- Compute models on τ_continuum scale
+- At each iteration, compute τ_Ross for convection
+- Once converged, interpolate final model to τ_Ross scale
+- ⚠️ **May fail for**: Big abundance changes causing big opacity changes
+
+**Takeaway for Julia**: Some users may want τ_continuum versions of ATLAS12
+
+#### Problem 2: Equation of State
+
+**The problem**:
+- EOS routines date from the 1960s
+- Poor laboratory data for energy levels at that time
+- Partition functions wrong (especially heavy elements)
+- Ionization potentials uncertain
+- **Still wrong in 2005!**
+- Molecules need separate partition function per isotopomer
+
+**Planned solution**:
+- Write new EOS routine using partition function tables
+- Each species gets its own table (including each isotopomer)
+- Kurucz auto-generates partition functions when computing line lists
+- Example: PFIRON file contains partition functions for iron group (Kurucz 1988a)
+- "However those calculations are going slowly, especially since I do not have funding"
+- Interim plan: Quick Hartree-Fock calculation for all atoms
+- "Now that memory is not a problem, putting in the new partition functions and depth-dependent abundances should be simple"
+
+**Takeaway for Julia**: Modern partition function data is available - use it from the start
+
+---
+
+### 8.3 ATLAS12 Workflow (2005)
+
+**Performance metrics**:
+- ODF opacity tables: 1 day (fixed abundances)
+- Grid of models: 1 day (hundreds of models)
+- Small spectrum section for grid: 1 day
+- ATLAS12 small grid for one star: 1 day (varying T, g, abundances)
+- Small spectrum region for comparison: 1 day
+- Full spectrum for best-fitting model: computed after fit
+
+**Two-stage workflow** (confirmed by Kurucz):
+
+**Stage 1**: Line selection only
+```
+atlas12 → selects lines from line lists → writes packed file → STOP
+```
+
+**Stage 2**: Model iteration (reusing selected lines)
+```
+atlas12 → reads packed file → iterates model → converges
+synthe → reads packed file via RPACKEDLINE → computes spectrum
+```
+
+**Key insights**:
+- Packed file has "all information not essential to the opacity calculation removed"
+- **No identifications in packed file** → SYNTHE doesn't save line info
+- Same packed file can be used for similar stars (or lower abundance stars)
+- Higher abundance stars need new line selection
+- Complete spectrum may need to be computed in pieces with MERGESYN
+- ATLAS9 models can use ATLAS12 packed line lists
+
+**30,000 frequency points**:
+- Accurate enough for total flux
+- **NOT good enough for intermediate-band photometry** (e.g., uvby)
+- Must run separate SYNTHE flux calculation after convergence
+
+---
+
+### 8.4 Depth-Dependent Microturbulent Velocity
+
+**Key observation**: "Microturbulent velocity is a parameter that is generally not considered physically except in the sun."
+
+**Empirical solar model** (Fontenla, Avrett, Loeser 1993 - Model C):
+- Has chromosphere, temperature minimum, AND depth-dependent V_turb
+- V_turb splits into two components:
+  1. **Convective turbulence**: Goes to zero at/below temperature minimum
+  2. **Wave turbulence**: Heats chromosphere, extends above T_min
+
+**Solar V_turb profile**:
+- Minimum V_turb ≈ 0.28 × maximum V_turb
+- Minimum temperature ≈ 0.76 T_eff
+- Kurucz suggests: "All 'normally' convective cool stars have behavior like this"
+
+**Important distinctions**:
+
+| Method | Typical Value | Meaning |
+|--------|---------------|---------|
+| Equivalent width analysis | < 1 km/s | Mean over flux spectrum |
+| Line opacity tables (ASUN model) | 1.5 km/s | **Compensates for missing lines** |
+| Central intensity line profiles | 0-9 km/s | True depth-dependent value |
+
+**Kurucz's depth-dependent model**:
+1. Compute max convective velocity V_conv for each model (Figure 2)
+2. Compute max convective flux fraction F_conv (Figure 3)
+3. Compute flux-weighted velocity: V_W = V_conv × F_conv (Figure 4)
+4. V_W is V_turb at bottom of atmosphere (agrees with solar empirical value)
+5. Scale solar depth dependence to V_W
+6. Ignore outward-increasing wave component
+7. Set minimum: V_turb = max(V_turb_depth, 0.28 × V_W)
+
+**Key statement**: "Microturbulent velocity varies with effective temperature and gravity and abundance because convection varies with effective temperature, gravity, and abundance."
+
+**Impact on analysis**:
+- When comparing two stars: V_turb difference must be accounted for
+- When comparing evolutionary stages: V_turb change must be included
+- Using grids with depth-dependent V_turb: "This effect is automatically included. V_turb is no longer a free parameter."
+- ⚠️ **Exception**: "This may not be true for low-gravity stars hotter than the sun that have only weak convection"
+
+**Abundance dependence**:
+- Same T_eff and log g: Higher abundances → higher V_turb (more convective)
+- In ATLAS12: V_turb varies with convection
+- Convection varies with Rosseland opacity at τ=1
+- Rosseland opacity varies with abundances
+- "I have not yet computed the grids to work out the numbers"
+
+**Takeaway for Julia**: Implement depth-dependent V_turb based on convection physics, not as free parameter
+
+---
+
+### 8.5 ROTATE - Rotational Broadening Algorithm
+
+**Method**: Grid-based disk integration
+
+**Angular sampling**: 17 intensity spectra at µ angles:
+```
+µ = 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15, 0.125, 0.1, 0.075, 0.05, 0.025, 0.01
+```
+
+**Disk grid**: 200×200 rectilinear points (or 100×100 quadrant)
+
+**Algorithm**:
+1. Generate intensity spectra for 17 µ angles using SYNTHE
+2. Pretabulate and interpolate to 100 angles (µ = 0.005 to 0.995 by 0.010)
+3. For each point (x,y) on disk grid:
+   - Compute angle µ and projected velocity v
+   - Choose nearest angle from pretabulation
+   - Doppler shift by nearest integral number of points
+4. Sum all points
+
+**Approximations to check**:
+- Nearest-angle interpolation (100 angles = 0.01 spacing)
+- Nearest-point Doppler shift (error ≤ 1 part in 10^6 at R=500,000)
+- Most errors are random and cancel
+- "Increase the resolving power or the grid size or the number of angles and see if the output spectrum is affected"
+
+**Differential rotation** (optional):
+- Empirical solar fit from Libbrecht & Morrow 1991
+- Latitude φ, radius R in km:
+
+```
+V_rot(φ) = (462 - 75sin²φ - 50sin⁴φ) × 10⁻⁹ × 2πR
+```
+
+- Solar: equator 2.020 km/s, pole 1.474 km/s
+- Relative: V_rot(φ)/V_rot(0) = (1 - 75/462 sin²φ - 50/462 sin⁴φ)
+- Assumed same for all stars (only if explicitly turned on)
+- Input parameter: stellar equatorial velocity
+
+**Generalization**: "As long as physical variables can be defined on an array of points and there is a procedure for interpolating in a grid of spectra... one can treat any shape star, or binaries, spots, rapid rotators, etc."
+
+**Takeaway for Julia**: ROTATE algorithm is straightforward to implement; consider more flexible interpolation
+
+---
+
+### 8.6 Complete Observation Modeling Pipeline
+
+**Kurucz's vision**: End-to-end forward modeling from stellar surface to detector
+
+```
+Star surface
+  ↓
+SYNTHE + SPECTR → High-resolution spectrum
+  ↓
+ROTATE → Rotational broadening (if rotating)
+  ↓
+[Interstellar reddening] → ⚠️ Not yet implemented
+[Diffuse interstellar bands] → ⚠️ Not yet implemented
+[Interstellar lines] → ⚠️ Not yet implemented
+  ↓
+TRANSYNTHE suite → Telluric transmission
+  ↓
+[Telluric emission: airglow, pollution] → ⚠️ Not yet implemented
+  ↓
+BROADEN/BROADENX → Instrumental broadening
+  ↓
+INTEGRATEFILTER → Photometry convolution
+  ↓
+PLOTSYN → Comparison with observation
+```
+
+**Status of unimplemented components** (2005):
+- "I have not yet written the programs to model the reddening, the diffuse interstellar bands, and the interstellar lines, but it would be easy for the user to do it."
+- Catalogues available: Herbig 1995 (diffuse bands)
+- Interstellar lines: Search Kurucz line list for E_low < 1000 cm⁻¹
+- "An interstellar package will eventually be included with SYNTHE"
+- Airglow: Osterbrock et al. 2000
+- Pollution lines: Slanger et al. 2003
+- "I have also not yet written the programs to model airglow and anthropogenic pollution emission lines, but those would also be easy for the user to do"
+
+**Takeaway for Julia**: Complete pipeline is well-defined but has gaps - opportunities for contribution
+
+---
+
+### 8.7 Telluric Transmission (TRANSYNTHE Suite)
+
+**Motivation**: 1988 discovery in Kitt Peak FTS solar spectra (Kurucz 1988b)
+- Broad features from O₃ and [O₂]₂ (O₂ dimer)
+- Not previously considered in Solar Flux Atlas reduction (Kurucz et al. 1984)
+- Many O₂ and H₂O lines blend with or mask solar lines
+
+**O₂ dimer [[O₂]₂ ]**:
+- Number density ∝ (O₂ concentration)²
+- Concentrated near ground
+- Strong features at sunset/sunrise
+
+**Data sources**:
+
+| Component | Wavelength | Source |
+|-----------|------------|--------|
+| O₃ UV (Hartley, Huggins) | Ultraviolet | Bass & Paur 1981; Griggs 1968; Freeman et al. 1983 |
+| O₃ visible (Chappuis & Wulf) | Visible | Shettle & Anderson 1995 tabulation |
+| [O₂]₂ features | 300-1500 nm | Greenblatt et al. 1990; Dianov-Klokov 1959 |
+| O₂, H₂O, etc. lines | All | HITRAN database (Rothman et al. 2005) |
+
+**HITRAN database**:
+- HIgh-resolution TRANsmission molecular database
+- Originally Air Force (now managed by SAO)
+- Historically focused on IR (λ > 1 µm)
+- High accuracy: positions, strengths, pressure shifts, damping
+- Visible data historically poor quality
+- 2005 status: "About half of the O₂ and H₂O are good"
+- Kurucz filled in missing O₂ lines by calculation and solar fitting
+- H₂O calculations available but "do not work very well"
+
+**Critical issue - Pressure shifts**:
+- Not just Stark broadening (familiar to astronomers)
+- Line positions measured in solar spectra are NOT true positions
+- Shifted by terrestrial atmosphere pressure
+- If used to generate molecular constants → systematic errors
+- Laboratory: measure positions vs. pressure, extrapolate to zero
+- "Only the strongest bands of O₂ have been well measured"
+
+**⚠️ Resolving power requirement**: Must be ≥ 2 million in regions with sharp telluric lines
+- Reason: Sub-300K Doppler width
+- Any computed stellar spectra must have same resolution
+
+**Model atmospheres** (Anderson et al. 1986):
+- Air Force measurements: T, P, O₃, H₂O vs. altitude
+- Averaged models: whole year, quarterly, monthly
+- Different latitudes: temperate, tropical, etc.
+- Kurucz's four models for Kitt Peak:
+  - MODMIDWIN, MODSPRING, MODMIDSUM, MODAUTUMN
+  - Can be used as starting guesses at any observatory (except Antarctica)
+  - Must adjust T, P, O₃, H₂O to fit observations
+  - Table 1 in paper shows MODMIDSUM (0-100 km, 41 layers)
+
+**Programs**:
+- **OZONE**: Subroutine to compute O₃ transmission
+- **O2DIMER**: Subroutine to compute [O₂]₂ transmission
+- **TRANSYNBEG**: Read input parameters (wavelength range, resolution, radial velocity)
+- **RMOLAIR**: Read line data from AIR* files
+- **TRANSYNTHE**: Compute opacity spectrum
+- **TRANSPECTR**: Compute mean transmission (given airmass range, hour angle, declination, latitude, altitude)
+- **TRANSMIT**: Multiply stellar spectrum × transmission
+
+**Line data files**: AIR1, AIR2, AIR3, ..., AIR10, AIR20, AIR100, AIREND
+- Coverage: AIR1 = 0-1 µm, AIR2 = 1-2 µm, etc.
+- Most data from HITRAN (reformatted like Kurucz line lists)
+- Some hand corrections
+- ⚠️ "The overall quality at short wavelengths is not good. Every line should be checked for critical work."
+
+**Kurucz's honest assessment**: "The cause of the delay, as for solar lines, is that the telluric data are still not good enough to treat the problem without hand adjustment, even for O₂, and there are many missing lines."
+
+**Takeaway for Julia**: Telluric correction is mature but data quality varies; pressure shifts are critical
+
+---
+
+### 8.8 Spectrophotometry and Photometry
+
+**BROADEN**: Instrumental convolution
+- Profiles: Gaussian, sin(x)/x, or rectangular
+- Specification modes:
+  - FWHM in velocity
+  - FWHM in wavelength
+  - FWHM in wavenumber
+  - Resolving power
+- Can use tabulated instrumental profiles at computed point spacing
+- **BROADENX**: Linear interpolation between profiles for rapidly changing profiles
+
+**Pre-computed broadened spectra** (on Kurucz website, STARS directory):
+- Resolving powers: 500000, 100000, 50000, 30000, 20000, 10000, 5000, 3000, 2000, 1000, 500, 300, 200, 100
+- "Off the shelf" predictions for comparison
+- **Cost**: ~1 day per model for all resolutions
+
+**INTEGRATEFILTER**: Photometry convolution
+- Convolves SYNTHE output with response function
+- Response function includes:
+  - Detector response
+  - Filter transmission
+  - Optical system transmission
+  - (If ground-based) Atmospheric transmission
+- Can read any number of response functions
+- Atmospheric transmission from TRANSYNTHE applied before convolution
+- Visible/near-IR: insensitive to atmosphere
+- UV/IR: sensitive to atmosphere
+
+**Asiago Database** (Moro & Munari 2000):
+- Most comprehensive photometric system collection
+- Kurucz suggests: "Some user make up a general input file from it and a program to generate all the colors"
+
+**Takeaway for Julia**: Photometry tools are simple but comprehensive; consider modern filter databases
+
+---
+
+### 8.9 Limb Darkening
+
+**Automatic by-product of ROTATE**:
+- Intensity spectra computed at 17 µ angles
+- Normally discarded (files too big)
+- Can transpose: "all wavelengths at each angle" instead of "all angles at each wavelength"
+
+**Photometric limb darkening**:
+- Convolve intensity spectra with observation model
+- Same as photometry: detector + filter + optics + (if ground) atmosphere
+- Tools: **SPLIT17SYN** and **INTEGRATEFILTER**
+
+**Takeaway for Julia**: Limb darkening is "free" if we save intensity spectra; consider selective wavelength output
+
+---
+
+### 8.10 PLOTSYN - Comparison and Analysis
+
+**Kurucz's philosophy**: "I make large plots that compare computed and observed spectra and that actually show errors and provide information to the reader."
+
+**Plot features**:
+- Features labelled with wavelengths and energy levels
+- Readable directly from plot
+- File with complete information for each labelled line
+- Hand-editable file with input data for every contributing line
+- File can be read back to iterate on fit
+
+**Current implementation**: Pre-Postscript legacy
+- Writes binary vector file
+- Must be translated to Postscript
+- "I am going to rewrite the plotting utilities, PLOTPACK, to write Postscript directly. (It is simple.)"
+- Will make files "smaller, scalable, and editable"
+
+**Future vision** (2005):
+- Plots on CDs or DVDs
+- Solar spectra at 1 Å per page with line IDs (reference atlas)
+- Big continuous plots that can be windowed
+
+**Takeaway for Julia**: Use modern plotting (e.g., Makie.jl); interactive plots with line ID tooltips
+
+---
+
+### 8.11 WIDTH9 - Abundance Analysis Tool
+
+**Purpose**: Individual line analysis for abundance determination
+
+**Capabilities**:
+- Compute line profiles for individual lines
+- Compute curves of growth
+- Derive abundance from observed equivalent width
+- Determine model sensitivity
+- Test chromosphere effects
+- Investigate V_turb sensitivity
+- Test damping effects (weak lines can have strong damping!)
+- Determine linear vs. saturated curve of growth
+- Test continuum level choice on apparent equivalent width
+
+**Kurucz's abundance analysis philosophy** (strong opinions!):
+
+**Problems with traditional methods**:
+1. Most lines are blended (other species, isotopes, hyperfine, tellurics)
+2. Noisy data → continuum level uncertain
+3. Lines not on linear part of curve of growth → systematic errors from model physics
+4. Errors in V_turb treatment
+5. Errors in damping
+6. Using many lines doesn't help - errors are **not random**
+
+**Kurucz's recommendations** (strict!):
+
+```
+STEP 1: Throw out all lines NOT on linear part of curve of growth
+→ "Using stronger lines... just increases the real error because the errors are not random.
+   There is no improvement from using many lines."
+
+STEP 2: Get high S/N, high-resolution atlas of slowly rotating reference star
+→ Fast rotators OK (similar equivalent widths) but lines may not be discernible
+
+STEP 3: Look up every remaining line and throw out significantly blended lines
+
+STEP 4: Synthesize spectrum for atlas AND your star
+→ Understand blending and continuum level to 95% confidence level
+
+STEP 5: Throw out any lines you don't understand to 95% level
+```
+
+**Solar iron abundance case study** (Grevesse & Sauval 1999):
+- Kurucz applied his strict procedure to their Fe line list
+- **Result**: Only **3 Fe I lines** and **1 Fe II line** survived!
+- These 4 lines gave **10% less** Fe abundance than Grevesse & Sauval's full list
+- "You have to measure only those three Fe I lines to determine the Fe abundance relative to the sun for any star like the sun"
+
+**Additional complication**:
+- Fe I is not principal ionization stage (most Fe is Fe II)
+- Dominant ion less sensitive to model errors than minor ion
+- "Dominant ions should always be used in an abundance analysis if there is a choice"
+
+**Kurucz's parting advice**: "I am giving you the solar atlases. I am giving you the line data. I will eventually give you the atlases with the line identifications. I am giving you the programs. **Use them.**"
+
+**Takeaway for Julia**: Provide tools for rigorous differential abundance analysis; document blending carefully
+
+---
+
+### 8.12 Realism About Spectra
+
+**Kurucz's frank assessment**:
+
+> "These spectra do not reproduce real high resolution observed spectra. Stronger lines tend to have good data but the weaker lines are incomplete and they include the predicted lines with uncertain wavelengths that fill in the opacity between big lines. At lower resolution most of the wavelength errors should average out."
+
+**Compensations in standard models**:
+- Overestimate Fe abundance
+- Overestimate microturbulent velocity
+- Both compensate for missing line opacity
+
+**For detailed high-resolution comparison**:
+- Use ONLY line lists with laboratory wavelengths
+- Hand-adjust gf values to match
+- Hand-adjust damping constants to match
+- Work **differentially** from reference star with good model
+- Adjust line data to match high-resolution, high-S/N atlas first
+- Then apply same line data to target star
+
+**Takeaway for Julia**: Manage user expectations; document known incompleteness; support differential analysis
+
+---
+
+### 8.13 Program Ecosystem Summary (2005)
+
+**Model atmosphere codes**:
+- **ATLAS9**: ODF method (predecessor)
+- **ATLAS12**: Opacity sampling method (30,000 points)
+
+**Opacity preparation**:
+- **DFSYNTHE**: Pretabulate opacity for ODFs
+- **KAPPA9**: Opacity calculations (context unclear)
+
+**Spectrum synthesis**:
+- **SYNTHE**: High-resolution spectrum synthesis (core)
+- **SPECTR**: Emergent spectrum computation
+- **RPACKEDLINE**: Read packed line files for SYNTHE
+
+**Stellar surface effects**:
+- **ROTATE**: Rotational broadening + differential rotation
+- Limb darkening (by-product of ROTATE)
+
+**Observational effects**:
+- **TRANSYNTHE suite**: Telluric absorption (TRANSYNBEG, RMOLAIR, TRANSYNTHE, TRANSPECTR, TRANSMIT)
+- **OZONE**: O₃ absorption
+- **O2DIMER**: [O₂]₂ absorption
+- **BROADEN**: Instrumental broadening (Gaussian, sinc, rectangular)
+- **BROADENX**: Interpolating instrumental profiles
+- **INTEGRATEFILTER**: Photometry (filter convolution)
+
+**Analysis and plotting**:
+- **WIDTH9**: Line profiles, curves of growth, abundance determination
+- **PLOTSYN**: Plot observed vs. computed with line IDs
+- **MERGESYN**: Patch together spectrum pieces
+- **SPLIT17SYN**: Split intensity spectra by angle
+
+**Utility**:
+- **TABVOIGT**: Pretabulate Voigt profiles
+- **PRETABLOG**: Pretabulate logarithms
+
+**Total**: ~25 programs in the ecosystem (2005)
+
+---
+
+### 8.14 Development Philosophy and Practicality
+
+**Kurucz's approach**: Iterative, pragmatic, honest about limitations
+
+**Evidence**:
+- "Still does not work as originally advertised" (frank about ATLAS12)
+- "Took me years to figure out how to..." (Rosseland opacity problem)
+- "Especially since I do not have funding" (resource constraints)
+- "The data are still not good enough..." (honest about line quality)
+- "Would be easy for the user to do it" (encourages community contribution)
+- "I am giving you... Use them." (open data/code philosophy)
+
+**Unfinished components in 2005**:
+- Interstellar reddening
+- Diffuse interstellar bands
+- Interstellar lines
+- Telluric emission (airglow, pollution)
+- PLOTPACK → Postscript rewrite
+- Partition functions for all atoms
+- Complete telluric line data
+
+**Takeaway for Julia**: Embrace iterative development; document limitations; build extensible framework for community contributions
+
+---
+
+### 8.15 Key Warnings and Caveats
+
+**⚠️ ATLAS12 fluxes**: 30,000 points accurate for total flux, **NOT for intermediate-band photometry** (must run SYNTHE separately)
+
+**⚠️ Equation of state**: 1960s vintage, "still wrong" in 2005, especially heavy elements
+
+**⚠️ Synthetic spectra vs. observations**: "Do not reproduce real high resolution observed spectra" - use differential analysis
+
+**⚠️ Telluric line quality**: "Not good enough... without hand adjustment, even for O₂"
+
+**⚠️ Pressure shifts**: Measured telluric positions in solar spectra ≠ true line positions
+
+**⚠️ Resolution requirement**: R ≥ 2,000,000 for sharp telluric lines (sub-300K Doppler width)
+
+**⚠️ Abundance analysis**: Traditional methods using many lines give systematic errors - use only 3-4 best lines!
+
+**⚠️ Depth-dependent V_turb**: Exception for "low-gravity stars hotter than the sun that have only weak convection"
+
+**⚠️ ROTATE approximations**: Check by varying grid size, angle count, resolving power
+
+---
+
+### 8.16 Implications for Julia Migration
+
+| Kurucz 2005 Insight | Atlas.jl Strategy |
+|---------------------|-------------------|
+| ATLAS12 "still doesn't work as advertised" | Document known issues; fix equation of state from start |
+| Rosseland opacity for arbitrary abundances is hard | Implement both τ_Ross and τ_continuum options; document tradeoffs |
+| Partition functions are wrong (1960s data) | Use modern atomic data (NIST, etc.); proper isotopomer handling |
+| Depth-dependent V_turb tied to convection | Implement as physics-based, not free parameter; provide override |
+| 30K points insufficient for photometry | Consider adaptive frequency grid; separate flux vs. photometry modes |
+| Packed line files have no IDs | Keep identifications throughout pipeline for analysis |
+| Hand adjustment needed for line data | Build tools for line-by-line comparison and fitting |
+| Differential analysis is key | Support reference atlas + differential workflow from start |
+| Telluric data quality varies | Clearly document quality flags; support user corrections |
+| ~25 programs in ecosystem | Design modular Julia package with clear interfaces |
+| Many unfinished components | Extensible architecture for community contributions |
+| Kurucz's honest limitations | Document uncertainties; manage expectations; enable validation |
+
+**Key architectural principle**: Kurucz built a comprehensive but loosely coupled ecosystem of programs communicating via files. Julia can provide tighter integration while maintaining modularity and flexibility.
+
+**Development priority**: Fix known issues (EOS, partition functions) rather than replicate historical limitations.
+
+---
+
+**Section status**: Kurucz 2005 overview processed - provides author's perspective on design philosophy, practical limitations, and usage recommendations.
