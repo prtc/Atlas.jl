@@ -12,7 +12,8 @@
 **Synthesis Documents**:
 - `PHYSICS_PIPELINE_ATLAS12.md` (1,547 lines) - Physics of ATLAS12 iteration (WHAT/WHY)
 - `PHYSICS_PIPELINE_SYNTHE.md` (1,607 lines) - Physics of SYNTHE synthesis (WHAT/WHY)
-- `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - SYNTHE migration roadmap (HOW)
+- `SYNTHE_DEEP_DIVE_SUMMARY.md` (922 lines) - SYNTHE migration roadmap (HOW)
+- `../SYNTHESIS_INDEX.md` (NEW) - Track all synthesis docs, flag opportunities
 
 ---
 

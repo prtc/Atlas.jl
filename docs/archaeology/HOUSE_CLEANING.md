@@ -15,12 +15,13 @@
 
 **ATLAS Suite Code Archaeology Mission**: Documenting 487K lines of Fortran 77 stellar atmosphere modeling code (ATLAS12, SYNTHE, and related tools) to guide future Julia migration.
 
-**Key documentation files** (as of Phase 2B completion):
+**Key documentation files** (as of Phase 3 completion):
 - `MISSION.md` - Project roadmap and task tracking
 - `docs/archaeology/CENSUS_REPORT.md` - Initial code survey
 - `docs/archaeology/ARCHITECTURE_DETAILS.md` - Comprehensive code catalog
 - `docs/archaeology/ARCHITECTURE_INSIGHTS.md` - Julia migration guidance (PRIMARY)
 - `docs/archaeology/DEEP_DIVES/` - Detailed analysis of high-risk code sections
+- `docs/archaeology/SYNTHESIS_INDEX.md` - Track synthesis documents, avoid duplication
 
 ### Why house cleaning matters
 
@@ -323,6 +324,63 @@ House cleaning finds and fixes these issues before they confuse future readers (
 
 ---
 
+### Task 11: Synthesis Index Maintenance
+
+**Goal**: Track synthesis documents to avoid duplication and identify gaps.
+
+**Why this matters**: As the project grows, we create synthesis documents that combine multiple sources. Without tracking, we risk:
+- Creating duplicate synthesis on the same topic
+- Missing synthesis opportunities when we have enough source material
+- Losing track of which papers/analyses fed into each synthesis
+- Unclear handoff between instances
+
+**What to track**:
+- Synthesis document name and location
+- Source documents (papers, deep dives, analyses)
+- Date created and instance that created it
+- Topics covered (keywords/tags)
+- Related synthesis documents
+
+**How to do it**:
+1. Create/update `docs/archaeology/SYNTHESIS_INDEX.md` (if doesn't exist)
+2. Add entry for each synthesis document:
+   ```markdown
+   ### SYNTHE_DEEP_DIVE_SUMMARY.md
+   **Created**: 2025-11-09 (Phase 2B)
+   **Sources**: DD08-12 (5 SYNTHE deep dives), Atlas7v Phase 1-4
+   **Topics**: SYNTHE pipeline, migration roadmap, line readers, binary I/O
+   **Related**: PHYSICS_PIPELINE_SYNTHE.md, ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md
+   **Status**: Complete - ready for implementation
+   ```
+3. Update existing entries when new sources are added
+4. Flag potential synthesis opportunities (3+ related sources not yet synthesized)
+
+**Synthesis opportunity triggers**:
+- 3+ deep dives on related topics → Consider thematic synthesis
+- 3+ papers on same subject → Create literature review synthesis
+- Sequential analysis phases (like Atlas7v 1-4) → Create summary document
+- Before major phase transitions → Create completion synthesis
+
+**Example index structure**:
+```markdown
+# Synthesis Index
+
+## Active Synthesis Documents
+- PHYSICS_PIPELINE_ATLAS12.md - Physics synthesis (7 deep dives)
+- PHYSICS_PIPELINE_SYNTHE.md - Physics synthesis (5 deep dives + papers)
+- SYNTHE_DEEP_DIVE_SUMMARY.md - Migration roadmap (5 deep dives + Atlas7v)
+
+## Potential Synthesis Opportunities
+- Binary I/O synthesis: DD04 (ATLAS12) + DD09 (SYNTHE) + format papers
+- Opacity synthesis: DD03 + DD10 + opacity papers (Kurucz, Castelli)
+- Precision analysis: DD01, DD02, DD03, DD05 → "Numerical Precision Guide"
+
+## Source→Synthesis Mapping
+See detailed tracking below for which sources fed into which synthesis...
+```
+
+---
+
 ## House Cleaning Checklist
 
 Use this as a systematic walkthrough:
@@ -343,6 +401,7 @@ Use this as a systematic walkthrough:
 - [ ] **Summary updates**: Update index and summary documents with new work
 - [ ] **Status tables**: Update decision/risk/progress tracking tables
 - [ ] **Manuscript processing** (if applicable): Update PDF processing status, add cross-references
+- [ ] **Synthesis index**: Update SYNTHESIS_INDEX.md with new synthesis docs, flag opportunities
 
 ### Commit and document
 - [ ] Commit changes with descriptive message
@@ -471,11 +530,13 @@ House cleaning is for **quality assurance after major work**, not micro-optimizi
 
 ---
 
-**Version**: 1.2 (2025-11-09)
+**Version**: 1.3 (2025-11-09)
+**Changes in v1.3**:
+- Added Task 11: Synthesis Index Maintenance (track synthesis docs, avoid duplication)
+- Added synthesis opportunity triggers to protocol
+- Updated checklist to include synthesis index maintenance
 **Changes in v1.2**:
 - Removed time estimates (inaccurate and not helpful)
 - Added Task 9: Merge Conflict Detection (critical pre-flight check)
 - Added Task 10: Manuscript/PDF Processing (academic papers, manuals)
-- Added manuscript-specific cross-reference strategy
-- Added synthesis triggers for manuscript work
 **Next review**: After Phase 4 completion or next major documentation sprint
