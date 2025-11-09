@@ -764,136 +764,550 @@ Where:
 
 ## IV. Physical Constraints & Conservation Laws
 
+These physical constraints must be satisfied by any valid atmosphere model. They serve as validation tests for the Julia migration.
+
 ### 4.1 Energy Conservation
 
-**Integrated flux condition**: [TO BE FILLED]
+**Global flux conservation** (Stefan-Boltzmann):
+```
+∫ F_ν dν = σ T_eff⁴
+```
+
+Where:
+- F_ν = emergent flux at surface as function of frequency
+- σ = Stefan-Boltzmann constant = 5.67×10⁻⁵ erg/(cm² s K⁴)
+- T_eff = effective temperature (input parameter)
+
+**Implementation**: ATLAS12 enforces this by adjusting temperature structure via Step 5 (TCORR) until integrated flux matches T_eff⁴.
+
+**Validation test**: Compute ∫ H_ν(τ=0) dν and compare to σ T_eff⁴. Should agree to < 1% at convergence.
+
+**Local energy balance** (radiative equilibrium):
+```
+∫ (J_ν - S_ν) κ_ν dν = 0   at each depth
+```
+
+Or equivalently:
+```
+dH/dτ = 0   (flux constant with depth in pure radiative equilibrium)
+```
+
+With convection:
+```
+d(H_rad + F_conv)/dτ = 0   (total flux constant)
+```
 
 ### 4.2 Particle Number Conservation
 
-[TO BE FILLED]
+**Element conservation** (for each element i):
+```
+Σ_j n_i,j = n_i,total
+```
+
+Where:
+- j = ionization stage (0 = neutral, 1 = singly ionized, etc.)
+- n_i,j = number density of element i in ionization stage j
+- n_i,total = total number density of element i (from abundances and ρ)
+
+**Validation test**: After Step 1 (POPS), sum populations across ionization stages and verify equals input abundance × n_total.
+
+**Molecular dissociation** (if molecules present):
+```
+n_AB + n_A + n_B = n_A,total + n_B,total
+```
+
+Accounts for atoms bound in molecules (H2, CO, TiO, etc.).
 
 ### 4.3 Hydrostatic Equilibrium
 
-**Equation**: dP/dτ = g/κ_Ross
+**Equation**:
+```
+dP/dτ = g/κ_Ross
+```
 
-[TO BE FILLED]
+Or equivalently in geometric depth:
+```
+dP/dz = -ρg
+```
+
+Where:
+- P = total pressure (gas + radiation + turbulent)
+- τ = Rosseland optical depth
+- κ_Ross = Rosseland mean opacity
+- g = surface gravity (input parameter)
+- z = geometric height
+
+**Physical meaning**: Pressure gradient balances gravitational force. Valid when dynamical timescales (minutes-hours) >> sound crossing time (seconds).
+
+**Implementation**: ATLAS12 integrates this equation to relate P(τ) to T(τ) and ρ(τ) via ideal gas law and opacity.
+
+**Validation test**: Compute dP/dz numerically and compare to -ρg. Should agree to < 1%.
 
 ### 4.4 Radiative Equilibrium
 
-**Equation**: ∫ (J_ν - S_ν) κ_ν dν = 0
+**Equation**:
+```
+∫ (J_ν - S_ν) κ_ν dν = 0
+```
 
-[TO BE FILLED]
+Or in terms of flux:
+```
+dH/dτ = J - S
+```
+
+**Physical meaning**: At each depth, absorbed radiation equals emitted radiation (steady state, no internal heating).
+
+**Implementation**: Step 5 (TCORR) adjusts temperatures to drive this integral toward zero.
+
+**Convergence criterion**: Flux error |dH/dτ| / H < CONVL (typically 0.01 = 1%).
+
+**Breakdown**: Radiative equilibrium can fail in:
+- Chromospheres (non-radiative heating)
+- Stellar winds (dynamical effects)
+- Rapid pulsations (time-dependent)
+
+ATLAS12 assumes radiative equilibrium always valid (appropriate for photospheres).
 
 ### 4.5 Charge Conservation
 
-[TO BE FILLED]
+**Equation**:
+```
+n_e = Σ_i,j j × n_i,j
+```
+
+Where:
+- n_e = electron number density
+- j = charge state (1 for singly ionized, 2 for doubly ionized, etc.)
+- n_i,j = number density of ion i in charge state j
+
+**Physical meaning**: Free electrons come from ionized atoms. Total electron density equals sum of charges from all ions.
+
+**Implementation**: Step 1 (POPS) iterates electron density with damping factor 0.3 to satisfy this constraint.
+
+**Validation test**: After POPS convergence, compute right-hand side and compare to n_e. Should agree to < 0.1%.
+
+**Correction for doubly ionized He**:
+```fortran
+EXCESS = 2×n_e - P/(k×T)
+IF(EXCESS > 0) CHARGESQ = CHARGESQ + 2×EXCESS
+```
+
+Accounts for He⁺⁺ contributing 2 electrons each (atlas12.for:240-243).
 
 ---
 
 ## V. Numerical Methods Summary
 
-### 5.1 Population Solver
+Quick reference for the algorithms used at each pipeline step. See Section III for detailed physics.
 
-[TO BE FILLED - Direct calculation, iterative n_e]
+### 5.1 Population Solver (Step 1)
 
-### 5.2 Opacity Calculations
+**Method**: Saha-Boltzmann equation (direct analytical calculation)
+- **Iteration**: Electron density n_e iterated with 0.3 damping factor
+- **Solver**: Algebraic (not matrix inversion)
+- **Convergence**: Typically < 20 iterations per depth point
+- **Key subroutine**: POPS (atlas12.for:4143-4665)
 
-[TO BE FILLED]
+### 5.2 Opacity Calculations (Steps 2-3)
 
-### 5.3 Radiative Transfer Solver
+**Continuum opacity** (Step 2):
+- **Method**: Direct summation of ~25 independent sources
+- **Algorithm**: Each source computed via analytic formulas or tabulated cross-sections
+- **Performance**: Fast (few ms per wavelength)
 
-[TO BE FILLED - Feautrier-like method]
+**Line opacity** (Step 3):
+- **Method**: Accumulation over 100K-1M spectral lines
+- **Algorithm**: For each line: compute Voigt profile, accumulate to XLINES array
+- **Critical optimization**: Early exit when contribution < TABCONT threshold (~500× speedup)
+- **Voigt profile**: 4-regime piecewise approximation (~1 μs/call)
+- **Performance**: 600 GFLOP (XLINOP), 3 PFLOP (LINOP1) - See Deep Dive 03
 
-### 5.4 Temperature Correction Algorithm
+### 5.3 Radiative Transfer Solver (Step 4)
 
-[TO BE FILLED - Damped Newton-Raphson]
+**Method**: Feautrier-like integration with pretabulated weights
+- **Grid**: Fixed 51-point τ grid (τ = 0 to 20)
+- **Scattering iteration**: Gauss-Seidel (up to 51 iterations, no convergence check)
+- **Integration**: Matrix multiplication J = COEFJ · S, H = COEFH · S
+- **Interpolation**: MAP1 parabolic (3-point stencil) for grid mapping
+- **Key subroutine**: JOSH (atlas12.for:10342-10609)
 
-### 5.5 Convection Solver
+### 5.4 Temperature Correction Algorithm (Step 5)
 
-[TO BE FILLED - MLT, numerical derivatives]
+**Method**: Damped Newton-Raphson with 6 simultaneous damping mechanisms
+1. Optical depth limits: ±τ/4
+2. Temperature limits: ±T_eff/25
+3. Adaptive damping: 0.5× (oscillation) to 1.25× (acceleration)
+4. Spatial smoothing: 3-point depth average
+5. Monotonicity preservation: Prevent unphysical T inversions
+6. Grid adjustment: Couple to hydrostatic equilibrium
+
+**Iteration control**: Fixed iteration count (NUMITS), no early exit
+- **Key subroutine**: TCORR (atlas12.for:606-995)
+
+### 5.5 Convection Solver (Step 6)
+
+**Method**: Mixing length theory (MLT) with numerical thermodynamic derivatives
+- **Derivatives**: Finite differences (±0.1% perturbations, 4× POPS calls)
+  - ∂E/∂T, ∂E/∂P, ∂ρ/∂T, ∂ρ/∂P
+- **Opacity iteration**: 30 iterations with SOR relaxation (ω=0.7)
+- **Corrections**: Mihalas optically-thin factor, overshooting (OVERWT)
+- **Key subroutine**: CONVEC (atlas12.for:4847-5090)
 
 ### 5.6 Convergence Acceleration
 
-[TO BE FILLED - Adaptive damping]
+**Adaptive damping** (in TCORR):
+- Detects oscillation (ΔT sign flips) → damp by 0.5
+- Detects steady decrease → accelerate by 1.25
+- Auto-adjusts to convergence behavior
+
+**Spatial smoothing**:
+- 3-point averaging of ΔT to prevent grid-scale oscillations
+- Applied before temperature update
+
+**No global convergence acceleration**:
+- ATLAS12 does not implement Ng acceleration or Anderson mixing
+- Relies entirely on local damping mechanisms
 
 ---
 
 ## VI. Failure Modes & Physics Checks
 
+Common failure modes and how to detect them. Julia migration should add diagnostics for all of these.
+
 ### 6.1 Non-Convergence Scenarios
 
-**Oscillation**: [TO BE FILLED]
+**Oscillation** (most common failure):
+- **Symptom**: ΔT alternates sign every iteration, temperature bounces between two values
+- **Cause**: Insufficient damping, stiff coupling (e.g., strong convection)
+- **Detection**: Track sign(ΔT) across iterations, flag if alternates >3 times
+- **Fortran handling**: Adaptive damping (mechanism #3 in TCORR) should catch, but may persist
+- **Julia improvement**: Add explicit oscillation detection, reduce damping automatically
 
-**Divergence**: [TO BE FILLED]
+**Divergence** (rare but catastrophic):
+- **Symptom**: ΔT grows instead of shrinking, temperatures run away to extremes
+- **Cause**: Bad opacity (missing source), wrong abundance, corrupted input
+- **Detection**: |ΔT| > ΔT_previous for 5+ consecutive iterations
+- **Fortran handling**: Damping limits (±T_eff/25, ±τ/4) prevent total catastrophe
+- **Julia improvement**: Add early-exit abort if divergence detected
 
-**Slow convergence**: [TO BE FILLED]
+**Slow convergence** (> 50-100 iterations):
+- **Symptom**: ΔT decreases but very slowly, linear not exponential
+- **Cause**: Poor initial guess, extreme stellar parameters, stiff problem
+- **Detection**: Iteration count > NUMITS without convergence
+- **Fortran handling**: None - just runs out of iterations
+- **Julia improvement**:
+  - Suggest better initial guess (interpolate from grid)
+  - Implement Ng acceleration or Anderson mixing
+  - Adaptive damping tuning
 
 ### 6.2 Unphysical Outputs
 
-**Negative densities**: [TO BE FILLED]
+**Negative densities**:
+- **Where**: Populations (n_i,j < 0), electron density (n_e < 0)
+- **Cause**: Saha equation numerical error, wrong partition functions
+- **Detection**: Check all n_i,j ≥ 0 after Step 1
+- **Fortran handling**: Clamps n_e > 0, re-iterates
+- **Julia improvement**: Throw error with diagnostic (which species, which depth)
 
-**Inverted temperature gradient**: [TO BE FILLED]
+**Inverted temperature gradient** (T increases outward):
+- **Where**: Surface layers (low optical depth)
+- **Physical**: Can be real (chromospheric heating) but ATLAS12 doesn't model this
+- **Detection**: Check dT/dτ < 0 in photosphere (τ > 0.1)
+- **Fortran handling**: Monotonicity damping (mechanism #5) tries to prevent
+- **Julia improvement**: Flag as warning (may indicate non-LTE needed)
 
-**Flux non-conservation**: [TO BE FILLED]
+**Flux non-conservation**:
+- **Symptom**: ∫ F_ν dν ≠ σ T_eff⁴ (>1-2% error)
+- **Cause**: Temperature correction failed, optical depth grid inadequate
+- **Detection**: Compute flux integral, compare to σ T_eff⁴
+- **Fortran handling**: TCORR should drive this to < CONVL tolerance
+- **Julia improvement**: Report flux error prominently in output
+
+**Negative opacities**:
+- **Where**: Continuum opacity κ_cont < 0
+- **Cause**: Populations negative, bad atomic data
+- **Detection**: Check ACONT(depth) ≥ 0 after Step 2
+- **Fortran handling**: May silently use |κ| or clamp to 0
+- **Julia improvement**: Abort with diagnostic
 
 ### 6.3 Precision Failures
 
-**Underflow**: [TO BE FILLED]
+**Underflow** (most common precision issue):
+- **Where**: Populations (Saha equation exp(-χ/kT) for high ionization)
+  - Example: n_Fe7+ / n_Fe6+ ~ exp(-54.8eV / k×5000K) ~ 10⁻⁴⁷
+- **Float32 range**: ~10⁻³⁸ (underflows to exactly 0.0)
+- **Float64 range**: ~10⁻³⁰⁸ (adequate)
+- **Detection**: Check for exact 0.0 where small positive expected
+- **Fortran handling**: Uses Float64 for populations (REAL*8)
+- **Julia migration**: **Must use Float64** for populations (Deep Dive 02)
 
-**Overflow**: [TO BE FILLED]
+**Overflow** (rare):
+- **Where**: Exp(-χ/kT) for very hot stars (T > 50,000K, low χ)
+- **Float64 max**: ~10³⁰⁸
+- **Detection**: Check for Inf or NaN in populations
+- **Fortran handling**: Typically doesn't occur in valid T_eff range
+- **Julia improvement**: Clamp exponents before evaluation if T extreme
 
-**Catastrophic cancellation**: [TO BE FILLED]
+**Catastrophic cancellation**:
+- **Where**: Line opacity accumulation (10⁸ additions, values span 10⁸ range)
+  - Adding 10⁻³² to accumulated sum ~10⁻²⁴
+- **Float32**: Loses precision after ~10⁷ additions
+- **Float64**: Adequate (Deep Dive 03 analysis)
+- **Detection**: Compare accumulated sum to exact (Kahan summation)
+- **Fortran**: Uses Float32 (XLINES), no Kahan summation, accepts ~0.01% error
+- **Julia migration**: Float64 recommended as "cheap insurance"
 
 ### 6.4 When LTE Breaks Down
 
-[TO BE FILLED]
+**LTE assumptions** (ATLAS12 always assumes these valid):
+1. Collisions >> radiative processes (sets level populations)
+2. Thermalization depth >> photon mean free path
+3. Velocity fields << sound speed (hydrostatic equilibrium)
+
+**Where LTE fails**:
+- **Chromospheres**: Low density, radiation dominates → NLTE populations needed
+- **Stellar winds**: Supersonic outflow → not hydrostatic
+- **Hot stars** (T_eff > 30,000K): UV radiation fields → photoionization from excited states
+- **Strong lines**: Line cores optically thick → scattering not thermalization
+
+**Symptoms of LTE breakdown** (in ATLAS12 output):
+- Unphysical strong lines (much stronger than observed)
+- Ionization balance wrong (compared to observed spectra)
+- Chromospheric lines in emission (ATLAS12 predicts absorption)
+
+**ATLAS12 mitigation**: None - assumes LTE always valid
+
+**ATLAS12 vs ATLAS9**: ATLAS12 has experimental NLTE options (fort.19 file) but rarely used
+
+**Julia migration**: Document LTE limitations, potentially add NLTE as future extension
 
 ---
 
 ## VII. Comparison: ATLAS12 vs ATLAS9
 
+Quick comparison for users familiar with ATLAS9. Both codes compute LTE stellar atmospheres but differ in opacity treatment.
+
 ### 7.1 Physics Differences
 
-**Opacity treatment**: [TO BE FILLED - OS vs ODF]
+**Opacity treatment** (fundamental difference):
+
+**ATLAS9**: Opacity Distribution Functions (ODFs)
+- Pre-tabulated opacity bins (statistical approach)
+- Groups lines into ~10,000 opacity bins
+- Fast (no line-by-line calculation each iteration)
+- Less accurate for non-solar abundances
+
+**ATLAS12**: Opacity Sampling (OS)
+- Direct line-by-line opacity calculation
+- Uses actual line list (100K-1M lines from fort.12)
+- Slower (must compute each line each iteration)
+- More accurate, especially for abundance variations
+
+**When to use ATLAS12**:
+- Non-standard abundances (metal-poor, enhanced CNO, etc.)
+- High-resolution spectral synthesis (couples with SYNTHE)
+- Accurate line blanketing for specific elements
+
+**When ATLAS9 sufficient**:
+- Solar or near-solar abundances
+- Broad-band photometry (no high-res spectra)
+- Fast grid calculations (many models)
 
 ### 7.2 Numerical Method Differences
 
-[TO BE FILLED]
+**Similarities**:
+- Same radiative transfer solver (JOSH - Feautrier-like)
+- Same temperature correction (TCORR - 6 damping mechanisms)
+- Same convection treatment (CONVEC - mixing length theory)
+- Same hydrostatic equilibrium integration
+
+**Differences**:
+- **Line opacity**: ATLAS9 uses pretabulated ODFs, ATLAS12 computes line-by-line
+- **Performance**: ATLAS9 ~10-100× faster (no line opacity summation)
+- **Memory**: ATLAS12 uses more (stores XLINES array: 72×30,000 Float32)
 
 ### 7.3 Accuracy Improvements
 
-[TO BE FILLED]
+**Abundance sensitivity**:
+- ATLAS9: Accurate to ~10-20% for solar-scaled abundances
+- ATLAS12: Accurate to ~1-5% for arbitrary abundances
+
+**Line blanketing**:
+- ATLAS9: Statistical (averages over bins)
+- ATLAS12: Exact (every line resolved)
+
+**Example**: Fe-enhanced star ([Fe/H] = +0.5, solar CNO)
+- ATLAS9: Uses scaled-solar ODF (wrong for Fe-only enhancement)
+- ATLAS12: Computes Fe line opacity correctly (more accurate T structure)
+
+**Validation**: Deep Dive 03 confirms ATLAS12 opacity sampling gives < 1% error relative to exact Voigt profiles
 
 ---
 
 ## VIII. Migration Considerations
 
+Critical guidance for Julia developers. Prioritized by risk and impact.
+
 ### 8.1 Physics That Must Be Preserved Exactly
 
-1. **Population calculations**: Float64 precision, Saha-Boltzmann equation, charge conservation
-2. [TO BE FILLED]
+**NON-NEGOTIABLE** (validation will fail if changed):
+
+1. **Population calculations** (Step 1):
+   - Float64 precision (40+ order of magnitude range)
+   - Saha-Boltzmann equations exact
+   - 0.3 damping factor for n_e iteration
+   - Charge conservation enforced
+
+2. **Voigt profile magic constants** (Step 3):
+   - 13 constants in HVOIGT subroutine
+   - 4-regime piecewise algorithm
+   - Must port exactly (even if non-standard) for validation
+
+3. **JOSH pretabulated weights** (Step 4):
+   - COEFJ, COEFH matrices (51×51 each)
+   - CK, CH surface weights (51 values each)
+   - Copy verbatim from Fortran DATA statements
+
+4. **TCORR damping mechanisms** (Step 5):
+   - All 6 damping mechanisms active
+   - ±T_eff/25 and ±τ/4 limits exact
+   - 0.5×/1.25× adaptive factors
+   - 3-point spatial smoothing
+
+5. **Frequency integration**:
+   - ~30,000 wavelength points (from WAVESET array)
+   - Rosseland weighting (RCOSET array)
+   - Integration order (continuum → lines → RT → corrections)
+
+**PRESERVE INITIALLY, OPTIMIZE LATER**:
+
+6. **Early-exit thresholds** (Step 3):
+   - TABCONT cutoff (performance-critical)
+   - Line wing truncation distances
+   - Validate these exactly, then tune for Julia
+
+7. **Iteration counts**:
+   - NUMITS (main loop)
+   - 51 iterations (JOSH scattering)
+   - 30 iterations (CONVEC opacity)
+   - No early-exit convergence checks
 
 ### 8.2 Where Optimizations Are Safe
 
-1. **Voigt profile evaluation**: Float32 acceptable (see Deep Dive 01)
-2. [TO BE FILLED]
+**SAFE IMMEDIATELY** (won't affect validation):
+
+1. **Data structures**:
+   - Replace COMMON blocks with structs
+   - Make dependencies explicit (function arguments)
+   - Use immutable structs where possible
+
+2. **Parallelization**:
+   - Frequency loop (Step 4): Embarrassingly parallel
+   - Continuum opacity sources (Step 2): Independent, can parallelize
+   - Depth loop in line opacity: Parallelizable with care (shared XLINES accumulation)
+
+3. **Vectorization**:
+   - Voigt profile: SIMD intrinsics for u loop
+   - Population calculations: Broadcast over depth points
+   - Opacity summation: GPU-friendly (if needed)
+
+4. **I/O format**:
+   - Fort units → named files or in-memory structures
+   - Binary formats → HDF5, FITS, or Julia serialization
+   - Preserve ability to read/write legacy formats for validation
+
+5. **Diagnostics**:
+   - Add convergence tracking (iteration history)
+   - Add timing profilers
+   - Add physics check warnings (negative densities, flux errors, etc.)
+
+**SAFE AFTER VALIDATION**:
+
+6. **Voigt profile**:
+   - Replace with standard library (Faddeeva.jl) after validating against HVOIGT
+   - Use Float32 (Deep Dive 01 confirms adequate)
+
+7. **Line opacity precision**:
+   - XLINES Float32 → Float64 "cheap insurance" (Deep Dive 03)
+   - Memory cost negligible (~8 MB → 16 MB)
+
+8. **Convection derivatives**:
+   - Finite differences → automatic differentiation (ForwardDiff.jl)
+   - Eliminates 4× POPS calls → major speedup
+   - Validate thermodynamic derivatives match Fortran first
+
+9. **Convergence acceleration**:
+   - Add Ng acceleration or Anderson mixing
+   - Optional early-exit on convergence
+   - Keep fixed-iteration mode for validation
 
 ### 8.3 Physical Validation Tests
 
-**Flux conservation**: [TO BE FILLED]
+**Test suite for Julia vs Fortran validation** (all must pass to < 1% error):
 
-**Population ratios**: [TO BE FILLED]
+1. **Flux conservation**:
+   ```julia
+   @test abs(integrated_flux - σ * T_eff^4) / (σ * T_eff^4) < 0.01
+   ```
 
-**Hydrostatic equilibrium**: [TO BE FILLED]
+2. **Population ratios** (check Saha equation):
+   ```julia
+   for each ionization stage:
+       ratio_computed = n[i,j+1] / n[i,j]
+       ratio_saha = saha_equation(T, n_e, Z[i,j], χ[i,j])
+       @test isapprox(ratio_computed, ratio_saha, rtol=0.01)
+   ```
+
+3. **Hydrostatic equilibrium**:
+   ```julia
+   dP_dz = numerical_derivative(P, z)
+   @test all(abs.(dP_dz + ρ * g) ./ (ρ * g) .< 0.01)
+   ```
+
+4. **Charge conservation**:
+   ```julia
+   n_e_computed = sum(j * n[i,j] for all ions)
+   @test isapprox(n_e_computed, n_e, rtol=0.001)
+   ```
+
+5. **Temperature structure** (validate against Fortran fort.7 output):
+   ```julia
+   T_julia = read_atmosphere("julia_output.dat")
+   T_fortran = read_atmosphere("fortran_fort7.dat")
+   @test all(abs.(T_julia - T_fortran) ./ T_fortran .< 0.01)
+   ```
+
+6. **Opacity spot checks**:
+   - Compare XLINES(depth, ν) for specific wavelengths
+   - Compare continuum opacity at test wavelengths
+   - Validate Voigt profile against HVOIGT for test (a, u) values
+
+7. **Radiative transfer**:
+   - Compare J_ν(depth) for test wavelengths
+   - Compare H_ν(depth) (flux)
+   - Surface flux I_ν(μ) for test angles
+
+**Test atmospheres** (validate all):
+- Solar (T_eff=5777K, log g=4.44, [M/H]=0.0)
+- Hot star (T_eff=15000K, log g=4.0, [M/H]=0.0)
+- Metal-poor (T_eff=6000K, log g=4.0, [M/H]=-2.0)
+- Giant (T_eff=5000K, log g=2.0, [M/H]=0.0)
 
 ### 8.4 Precision Requirements by Component
 
-| Component | Precision | Justification |
-|-----------|-----------|---------------|
-| Populations | Float64 | 40+ order magnitude range (Deep Dive 02) |
-| Voigt profiles | Float32 | Target accuracy ~2% (Deep Dive 01) |
-| Line opacity | Float64 recommended | "Cheap insurance" (Deep Dive 03) |
-| RT integration | Mixed | Weights Float32, sources Float64 (Deep Dive 05) |
+| Component | Fortran | Julia Recommended | Justification |
+|-----------|---------|-------------------|---------------|
+| **Populations** | Float64 | **Float64** | 40+ order magnitude range (Deep Dive 02) - NON-NEGOTIABLE |
+| **Voigt profiles** | Float32 | Float32 | Target accuracy ~2% sufficient (Deep Dive 01) |
+| **XLINES accumulation** | Float32 | **Float64** | "Cheap insurance" vs catastrophic cancellation (Deep Dive 03) |
+| **Continuum opacity** | Mixed | Float64 | Consistent with populations input |
+| **RT source functions** | Float64 | Float64 | Large dynamic range |
+| **RT weights (COEFJ)** | Float32 | Float32 | Pretabulated, no need to change |
+| **Temperature** | Float64 | Float64 | Accumulated frequency integrals |
+| **Flux integrals** | Float64 | Float64 | Sum over ~30,000 wavelengths |
+| **Convection** | Float64 | Float64 | Finite difference derivatives sensitive |
+
+**General principle**: Use Float64 by default unless Deep Dive analysis confirms Float32 adequate. Memory cost negligible on modern hardware.
 
 ---
 
