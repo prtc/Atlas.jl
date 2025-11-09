@@ -1008,6 +1008,119 @@ Convolve spectrum with instrumental profile:
 
 ---
 
+### SYNTHE Line Data Formats
+
+**Reference**: Jauregi 2005, Section 3.4 (complete field specifications)
+
+#### Atomic Line Format (30 fields)
+
+**Source**: Kurucz gf*.100 files (ASCII, fixed format)
+
+| Field | Variable | Format | Description |
+|-------|----------|--------|-------------|
+| 1 | WL | F10.4 | Wavelength (nm) |
+| 2 | GFLOG | F7.3 | log(gf) oscillator strength |
+| 3 | CODE | F6.2 | Element.ion (e.g., 26.01 = Fe II) |
+| 4 | E | F12.3 | Lower energy level (cm⁻¹) |
+| 5 | XJ | F5.1 | Lower level J = L+S |
+| 6 | LABEL | A10 | Lower level config (spectroscopic notation) |
+| 7 | EP | F12.3 | Upper energy level (cm⁻¹) |
+| 8 | XJP | F5.1 | Upper level J |
+| 9 | LABELP | A10 | Upper level config |
+| 10 | GAMMAR | F6.2 | log(γ_rad) radiative damping |
+| 11 | GAMMAS | F6.2 | log(γ_Stark) Stark damping |
+| 12 | GAMMAW | F6.2 | log(γ_VdW) van der Waals damping @10000K |
+| 13 | REF | A4 | Bibliographic reference code |
+| 14 | NBLO | I2 | NLTE departure coeff (lower level) |
+| 15 | NBUP | I2 | NLTE departure coeff (upper level) |
+| 16 | ISO1 | I3 | Isotope number (1st component) |
+| 17 | X1 | F7.3 | Hyperfine component log fractional strength |
+| 18 | ISO2 | I3 | Isotope number (2nd component for diatomics) |
+| 19 | X2 | F7.3 | Log isotopic abundance fraction |
+| 20-21 | - | I5, I5 | Hyperfine shifts (mK) for lower, upper levels |
+| 22-23 | - | I1, A1 | Hyperfine f (lower), note ('z'=none, '?'=guess) |
+| 24-25 | - | I1, A1 | Hyperfine f (upper), note |
+| 26 | - | I1 | Line strength class code |
+| 27 | - | A3 | Special code (e.g., 'AUT' for autoionizing) |
+| 28 | GLANDE | I5 | Landé g-factor (lower) × 1000 |
+| 29 | GLANDEP | I5 | Landé g-factor (upper) × 1000 |
+| 30 | ISOSHIFT | I6 | Isotope wavelength shift (mÅ) |
+
+**Example** (Ca II triplet line at 854.2091 nm):
+```
+854.2091 -0.362 20.01 13710.880 2.5 3d 2D 25414.400 1.5 4p 2P
+8.20 -5.55 -7.80BWL 2 3 0 0.000 0 0.000 0 0 5 1200 1334
+```
+
+**Reference codes**: See gfall.ref and gfelem.ref in Kurucz website /linelists/lines/
+
+#### Molecular Line Format (10 fields)
+
+**Source**: Kurucz molecular line files (various formats per molecule)
+
+| Field | Variable | Format | Description |
+|-------|----------|--------|-------------|
+| 1 | WL | F10.4 | Wavelength (nm) |
+| 2 | GFLOG | F7.3 | log(gf) |
+| 3 | XJ | F5.1 | Lower level J = L+S |
+| 4 | E | F12.3 | Lower energy (cm⁻¹) |
+| 5 | XJP | F5.1 | Upper level J |
+| 6 | EP | F12.3 | Upper energy (cm⁻¹) |
+| 7 | CODE | F9.2 | Molecule code + transition label |
+| 8 | LABEL(1) | A8 | Lower level label |
+| 9 | LABELP(1) | A8 | Upper level label |
+| 10 | ISO | I2 | Isotope number |
+
+**Molecule codes**: Atomic numbers concatenated (e.g., 608=CO, 814=SiO, 101.01=H₂⁺, 100=H⁻)
+
+**Example** (SiO line at 350.0288 nm):
+```
+350.0288 -0.121 69.0-32654.280 70.0 -61215.190 814X28 E10 29
+```
+
+---
+
+### SYNTHE Known Bugs and Quirks
+
+**Reference**: Jauregi 2005, Section 3.5
+
+#### Critical Bug: SURFACE FLUX + ROTATE Crash
+
+**Problem** (Section 3.5.1):
+- Using `SURFACE FLUX` control card in ATLAS model header **crashes** when ROTATE program is in SYNTHE pipeline
+- Confirmed by F. Castelli (private communication) as bug in ROTATE
+
+**Workaround**:
+| Goal | Header Card | ROTATE | Output |
+|------|-------------|--------|--------|
+| Flux, non-rotating star | `SURFACE FLUX` | Omit ROTATE | ✅ Flux spectrum |
+| Flux, rotating star | `SURFACE FLUX` | Include ROTATE | ❌ **CRASH** |
+| Flux, rotating star (workaround) | `SURFACE INTENSITY` | Include ROTATE | ✅ Flux spectrum |
+| Intensity, non-rotating | `SURFACE INTENSITY` | Omit ROTATE | ✅ Intensity @ angles |
+| Intensity, rotating | `SURFACE INTENSITY` | Include ROTATE | ✅ Flux spectrum |
+
+**Recommendation**: **Always use SURFACE INTENSITY instead of SURFACE FLUX** to avoid crashes.
+
+**Mechanism**: ROTATE integrates intensity over stellar disk to produce flux. With v sin i = 0, this gives same result as SURFACE FLUX but without crashing.
+
+**Julia migration note**: This bug should NOT be reproduced in Julia version. Implement proper flux/intensity/rotation logic without this limitation.
+
+#### Line List File Naming Exception
+
+**General pattern**: `GFxxxx.yyy`
+- xxxx = upper wavelength limit (nm)
+- yyy = wavelength range (nm)
+
+**Example**: GF0300.100 contains lines 200-300 nm (100 nm range)
+
+**EXCEPTION**: GF1200.100 actually contains lines 800-1200 nm (400 nm range, not 100!)
+
+**Correct interpretation**:
+- GF1200.100 should be called GF1200.400
+- Users must know this exception when selecting line lists
+
+---
+
 ### SYNTHE Pipeline Data Flow Summary
 
 ```
@@ -1408,17 +1521,38 @@ save_model(model, "output.dat")
 
 ### 3.5 Input/Output Files
 
-**Input files** (from code comments):
-- **TAPE1**: Rosseland opacity tables (if non-solar abundances)
-- **TAPE2**: Molecular equilibrium constants
-- **TAPE5**: Standard input (model parameters)
-- **TAPE9**: Line Distribution Function (ODF) input
+**Reference**: Jauregi 2005, Section 2.1 (Table 1)
 
-**Output files**:
-- **TAPE6**: Standard output (iteration log)
-- **TAPE7**: Final model atmosphere and/or flux
+**Fortran I/O Unit Structure** (accessed via READ(n,...) or WRITE(n,...)):
 
-**Key difference from ATLAS12**: Requires pre-computed ODF files (TAPE9) instead of raw line lists.
+| Unit | Direction | Format | Description | Content |
+|------|-----------|--------|-------------|---------|
+| 9 | Input | Binary | ODF file | Opacity Distribution Functions (BIG or LITTLE) |
+| 1 | Input | Text | Rosseland opacity file | Optional non-solar abundance tables |
+| 5 | Input | Text | Command-line args | Control cards (GRAVITY, TEFF, BEGIN, etc.) |
+| 3 | Input | Text | Preexisting model | For READ PUNCH, READ DECK, SCALE operations |
+| 2 | Input | Text | Molecule data | MOLECULES.DAT (partition functions) |
+| 7 | Output | Text | Main output | New model or radiation field (controlled by PUNCH) |
+| 6 | Output | Text | Auxiliary info | Iteration diagnostics (controlled by PRINT) |
+
+**ODF File Naming Convention** (Jauregi 2005):
+- Format: `M25ABIG4.BDF` or `M25ALIT2.BDF`
+- `M25` = log₁₀[Z/Z☉] = -2.5 (metallicity)
+- `A` = alpha-enhanced abundances (O, Ne, Mg, Si, S, Ar, Ca, Ti +0.4 dex)
+- `BIG` or `LIT` = Resolution (328 vs 1212 frequency divisions)
+- `4` = Microturbulent velocity ξ = 4 km/s
+
+**ODF Resolutions** (Jauregi 2005, Section 2.1):
+- **BIG**: 328 divisions over wavelength range 8.977-100000 nm (for model calculation)
+- **LITTLE**: 1212 divisions over same range (for radiation field calculation)
+- **Location in code**: Subroutine BLOCKBIG contains exact wavelength divisions
+
+**Rosseland Opacity Files**:
+- Format: `kapxxx.ros` (e.g., `kap000.ros` for solar, `kapm10.ros` for [M/H]=-1.0)
+- Default: Solar abundances + ξ=2 km/s stored in source code (function ROSSTAB, subroutine TTAUP)
+- External file required for non-standard abundances (use READ KAPPA card)
+
+**Key difference from ATLAS12**: Requires pre-computed ODF files (unit 9) instead of raw line lists.
 
 ---
 
@@ -1454,7 +1588,108 @@ Based on structural similarity to ATLAS12:
 
 ---
 
-### 3.7 ODF (Opacity Distribution Function) Concept
+### 3.7 ATLAS9 Control Cards Reference
+
+**Reference**: Jauregi 2005, Section 2.3 (comprehensive card catalog)
+
+**Card Categories**:
+1. Model computation cards
+2. Physical process cards
+3. Output control cards
+4. Miscellaneous cards
+
+#### 3.7.1 Cards to Compute New Model
+
+| Card | Syntax | Purpose |
+|------|--------|---------|
+| **GRAVITY** | `GRAVITY n` | Set log g (cm/s²) |
+| **TEFF** | `TEFF n` | Set effective temperature (K) |
+| **CALCULATE** | `CALCULATE n1 n2 n3` | Create gray T vs τ_Ross (n1 depths, start n2, step n3) |
+| **READ START** | `READ START n` | Read n pairs of (τ_Ross, T) |
+| **READ DECK** | `READ DECK n` | Read n lines: RHOX, T, P, XNE, ABROSS, PRAD, VTURB |
+| **READ DECK6** | `READ DECK6 n` | Like READ DECK but PRAD → ACCRAD (rad. acceleration) |
+| **SCALE** | `SCALE n1 n2 n3 n4 n5` | Rescale to n1 depths, 10^n2 τ start, 10^n3 step, T=n4, g=n5 |
+| **FREQUENCIES** | `FREQUENCIES n1 n2 n3 name` | Read n1 freqs from n2 to n3, name=BIG or LITTLE |
+| **ITERATIONS** | `ITERATIONS n` | Number of iterations (typically 15 for models, 1 for radiation) |
+| **ABUNDANCE SCALE** | `ABUNDANCE SCALE n` | Multiply all abundances (except H, He) by n |
+| **ABUNDANCE CHANGE** | `ABUNDANCE CHANGE n1 n2, n3 n4, ...` | Change individual elements (Z=n1, abund=n2) |
+| **READ KAPPA** | `READ KAPPA` | Read Rosseland opacity from KAPxxx.ROS (before model cards!) |
+| **READ PUNCH** | `READ PUNCH` | Read preexisting model from separate file (unit 3) |
+| **BEGIN** | `BEGIN` | Begin calculation |
+| **END** | `END` | Call EXIT, end procedure |
+
+**Important**: `READ KAPPA` must be called **before** any model initialization cards.
+
+**SCALE vs CALCULATE**: Castelli (1988) recommends using SCALE to modify existing model rather than CALCULATE from scratch (better numerical stability).
+
+#### 3.7.2 Cards to Control Physical Processes
+
+| Card | Syntax | Purpose |
+|------|--------|---------|
+| **OPACITY ON** | `OPACITY ON name1, name2, ...` | Turn on opacity sources |
+| **OPACITY OFF** | `OPACITY OFF name1, name2, ...` | Turn off opacity sources |
+| **OPACITY IFOP** | `OPACITY IFOP switches` | 20 comma-separated 0/1 switches |
+| **CORRECTION** | `CORRECTION ON/OFF` | Temperature correction (off for radiation fields) |
+| **PRESSURE** | `PRESSURE ON/OFF` | Compute pressure and number densities |
+| **SURFACE FLUX** | `SURFACE FLUX` | Compute radiation flux at surface only |
+| **SURFACE INTENSITY** | `SURFACE INTENSITY n n1 n2 n3 ...` | Compute intensity at n angles (μ=cos θ) |
+| **SURFACE OFF** | `SURFACE OFF` | Calculate radiation at all depths |
+| **SCATTERING** | `SCATTERING ON/OFF` | Include scattering in opacity |
+| **CONVECTION ON** | `CONVECTION ON n` | Mixing-length convection (n = l/H_p ratio) |
+| **CONVECTION OFF** | `CONVECTION OFF` | Disable convection |
+| **CONVECTION OVER** | `CONVECTION OVER n1 n2` | Overshooting (n1=l/H_p, n2=weight W, 0=disable) |
+| **MOLECULES** | `MOLECULES ON/OFF` | Input molecular partition functions |
+| **TURBULENCE ON** | `TURBULENCE ON n1 n2 n3 n4` | P_t = ½ρ(n1×ρ^n2 + n3×v_s/10⁵ + n4)² |
+| **TURBULENCE OFF** | `TURBULENCE OFF` | Disable turbulent pressure |
+| **LTE / NLTE** | `LTE` or `NLTE` | Enable NLTE for H and H⁻ continua |
+
+**Overshooting parameter**: W=0 disables overshooting (recommended). Must explicitly use `CONVECTION OFF` to compute non-overshooting models - `CONVECTION ON` defaults to W=1.
+
+#### 3.7.3 Cards to Control Output
+
+| Card | Syntax | Purpose |
+|------|--------|---------|
+| **PRINT** | `PRINT n` or `PRINT n1 n2 ... n_iter` | Unit 6 output control |
+| **PUNCH** | `PUNCH n` or `PUNCH n1 n2 ... n_iter` | Unit 7 output control |
+
+**For model calculations**:
+- `PRINT 1 0 0 0 ... 0 1` = Print first and last iteration only
+- `PUNCH 0 0 0 0 ... 0 1` = Punch final model only
+- Each number is a switch (0 or 1) for corresponding iteration
+
+**For radiation field calculations**:
+- `PRINT n` where n = 0 (none) to 4 (verbose), default 2
+- Similar for PUNCH
+
+#### 3.7.4 Other Cards
+
+| Card | Syntax | Purpose |
+|------|--------|---------|
+| **READ DEPARTURE** | `READ DEPARTURE n1` | Read H and H⁻ NLTE departure coefficients (not recommended) |
+| **CALL** | `CALL` | Call user-supplied DUMMYR subroutine |
+| **TITLE** | `TITLE string` | Set model name (max 74 characters) |
+| **CHANGE** | `CHANGE n1 n2, n3, n4 ...` | Map model onto n1 points at depths n2, n3, ... |
+
+#### 3.7.5 Convergence Check (from Auxiliary Output)
+
+**How to verify convergence** (Section 2.1, Auxiliary Output):
+
+Look for columns in unit 6 output:
+```
+PER CENT FLUX
+ERROR    DERIV
+...      ...
+```
+
+**Convergence criteria**:
+- ERROR (flux error) < 1%
+- DERIV (derivative error) < 10%
+
+If not converged, increase ITERATIONS.
+
+---
+
+### 3.8 ODF (Opacity Distribution Function) Concept
 
 **What are ODFs?**:
 - Pre-computed probability distribution of opacity at each wavelength

@@ -39,11 +39,23 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **atlas9+synthe.pdf** - ATLAS9 and SYNTHE combined documentation
-  - Date processed:
-  - Related components: ATLAS9, SYNTHE
-  - Archaeology docs updated:
+- [x] **atlas9+synthe.pdf** - ATLAS9 and SYNTHE combined documentation (Jauregi 2005)
+  - Date processed: 2025-11-09
+  - Related components: ATLAS9, SYNTHE, ROTATE, BROADEN
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (ATLAS9 and SYNTHE sections)
   - Key findings:
+    - Complete ATLAS9 I/O unit structure (Table 2.1): 7 units documented
+    - Comprehensive control card reference (47+ cards documented)
+    - SYNTHE 11-program pipeline with detailed COM file walkthrough
+    - Atomic line format: 30 fields (wavelength, log gf, damping, hyperfine, etc.)
+    - Molecular line format: 10 fields (simpler than atomic)
+    - ⚠️ CRITICAL BUG: SURFACE FLUX crashes with ROTATE - must use SURFACE INTENSITY
+    - Two ATLAS9 executables: atlas9v (radiation fields), atlas9mem (models)
+    - ODF resolutions: BIG=328 divisions (models), LITTLE=1212 divisions (radiation)
+    - Model naming: ap00t6000g45k2nover = abundance/Teff/logg/turb/convection
+    - Line list files: GF0300.100 = upper λ 300nm, range 100nm (except GF1200.100=400nm!)
+    - Complete SYNTHE I/O units across all 11 programs documented
+    - Partial redistribution parameters (fort.25 - NLTE only)
 
 - [ ] **atlas_synthe_manuals.pdf** - Manuals for ATLAS and SYNTHE
   - Date processed:
