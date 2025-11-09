@@ -39,11 +39,23 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **atlas9+synthe.pdf** - ATLAS9 and SYNTHE combined documentation
-  - Date processed:
-  - Related components: ATLAS9, SYNTHE
-  - Archaeology docs updated:
+- [x] **atlas9+synthe.pdf** - ATLAS9 and SYNTHE combined documentation (Jauregi 2005)
+  - Date processed: 2025-11-09
+  - Related components: ATLAS9, SYNTHE, ROTATE, BROADEN
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (ATLAS9 and SYNTHE sections)
   - Key findings:
+    - Complete ATLAS9 I/O unit structure (Table 2.1): 7 units documented
+    - Comprehensive control card reference (47+ cards documented)
+    - SYNTHE 11-program pipeline with detailed COM file walkthrough
+    - Atomic line format: 30 fields (wavelength, log gf, damping, hyperfine, etc.)
+    - Molecular line format: 10 fields (simpler than atomic)
+    - ⚠️ CRITICAL BUG: SURFACE FLUX crashes with ROTATE - must use SURFACE INTENSITY
+    - Two ATLAS9 executables: atlas9v (radiation fields), atlas9mem (models)
+    - ODF resolutions: BIG=328 divisions (models), LITTLE=1212 divisions (radiation)
+    - Model naming: ap00t6000g45k2nover = abundance/Teff/logg/turb/convection
+    - Line list files: GF0300.100 = upper λ 300nm, range 100nm (except GF1200.100=400nm!)
+    - Complete SYNTHE I/O units across all 11 programs documented
+    - Partial redistribution parameters (fort.25 - NLTE only)
 
 - [ ] **atlas_synthe_manuals.pdf** - Manuals for ATLAS and SYNTHE
   - Date processed:
@@ -51,11 +63,22 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **atlaslinux.pdf** - Linux implementation notes
-  - Date processed:
-  - Related components: Build/compilation, platform-specific
-  - Archaeology docs updated:
+- [x] **atlaslinux.pdf** - Linux implementation notes (Sbordone et al. 2004)
+  - Date processed: 2025-11-09
+  - Related components: Build/compilation, ATLAS9, SYNTHE, WIDTH
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (porting section)
   - Key findings:
+    - **Compiler**: Intel Fortran Compiler (IFC) 7.0/8.0 (free for research, good Fortran IV compatibility)
+    - **Minimal code changes**: FORMAT updates, OPEN syntax, double precision fixes, DATA block splitting
+    - **New requirement**: PFIRON.DAT file (iron group partition functions) - IFC DATA block size limit
+    - **Molecular data**: VMS binary → ASCII format (program modified to read ASCII)
+    - **ODF conversion**: VMS binary → ASCII → Linux binary (saves disk space)
+    - **Performance gains**: ATLAS9 2.7-3.9× faster, SYNTHE 6.9× faster vs VMS AlphaServer
+    - **Laptop capable**: Pentium M 1.6GHz runs ATLAS9 in 122s (was 478s on AlphaServer)
+    - **Scripts**: VMS DCL → C-shell, program sequence unchanged
+    - **Validation**: Results indistinguishable from VMS (perfect T, ne agreement)
+    - **Disk space**: ~700 MB typical (BIG ODFs + line lists + molecules)
+    - Distribution contact: lsbordon@eso.org, bonifaci@ts.astro.it
 
 - [ ] **atlasodfnew.pdf** - Opacity Distribution Functions (ODF) documentation
   - Date processed:
