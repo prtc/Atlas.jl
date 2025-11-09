@@ -100,10 +100,10 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 - ODF generation pipeline
 
 **Notes**:
-Phase 2 successfully completed with **twelve major deliverables** (5 + 7 deep dives).
-Phase 3 added **one major deliverable** (PHYSICS_PIPELINE_ATLAS12.md).
+Phase 2 successfully completed with **twelve major deliverables** (5 architecture + 7 ATLAS12 deep dives).
+Phase 3 added **two major deliverables** (PHYSICS_PIPELINE_ATLAS12.md, PHYSICS_PIPELINE_SYNTHE.md).
 
-**Total deliverables: 13 documents** (6 architecture + 7 deep dives)
+**Total deliverables: 14 documents** (6 architecture + 7 ATLAS12 deep dives + 1 ATLAS12 physics + 5 SYNTHE deep dives + 2 SYNTHE synthesis)
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -222,6 +222,23 @@ Discovered critical insight: **"Document what's clear, flag the mess, move on"**
     - Cross-references all 7 Deep Dives with physics context
     - 4 questions flagged for Paula (OVERWT bug, TABCONT tuning, COEFJ origin, damping values)
     - Comprehensive validation test suite specified
+
+14. **PHYSICS_PIPELINE_SYNTHE.md** (1,950 lines) - **Phase 3 Extension** documenting the physics of SYNTHE spectrum synthesis:
+    - Section I: Overview of spectrum synthesis (fixed atmosphere, wavelength-by-wavelength RT)
+    - Section II: Input state (ATLAS model, line lists, continuum opacities)
+    - Section III: Complete 5-stage pipeline with governing equations:
+      1. Line list preparation (wavelength filtering, 10K-1M lines)
+      2. Atmosphere preparation (POPS populations, KAPP continuum opacities)
+      3. Spectrum synthesis loop (line opacity + RT at each wavelength)
+      4. Rotational broadening (v sin i, limb darkening)
+      5. Instrumental broadening (resolving power, macroturbulence)
+    - Section IV-VI: Physical constraints (LTE validity, energy conservation), numerical methods, failure modes
+    - Section VII: SYNTHE vs other synthesis codes (SPECTRUM, Turbospectrum, MOOG)
+    - Section VIII: **Migration considerations** (what to preserve, safe optimizations)
+    - Section IX-XII: Glossary, equation reference, units, typical values
+    - Cross-references all 5 SYNTHE Deep Dives (DD08-12) with physics context
+    - 10 questions flagged for Paula (line list completeness, NLTE effects, validation targets)
+    - Parallels PHYSICS_PIPELINE_ATLAS12.md structure for consistency
 
 ---
 
