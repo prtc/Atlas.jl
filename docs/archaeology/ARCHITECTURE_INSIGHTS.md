@@ -16,10 +16,11 @@ This document bridges "what the Fortran does" to "how to design clean Julia." Un
 **Core challenge**: 57 COMMON blocks in ATLAS12 create implicit dependencies that make it impossible to reason about data flow. Julia migration must make these dependencies explicit.
 
 **Progress Update** (2025-11-09):
-- **Deep Dive 01** (Voigt Profile): Analyzed highest-risk numerical algorithm, validated Float32 precision acceptable
-- **Deep Dive 02** (Populations): Resolved critical precision decision (Float64 required), validated state management design
-- **Section V.4** (Precision): Decision RESOLVED via code analysis - mixed precision strategy documented
-- **Section VI** (Risk Assessment): Updated with cross-references to deep dive findings
+- **Phase 2B Complete**: 7 Deep Dives analyzing all high-risk computational kernels
+- **Phase 3 Complete**: PHYSICS_PIPELINE_ATLAS12.md (1,548 lines) documenting physics of one ATLAS12 iteration
+- **Deep Dives 01-07**: Voigt profile, populations, line opacity, binary I/O, radiative transfer, damping, convection
+- **Precision Decision (V.4)**: ✅ RESOLVED - Mixed precision strategy validated via code analysis
+- **Migration Guidance**: See `PHYSICS_PIPELINE_ATLAS12.md` Section VIII for comprehensive migration considerations
 
 ---
 
@@ -203,16 +204,17 @@ XNFDOP(J,NELION)=XNFP(J,NELION)/DOPPLE8/RHO(J)  ! Mixed precision math
 - Where is precision loss acceptable for memory savings?
 - Are there accumulated rounding errors we must match?
 
-**✅ PARTIALLY RESOLVED** - See Deep Dives 01-05 for precision analysis:
+**✅ RESOLVED** - See Deep Dives 01-07 for precision analysis and PHYSICS_PIPELINE_ATLAS12.md Section VIII for migration guidance:
 - **Populations (Deep Dive 02)**: Float64 REQUIRED - ratios span 40+ orders of magnitude, Float32 underflows
 - **Voigt profiles (Deep Dive 01)**: Float32 acceptable - target accuracy ~2%, measured error <1.5%
 - **Line opacity accumulation (Deep Dive 03)**: Float32 adequate (<0.01% error typical), Float64 recommended as "cheap insurance"
 - **Binary I/O (Deep Dive 04)**: Mixed Float32/Float64 in file format, must preserve exactly for validation
 - **RT integration (Deep Dive 05)**: Mixed precision - weights Float32, source functions Float64
-- **Remaining**: Convection derivatives (Deep Dive 07), full atmosphere validation needed
+- **Convection derivatives (Deep Dive 07)**: Float64 required for thermodynamic derivatives
+- **Comprehensive precision table**: See `PHYSICS_PIPELINE_ATLAS12.md` Section VIII.4
 
 **Julia Approach** (validated by code analysis):
-1. **~~Analyze first~~**: ✅ Done for top 6 computational kernels (see deep dives)
+1. **~~Analyze first~~**: ✅ Done for all 7 high-risk computational kernels (see Deep Dives 01-07)
 2. **Parameterize**: Use type parameters for flexibility
    ```julia
    struct AtmosphereState{T<:AbstractFloat}
@@ -679,6 +681,8 @@ prad = finalize(integrator, :radiation_pressure)
 Understanding data flow is critical for redesigning the architecture. This section maps what data enters, transforms through, and exits the major computational pipelines.
 
 ### 3.1 ATLAS12 Data Flow
+
+**NOTE**: This section documents DATA FLOW (HOW data moves through the code). For the PHYSICS of what happens during iteration, see `PHYSICS_PIPELINE_ATLAS12.md`.
 
 **High-level view**:
 ```
