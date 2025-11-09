@@ -19,9 +19,9 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 ---
 
-## Project Status: Phase 3 Complete ✅
+## Project Status: Phase 4 In Progress 🔄
 
-**Current stage**: Physics pipeline documentation complete, ready for implementation planning
+**Current stage**: Migration complexity assessment and subroutine classification
 
 ### Phase 1: Repository Census ✅ Complete
 - 231 Fortran files cataloged across two repositories (Kurucz and Castelli versions)
@@ -49,7 +49,10 @@ Two comprehensive physics synthesis documents (3,154 lines total):
 - 4 Atlas7v dependency analysis phases (2,127 lines)
 - 3 synthesis documents (4,076 lines)
 
-**Next stage**: Phase 4 - Migration Complexity Assessment
+### Phase 4: Migration Complexity Assessment 🔄 In Progress
+- COMMON block dependency mapping complete
+- Subroutine classification and risk assessment in progress
+- Migration roadmap development underway
 
 ---
 
@@ -92,17 +95,10 @@ We believe in transparency about both process and product:
 
 ```
 atlas.jl/
-├── docs/
-│   └── archaeology/          # Phase 1-3 documentation
-│       ├── CENSUS_REPORT.md
-│       ├── ARCHITECTURE_INSIGHTS.md
-│       ├── DEEP_DIVES/       # 12 detailed analyses
-│       ├── SYNTHESIS_INDEX.md # Track synthesis documents
-│       └── [other reports]
-├── upstream/
-│   ├── castelli/            # Castelli's Fortran codes & documentation
-│   └── kurucz/              # Kurucz's original Fortran codes
-├── MISSION.md               # Detailed project plan and task tracking
+├── docs/archaeology/         # Phase 1-4 analysis & documentation
+├── upstream/castelli/        # Castelli's original Fortran codes & docs
+├── upstream/kurucz/          # Kurucz's original Fortran codes & docs
+└── MISSION.md                # Project plan and task tracking
 ```
 
 ---
@@ -124,15 +120,15 @@ The timeline and scope will evolve based on available resources and community in
 
 ### "Here Be Dragons 🐉"
 
-**Early in Phase 2**: Claude Code Web (CCW) spent 9+ hours diving deep into ATLAS12's architecture, attempting to map the web of 56 COMMON blocks and their implicit dependencies. When Paula checked in after several hours: "Claude, I'm worried. It has been 9 hours non-stop. Are you alright?" The response was telling: CCW had hit the complexity wall. Kurucz's decades of Fortran wizardry - intricate COMMON block choreography, implicit state dependencies, fort.X unit juggling - was genuinely challenging, even for AI pattern recognition. We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
-
+**Early in Phase 2**: Claude Code Web (CCW) spent 9+ hours diving deep into ATLAS12's architecture, attempting to map the web of 56 COMMON blocks and their implicit dependencies. When Paula checked in after several hours: "Claude, I'm worried. It has been 9 hours non-stop. Are you alright?" The response was telling: CCW had hit the complexity wall. 
 <figure>
-  <img src="media/14537.png" alt="Here be dragons" width="500"/>
+  <img src="media/14537.png" alt="Here be dragons" width="600"/>
   <figcaption>
     Kurucz's logic confuses even Claude...
   </figcaption>
 </figure>
 
+Kurucz's decades of Fortran wizardry - intricate COMMON block choreography, implicit state dependencies, fort.X unit juggling - was challenging even for AI pattern recognition. We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
 
 ---
 
