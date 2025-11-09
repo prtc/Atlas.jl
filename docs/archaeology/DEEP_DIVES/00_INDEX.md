@@ -5,15 +5,16 @@
 **Status**: ✅ COMPLETE
 - ATLAS12: 7 of 7 deep dives complete (100%)
 - SYNTHE: 5 of 5 deep dives complete (100%)
-**Total Documentation**: ~14,100 lines across 12 deep dives + 2 synthesis documents
+**Total Documentation**: ~16,000 lines across 12 deep dives + 3 synthesis documents
 **Date Range**: 2025-11-07 to 2025-11-09
 **Branches**:
 - Phase 2B: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
 - Phase 3: claude/phase-3-archaeology-011CUwQjaQw6prCQbWCg27nc
 
 **Synthesis Documents**:
-- `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) - Physics context for ATLAS12 iteration pipeline
-- `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - Migration roadmap for SYNTHE pipeline
+- `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) - Physics of ATLAS12 iteration (WHAT/WHY)
+- `PHYSICS_PIPELINE_SYNTHE.md` (1,950 lines) - Physics of SYNTHE synthesis (WHAT/WHY)
+- `SYNTHE_DEEP_DIVE_SUMMARY.md` (915 lines) - SYNTHE migration roadmap (HOW)
 
 ---
 
@@ -49,11 +50,11 @@
 
 ### Combined Statistics
 
-| Suite | Deep Dives | Lines | Synthesis Doc | Total |
-|-------|------------|-------|---------------|-------|
-| ATLAS12 | 7 | 6,459 | 1,548 | 8,007 |
-| SYNTHE | 5 | 5,325 | 915 | 6,240 |
-| **TOTAL** | **12** | **11,784** | **2,463** | **14,247** |
+| Suite | Deep Dives | Lines | Synthesis Docs | Total |
+|-------|------------|-------|----------------|-------|
+| ATLAS12 | 7 | 6,459 | 1,548 (physics) | 8,007 |
+| SYNTHE | 5 | 5,325 | 2,865 (physics + migration) | 8,190 |
+| **TOTAL** | **12** | **11,784** | **4,413** | **16,197** |
 
 ---
 
@@ -544,7 +545,8 @@
 - [x] Update ARCHITECTURE_INSIGHTS.md with all deep dive findings
 - [x] SYNTHE deep dives (5 documents completed: DD08-DD12)
 - [x] SYNTHE migration roadmap (SYNTHE_DEEP_DIVE_SUMMARY.md)
-- [x] Phase 3: PHYSICS_PIPELINE_ATLAS12.md synthesis document
+- [x] Phase 3: PHYSICS_PIPELINE_ATLAS12.md synthesis document (1,548 lines)
+- [x] Phase 3 extension: PHYSICS_PIPELINE_SYNTHE.md physics document (1,950 lines)
 
 ### Near-Term (Phase 4)
 - [ ] Migration complexity assessment
