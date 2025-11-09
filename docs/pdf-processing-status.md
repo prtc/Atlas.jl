@@ -94,11 +94,26 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **kurucz05.pdf** - 2005 paper/proceedings
-  - Date processed:
-  - Related components: TBD
-  - Archaeology docs updated:
+- [x] **kurucz05.pdf** - 2005 paper "Rapid computation of line opacity in SYNTHE and DFSYNTHE"
+  - Date processed: 2025-11-09
+  - Related components: SYNTHE, DFSYNTHE, opacity optimization, distribution functions
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (SYNTHE and DFSYNTHE sections)
   - Key findings:
+    - **DFSYNTHE distribution functions**: 12-step opacity levels compress spectrum 100× (400 MB vs 40 GB)
+    - **Distribution function concept**: Fraction of wavelength interval at each opacity level (statistical representation)
+    - **Valid when**: Spectrum shape similar at different T,P; source function not rapidly varying
+    - **Fails for**: Isolated strong lines (H α, H β), variable broadening, rapidly changing source function
+    - **1000× speed-up**: Kurucz optimization over naive calculation (unpublished paper referenced)
+    - **Precision philosophy**: 0.1% accuracy sufficient (wavelengths only physically accurate numbers)
+    - **Optimizations**: Two-byte integers, low-precision Voigt, factor out T dependence, never compute twice
+    - **Opacity table trade-offs**: 40 GB full spectrum vs 400 MB distribution functions vs 400 MB opacity sampling
+    - **Pre-tabulated Rosseland**: ATLAS12 could converge faster without opacity routines (just interpolation)
+    - **Microturbulent broadening**: Compute V_turb=0, apply Gaussian/Fourier filter for other values
+    - **Billion line capability**: "I expect to reach more than one billion lines in the near future"
+    - **Selective strategies**: Element-specific, wavelength ranges, temperature/pressure limits, photometric bands
+    - **SYNTHE vs DFSYNTHE**: Point-by-point (exact) vs distribution functions (compressed approximation)
+    - **Kurucz honesty**: Mean opacities "may be no worse than mixing-length convection" (pragmatic physics)
+    - **Unpublished paper**: "Rapid Calculation of Line Opacity" at KURUCZ.HARVARD.EDU/PAPERS/OPACITYCALC
 
 - [ ] **kurucz06.pdf** - 2006 paper/proceedings
   - Date processed:

@@ -1282,12 +1282,78 @@ end
 
 ---
 
+### SYNTHE Performance and Optimization Strategies
+
+**Source**: Kurucz 2005 "Rapid computation of line opacity in SYNTHE and DFSYNTHE"
+
+#### Point-by-Point vs Distribution Functions
+
+**SYNTHE**: Computes **point-by-point** opacity spectrum
+- Full resolution spectrum (R = 500,000 typical)
+- Exact line profiles at every wavelength point
+- Accurate for all applications (photometry, line profiles, abundance analysis)
+
+**DFSYNTHE**: Uses **distribution functions** (see Section IV.8)
+- Statistical approximation (12 opacity levels per interval)
+- 100× storage compression (400 MB vs 40 GB)
+- Valid when source function doesn't vary strongly
+
+**When to use each**:
+- **SYNTHE**: Line-by-line analysis, high-resolution spectra, accurate photometry
+- **DFSYNTHE**: Model atmospheres, integrated photometry, large parameter grids
+
+#### Pre-tabulated Opacity Tables
+
+**Concept** (Kurucz 2005 proposal):
+1. Run SYNTHE once to compute opacity spectrum for full T,P,V_turb grid
+2. Store result as multi-dimensional table (40-80 GB)
+3. **Model atmosphere programs interpolate** from table (no opacity calculation)
+4. **Result**: "ATLAS12 could run without line data or opacity routines, just interpolations"
+
+**Benefits**:
+- Faster model convergence (especially with pre-tabulated Rosseland mean)
+- No need to recompute line opacity at each iteration
+- Consistent opacity across all models
+
+**Drawbacks**:
+- ❌ Loses ability to change abundances (table is abundance-specific)
+- ❌ Massive storage requirements (40+ GB per abundance set)
+- ❌ Fixed wavelength coverage (can't extend without recomputation)
+
+#### Selective Processing Strategies
+
+**From Kurucz 2005** - Ways to reduce computation/storage:
+
+1. **Limited wavelength ranges**:
+   - Single echelle order
+   - Photometric system only
+   - Velocity template (RV determination)
+
+2. **Element-specific processing**:
+   - Compute only lines of one element (abundance analysis)
+   - Exclude strong lines (H α, H β) for separate treatment
+   - Store each element separately, combine with abundance weights
+
+3. **Temperature/pressure ranges**:
+   - No molecules + no far-IR (hot stars)
+   - No high ions + no Lyman continuum (cool stars)
+
+4. **Approximation methods**:
+   - Opacity sampling (every 100th point)
+   - Mean opacities (average 100 points) - "may be no worse than mixing-length convection"
+   - Selective means (different strategies in different regions)
+
+**Practical recommendation**: Start with full SYNTHE for validation, consider pre-tabulation or distribution functions for production model grids.
+
+---
+
 **Status**: SYNTHE pipeline survey complete (breadth-first approach)
 
 **Coverage**:
 - ✅ All 11 programs cataloged with purpose, I/O, complexity
 - ✅ Data flow mapped end-to-end
 - ✅ Migration strategies outlined
+- ✅ Performance optimization strategies documented (Kurucz 2005)
 - ⚠️ Internal subroutine details deferred (flagged as TODOs)
 - ⚠️ ATLAS7V library interface needs dedicated analysis session
 
@@ -1898,10 +1964,116 @@ ATLAS9 model → XNFDF (populations) → DFSYNTHE (line selection) → SYNTHE (s
 
 ---
 
-📋 **Deferred details**:
+---
+
+### 4.8 Distribution Function Method (Core Algorithm)
+
+**Source**: Kurucz 2005 "Rapid computation of line opacity in SYNTHE and DFSYNTHE"
+
+**Problem**: Opacity spectrum with billions of lines would require massive storage (40+ GB for full P,T,Vturb,λ grid)
+
+**DFSYNTHE Solution**: Statistical compression using **opacity distribution functions**
+
+#### Distribution Function Concept
+
+Instead of storing thousands of opacity points in a wavelength interval, DFSYNTHE represents them with **12 discrete opacity levels** that describe the statistical distribution:
+
+```
+Wavelength interval [λ₁, λ₂]:
+  Instead of: κ(λ₁), κ(λ₂), κ(λ₃), ... κ(λₙ) [thousands of points]
+  Store: Distribution function: fraction of interval at each of 12 opacity levels
+         Level 1 (low opacity):    15% of interval
+         Level 2:                  22% of interval
+         ...
+         Level 12 (high opacity):   3% of interval
+```
+
+**Key insight**: The distribution function tells you **the fraction of the wavelength interval occupied by high, medium, and low opacity** (in 12 steps).
+
+#### When Distribution Functions Work
+
+**Valid approximations** (from Kurucz 2005):
+1. ✅ Spectrum shape similar at different T and P (maxima/minima line up)
+2. ✅ Source function doesn't vary strongly across wavelength interval
+3. ✅ Wavelength intervals can be sized to follow spectral features
+
+**When they fail**:
+- ❌ Isolated strong lines (H α, H β) - treat separately
+- ❌ Variable broadening across interval
+- ❌ Rapidly changing source function
+
+#### Opacity Table Trade-offs
+
+**Full point-by-point spectrum** (Kurucz 2005 estimates):
+- 4 million wavelength points
+- 20 pressure levels
+- 50 temperature points
+- 5 microturbulent velocities
+- **Storage**: 40 GB (80 GB with continuum opacity)
+
+**Distribution function compression**:
+- Same grid dimensions
+- 12 coefficients per interval (instead of thousands of points)
+- **Storage**: ~400 MB (100× compression)
+
+**Opacity sampling** (alternative):
+- Every 100th point saved
+- **Storage**: 400 MB
+- Used in ATLAS12 for fast convergence
+
+#### Variable Interval Sizing
+
+**Flexibility** (from paper):
+- Different interval sizes for different wavelength regions
+- Larger intervals in continua (smooth regions)
+- Smaller intervals following spectral features (lines, edges)
+- Can process same spectrum multiple times with different intervals
+
+**Selective storage**:
+- Store only specific elements (abundance analysis)
+- Omit molecules/far-IR (limited T,P range tables)
+- Leave out strong lines (treat separately)
+- Photometric bands only (not full spectrum)
+
+---
+
+### 4.9 Performance Considerations
+
+**Source**: Kurucz 2005 + unpublished paper "Rapid Calculation of Line Opacity"
+
+**Speed-up factor**: 1000× over naive calculation
+
+**Key optimizations**:
+
+1. **Precision matching physics**:
+   - Wavelengths: Full precision (only physically accurate numbers)
+   - Everything else: **0.1% accuracy sufficient**
+   - gf values: 1-100% uncertainty (don't over-compute)
+   - Damping constants: 1-100% uncertainty
+   - Lower energy (Boltzmann): 0.1% adequate
+   - Use **two-byte integers** for packed storage
+
+2. **Computational efficiency**:
+   - Use **low-precision Voigt function** (physics limited, not math limited)
+   - **Never compute anything twice**
+   - **Factor out T dependence**, do all pressures together for given T
+   - Pre-tabulate Rosseland mean (faster ATLAS12 convergence)
+
+3. **Microturbulent velocity**:
+   - Compute base spectrum at V_turb = 0
+   - Apply Gaussian filter or Fourier transform broadening for different V_turb values
+   - Store multiple V_turb versions (5 values typical)
+
+4. **No line limit**:
+   - "I expect to reach more than one billion lines in the near future" (Kurucz 2005)
+   - Distribution functions handle any number of lines
+
+---
+
+📋 **Remaining deferred details**:
 - [ ] xnfdf.for library analysis
 - [ ] Detailed subroutine catalog
-- [ ] TAPE15 output format (distribution functions)
+- [ ] Exact TAPE15 binary format specification
 - [ ] Comparison: DFSYNTHE opacity vs ATLAS12 Stage 1 opacity
 
 ---
