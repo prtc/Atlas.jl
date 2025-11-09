@@ -7,6 +7,8 @@
 **Date Range**: 2025-11-07 to 2025-11-08
 **Branch**: claude/phase-2b-documentation-architecture-011CUtZTwX29Tt1LCdtuf9pf
 
+**Phase 3 Synthesis**: See `PHYSICS_PIPELINE_ATLAS12.md` (1,548 lines) for physics context integrating all 7 deep dives into one complete ATLAS12 iteration pipeline
+
 ---
 
 ## Quick Reference Table
