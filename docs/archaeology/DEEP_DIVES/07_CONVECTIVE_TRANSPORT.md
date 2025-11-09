@@ -1343,6 +1343,20 @@ DELHGT(J)=MIN(HSCALE(J)*.5D-5*WTCNV,...)
 
 ---
 
+## Cross-References
+
+**Related Deep Dives**:
+- **Deep Dive 02 (Populations)**: CONVEC calls POPS 4× for thermodynamic derivative calculations (±0.1% T and P perturbations)
+- **Deep Dive 06 (TCORR)**: CONVEC output (FLXCNV, DLTDLP, GRDADB) feeds into TCORR MODE=3 for convection coupling
+
+**Referenced in**:
+- `docs/archaeology/ARCHITECTURE_INSIGHTS.md` Sections 3.3, 5.1, 6.6 (convection in data flow, decisions, risks)
+- `docs/archaeology/DEEP_DIVES/00_INDEX.md` (Physics methods, performance-critical)
+
+**Key physics**: Mixing length theory (MLT) connects convective energy transport to temperature structure, critical for T_eff < 8000 K stars.
+
+---
+
 **Status**: Deep Dive complete. Ready for code implementation.
 
 **Next steps**:
