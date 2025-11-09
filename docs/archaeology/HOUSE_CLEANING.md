@@ -520,6 +520,52 @@ Use this as a systematic walkthrough:
 
 ---
 
+## Example Deep Clean Session (2025-11-09 - Synthesis Index Creation)
+
+**Context**: User requested deep clean with newly added Task 11 (Synthesis Index Maintenance). No other sessions running - good time for thorough cleanup.
+
+**Changes made**:
+1. **Protocol improvements** (Task 11 added - v1.3):
+   - Added comprehensive Synthesis Index Maintenance task
+   - Documented synthesis triggers (3+ sources, phase transitions)
+   - Added example index structure template
+   - Updated checklist to include synthesis index
+
+2. **Created SYNTHESIS_INDEX.md** (283 lines):
+   - Cataloged 4 active synthesis documents
+   - Mapped all 12 deep dives → synthesis relationships
+   - Mapped Atlas7v phases 1-4 → synthesis documents
+   - Tracked paper sources (SYNTHE_JAUREGI_2005.md)
+   - Flagged 3 synthesis opportunities with priority levels
+
+3. **Cross-reference updates**:
+   - Added SYNTHESIS_INDEX.md to HOUSE_CLEANING.md key files list
+   - Added to 00_INDEX.md synthesis documents section
+   - Corrected SYNTHE summary line count (915 → 922, verified)
+   - Updated "Phase 2B" → "Phase 3" throughout
+
+4. **Consistency verification**:
+   - Verified all line counts with `wc -l`
+   - Confirmed 18,231 total lines across 19 documents
+   - Validated synthesis doc counts match actual files
+
+**Synthesis Opportunities Identified**:
+- Binary I/O Guide (Medium priority, 500-800 lines estimated)
+- Numerical Precision Guide (High priority, 400-600 lines estimated)
+- Opacity Methods Synthesis (Medium-High, 700-1000 lines)
+
+**Outcome**: Created systematic tracking for synthesis documents. Future instances can now:
+- Check index BEFORE creating new synthesis (avoid duplication)
+- Identify gaps where synthesis would add value
+- Trace which sources fed into each synthesis
+- Maintain bidirectional links
+
+**Key lesson**: Synthesis index prevents duplicate work and identifies opportunities. Critical for multi-instance collaboration where different instances might tackle similar topics.
+
+**Time**: Focused session, protocol-driven deep clean
+
+---
+
 ## When NOT to House Clean
 
 - **During rapid exploration**: Don't interrupt flow to fix cross-references
