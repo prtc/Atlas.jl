@@ -136,11 +136,29 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **kurucz_codes05.pdf** - 2005 codes overview
-  - Date processed:
-  - Related components: General overview, all components
-  - Archaeology docs updated:
+- [x] **kurucz_codes05.pdf** - 2005 codes overview (Kurucz)
+  - Date processed: 2025-11-09
+  - Related components: ATLAS12, SYNTHE, ATLAS9, WIDTH9, ROTATE, TRANSYNTHE, BROADEN, entire ecosystem
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (Section VIII - comprehensive overview)
   - Key findings:
+    - **ATLAS12 status**: "Still does not work as originally advertised" - Rosseland opacity and EOS issues
+    - **30,000 frequency points**: Accurate for total flux, NOT for intermediate-band photometry (must use SYNTHE)
+    - **Two fundamental problems**: (1) Rosseland opacity for arbitrary abundances (took years to solve), (2) Equation of state from 1960s "still wrong in 2005"
+    - **Depth-dependent microturbulent velocity**: Based on solar empirical model (Fontenla+ 1993), V_turb_min = 0.28 × V_turb_max, tied to convection physics not free parameter
+    - **ROTATE algorithm**: 17 µ angles, 200×200 disk grid, differential rotation from Libbrecht & Morrow 1991
+    - **Complete pipeline**: Star → SYNTHE → ROTATE → TRANSYNTHE → BROADEN → INTEGRATEFILTER → PLOTSYN
+    - **Unimplemented components**: Interstellar reddening/bands/lines, telluric emission (airglow, pollution)
+    - **TRANSYNTHE suite**: O₃, [O₂]₂ (O₂ dimer), HITRAN database, pressure shifts critical, R ≥ 2M required
+    - **Model atmospheres**: MODMIDWIN/SPRING/MIDSUM/AUTUMN for Kitt Peak (Anderson+ 1986 Air Force data)
+    - **WIDTH9 philosophy**: Only use 3-4 best lines on linear curve of growth! Grevesse & Sauval Fe: 3 Fe I + 1 Fe II lines (10% lower abundance)
+    - **Honest assessment**: "Spectra do not reproduce real high-resolution observations" - use differential analysis
+    - **Program ecosystem**: ~25 programs total (model, synthesis, observation effects, analysis)
+    - **Performance**: 1 day for ODF opacity tables, 1 day for model grid, 1 day for spectrum section
+    - **Pre-computed spectra**: 14 resolving powers (500000 to 100), ~1 day per model for all
+    - **Development philosophy**: Pragmatic, iterative, honest about limitations, encourages user contributions
+    - ⚠️ Telluric data "still not good enough without hand adjustment, even for O₂"
+    - ⚠️ EOS partition functions wrong (especially heavy elements) - modern data needed
+    - ⚠️ Many traditional abundance analysis methods give systematic errors
 
 ---
 
