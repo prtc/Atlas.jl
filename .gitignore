@@ -30,3 +30,5 @@ JuliaLocalPreferences.toml
 # MacOS-specific files
 .DS_Store
 
+# Project-specific instructions for Claude Code
+CLAUDE.md
