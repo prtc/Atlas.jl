@@ -103,7 +103,7 @@ Comprehensively cataloged 231 Fortran 77 files (487K lines) across both reposito
 Phase 2 successfully completed with **twelve major deliverables** (5 architecture + 7 ATLAS12 deep dives).
 Phase 3 added **two major deliverables** (PHYSICS_PIPELINE_ATLAS12.md, PHYSICS_PIPELINE_SYNTHE.md).
 
-**Total deliverables: 14 documents** (6 architecture + 7 ATLAS12 deep dives + 1 ATLAS12 physics + 5 SYNTHE deep dives + 2 SYNTHE synthesis)
+**Total deliverables: 20 documents** (6 architecture + 7 ATLAS12 deep dives + 1 ATLAS12 physics + 5 SYNTHE deep dives + 2 SYNTHE synthesis + 1 migration roadmap)
 
 1. **WORKFLOW_ANALYSIS.md** (1,066 lines) - Comprehensive workflow documentation revealing ATLAS12's two-stage execution model and SYNTHE's 11-program pipeline architecture. Includes compilation instructions, fort unit conventions, and data flow analysis.
 
@@ -204,7 +204,7 @@ Discovered critical insight: **"Document what's clear, flag the mess, move on"**
 
 **Deliverable**:
 
-13. **PHYSICS_PIPELINE_ATLAS12.md** (1,548 lines) - **Phase 3 Major Deliverable** documenting the physics of one ATLAS12 iteration:
+13. **PHYSICS_PIPELINE_ATLAS12.md** (1,547 lines) - **Phase 3 Major Deliverable** documenting the physics of one ATLAS12 iteration:
     - Section I: Overview of iterative atmosphere convergence
     - Section II: Input state and assumptions (LTE, plane-parallel, hydrostatic equilibrium)
     - Section III: Complete 7-step iteration pipeline with governing equations:
@@ -223,7 +223,7 @@ Discovered critical insight: **"Document what's clear, flag the mess, move on"**
     - 4 questions flagged for Paula (OVERWT bug, TABCONT tuning, COEFJ origin, damping values)
     - Comprehensive validation test suite specified
 
-14. **PHYSICS_PIPELINE_SYNTHE.md** (1,950 lines) - **Phase 3 Extension** documenting the physics of SYNTHE spectrum synthesis:
+14. **PHYSICS_PIPELINE_SYNTHE.md** (1,607 lines) - **Phase 3 Extension** documenting the physics of SYNTHE spectrum synthesis:
     - Section I: Overview of spectrum synthesis (fixed atmosphere, wavelength-by-wavelength RT)
     - Section II: Input state (ATLAS model, line lists, continuum opacities)
     - Section III: Complete 5-stage pipeline with governing equations:
