@@ -1325,28 +1325,126 @@ Critical guidance for Julia developers. Prioritized by risk and impact.
 
 **Hydrostatic equilibrium**: Force balance between gravity and pressure gradient. Valid when dynamical timescales >> sound crossing time.
 
-[Additional terms to be added as needed]
+**Planck function** (B_ν): Blackbody radiation intensity B_ν(T) = (2hν³/c²) / [exp(hν/kT) - 1]. Describes thermal emission in LTE.
+
+**Photosphere**: Layer where optical depth τ ~ 1. Radiation escapes to observer from this region.
+
+**Opacity sampling**: Direct line-by-line opacity calculation (ATLAS12 method). More accurate than ODFs but slower.
+
+**Opacity distribution function (ODF)**: Statistical binning of line opacity (ATLAS9 method). Fast but less accurate for non-solar abundances.
+
+**Voigt profile**: Convolution of Doppler (Gaussian) and Lorentz (damping) line profiles. Describes spectral line shape.
+
+**Eddington flux**: H = (1/4π) ∫ μI dΩ. Net radiation flux (energy transport).
+
+**Mean intensity**: J = (1/4π) ∫ I dΩ. Angle-averaged radiation field (drives heating/cooling).
+
+**Mixing length**: ℓ = α H_P. Characteristic distance convective bubbles travel before dissolving. α ≈ 1-2 (calibrated to Sun).
+
+**Superadiabatic gradient**: ∇ > ∇_ad. Indicates convective instability.
+
+**Saha equation**: Statistical equilibrium for ionization balance (collisions >> photoionization).
+
+**Boltzmann distribution**: Statistical equilibrium for level populations within an ion (collisions >> radiative transitions).
+
+**Scattering albedo**: α = σ_scatter / (σ_absorb + σ_scatter). Fraction of opacity that scatters (vs absorbs).
 
 ---
 
 ## X. Equation Reference
 
-### Saha Equation
+Quick reference for key equations. See Section III for detailed physics context.
+
+### Saha Equation (Ionization Balance)
 ```
 n_i,j+1 / n_i,j = (2 Z_i,j+1 / Z_i,j) × (2π m_e k T / h²)^(3/2) × exp(-χ_i,j / kT) / n_e
 ```
+Where:
+- n_i,j = number density of element i in ionization stage j
+- Z = partition function (temperature-dependent)
+- χ_i,j = ionization potential (eV or ergs)
+- n_e = electron density
 
-### Boltzmann Equation
-[TO BE FILLED]
+### Boltzmann Equation (Level Populations)
+```
+n_i,j,k / n_i,j = (g_k / Z_i,j) × exp(-E_k / kT)
+```
+Where:
+- n_i,j,k = number density in excited level k
+- g_k = statistical weight of level k
+- E_k = excitation energy above ground state
 
-### Radiative Transfer Equation
-[TO BE FILLED]
+### Radiative Transfer Equation (Plane-Parallel)
+```
+μ dI/dτ = I - S
+```
+Integrated moments:
+```
+J = (1/2) ∫₋₁⁺¹ I(μ) dμ        (mean intensity)
+H = (1/2) ∫₋₁⁺¹ μ I(μ) dμ      (Eddington flux)
+K = (1/2) ∫₋₁⁺¹ μ² I(μ) dμ     (K-integral)
+```
 
 ### Voigt Profile
-[TO BE FILLED]
+```
+V(a, u) = (a/π) ∫₋∞⁺∞ exp(-y²) / [(u-y)² + a²] dy
+```
+Where:
+- a = damping parameter = γ / (4π Δν_D)
+- u = frequency offset = (ν - ν₀) / Δν_D
+- Δν_D = Doppler width
 
-### Mixing Length Theory
-[TO BE FILLED]
+ATLAS12 uses piecewise polynomial approximation (not this integral).
+
+### Planck Function (Thermal Emission)
+```
+B_ν(T) = (2hν³/c²) / [exp(hν/kT) - 1]
+```
+
+### Hydrostatic Equilibrium
+```
+dP/dτ = g / κ_Ross
+
+dP/dz = -ρg   (geometric depth form)
+```
+
+### Radiative Equilibrium
+```
+∫ (J_ν - S_ν) κ_ν dν = 0
+```
+Or:
+```
+dH/dτ = J - S
+```
+
+### Mixing Length Theory (Convective Flux)
+```
+F_conv = ρ c_P v_conv ΔT
+
+v_conv ∝ √(g H_P ΔT / T)
+```
+Where:
+- ℓ = α H_P (mixing length)
+- H_P = P/(ρg) (pressure scale height)
+- ΔT = temperature excess of rising bubble
+
+### Rosseland Mean Opacity
+```
+1/κ_Ross = ∫ (1/κ_ν) × (∂B_ν/∂T) dν / ∫ (∂B_ν/∂T) dν
+```
+Harmonic mean weighted by Planck function derivative.
+
+### Charge Conservation
+```
+n_e = Σ_i,j j × n_i,j
+```
+Total electron density from all ionization stages.
+
+### Ideal Gas Law
+```
+P = (Σ n_i,j + n_e) k T
+```
+Total pressure from all particles (atoms + ions + electrons).
 
 ---
 
@@ -1391,10 +1489,59 @@ n_i,j+1 / n_i,j = (2 Z_i,j+1 / Z_i,j) × (2π m_e k T / h²)^(3/2) × exp(-χ_i,
 
 ---
 
-**End of PHYSICS_PIPELINE.md skeleton**
+## Document Status
+
+**Version**: 1.0 (Phase 3 Complete)
+**Created**: 2025-11-09
+**Author**: Claude (Phase 3 archaeology session)
+**Target Audience**: Future Julia developers and astrophysicists reviewing migration
+
+**Completion Status**:
+- ✅ Section I: Overview (complete)
+- ✅ Section II: Input State (complete)
+- ✅ Section III: Iteration Pipeline - All 7 steps (complete)
+- ✅ Section IV: Physical Constraints & Conservation Laws (complete)
+- ✅ Section V: Numerical Methods Summary (complete)
+- ✅ Section VI: Failure Modes & Physics Checks (complete)
+- ✅ Section VII: ATLAS12 vs ATLAS9 Comparison (complete)
+- ✅ Section VIII: Migration Considerations (complete - CRITICAL)
+- ✅ Section IX: Glossary (complete)
+- ✅ Section X: Equation Reference (complete)
+- ✅ Section XI: Units and Constants (complete)
+- ✅ Section XII: Physical Parameter Ranges (complete)
+
+**Document Statistics**:
+- Length: ~1,500 lines
+- Equations documented: 15+
+- Pipeline steps: 7 (complete with physics, methods, validation)
+- Failure modes catalogued: 15+
+- Validation tests specified: 7
+- Cross-references to Deep Dives: 7
+
+**Key Deliverables**:
+1. ✅ Complete physics documentation for one ATLAS12 iteration
+2. ✅ Governing equations for each pipeline step
+3. ✅ Precision requirements justified by Deep Dive analysis
+4. ✅ Failure modes with detection methods
+5. ✅ Migration guidance (what to preserve, where to optimize)
+6. ✅ Comprehensive validation test suite
+
+**Ready for**:
+- Julia migration planning
+- Physics review by domain experts
+- Implementation roadmap development
+
+**Questions flagged for Paula** (domain expert):
+- OVERWT = 0.5D-5 bug in CONVEC? (Section III Step 6)
+- TABCONT threshold tuning strategy? (Section III Step 3)
+- Origin of COEFJ/COEFH pretabulated weights? (Section III Step 4)
+- Typical damping parameter values for different stellar types? (Section III Step 5)
+
+**Cross-references**:
+- See `docs/archaeology/DEEP_DIVES/` for implementation details
+- See `docs/archaeology/ARCHITECTURE_INSIGHTS.md` for code organization
+- See `docs/archaeology/PHASE_3_BRIEFING.md` for mission context
 
 ---
 
-**Status**: Skeleton created, Section III Step 1 (Populations) complete, remaining sections to be filled
-**Next steps**: Fill in remaining pipeline steps using Deep Dive references and Fortran code analysis
-**Estimated completion**: Sections II-VIII will be completed in Phase 3 work sessions
+**End of PHYSICS_PIPELINE.md**
