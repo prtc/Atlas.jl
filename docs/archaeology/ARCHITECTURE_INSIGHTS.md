@@ -1916,6 +1916,8 @@ Rationale: End-to-end functionality proves concept
 
 📋 **Decision needed**: Migration sequence priority?
 
+**📖 Background**: See ARCHITECTURE_DETAILS.md Section VIII for Kurucz's 2005 comprehensive suite overview (complete pipeline: ATLAS12 → SYNTHE → ROTATE → TRANSYNTHE → BROADEN → filters, ~25 programs total, performance estimates, validation philosophy)
+
 ---
 
 ### 5.7 Line Database Strategy
@@ -1952,6 +1954,8 @@ Rationale: End-to-end functionality proves concept
 4. Do you use custom line lists?
 
 📋 **Decision needed**: Line database format and scope?
+
+**📖 Background**: See ARCHITECTURE_DETAILS.md Section IX for comprehensive line data infrastructure analysis (Kurucz 2016: 544M atomic lines, gfall.dat + gfall.predall formats, binary format requirements, memory-mapped architecture strategies)
 
 ---
 
@@ -2376,6 +2380,8 @@ end
 ### 6.5 File I/O and Format Compatibility Risks
 
 **Risk**: Julia can't read/write Fortran's binary fort.X files → can't validate or interoperate.
+
+**📖 Background**: See ARCHITECTURE_DETAILS.md Section VII for Linux porting experience (Sbordone 2004: VMS binary → ASCII → Linux binary conversion strategies, molecular data format changes, ODF conversion pipeline, validation against VMS results)
 
 #### Fortran Binary Format Issues:
 

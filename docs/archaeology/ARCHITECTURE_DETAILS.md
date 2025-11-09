@@ -594,6 +594,8 @@ Where:
 
 SYNTHE is an **11-program sequential pipeline** for synthetic spectrum calculation, documented in detail in WORKFLOW_ANALYSIS.md. This section provides program-by-program internal architecture using breadth-first documentation approach.
 
+**📖 User Guide**: For practical SYNTHE usage (VMS workflows, line formats, known bugs), see [`SYNTHE_JAUREGI_2005.md`](./SYNTHE_JAUREGI_2005.md)
+
 **Pipeline summary**: ATLAS model → xnfpelsyn → synbeg → line readers (×N) → synthe → spectrv → rotate → broaden → spectrum
 
 ---
