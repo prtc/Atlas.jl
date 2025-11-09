@@ -136,6 +136,181 @@
 
 ---
 
+### PHASE4_MIGRATION_INDEX.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/PHASE4_MIGRATION_INDEX.md`
+**Type**: Primary entry point for migration planning
+**Lines**: 185
+
+**Sources**:
+- COMMON_BLOCK_MAP.md (57 blocks analyzed)
+- MIGRATION_ASSESSMENT.md (112 subroutines classified)
+- API_PROJECTION.md (cost estimates)
+- Deep Dives 01-07 (ATLAS12 analysis)
+
+**Topics Covered**:
+- 3-phase implementation timeline (17+ weeks)
+- Quick reference tables for COMMON blocks and subroutines
+- Links to detailed analysis documents
+- Validation checklist
+
+**Related Synthesis**:
+- COMMON_BLOCK_MAP.md (detailed dependency maps)
+- MIGRATION_ASSESSMENT.md (roadmap options)
+- ARCHITECTURE_INSIGHTS.md (architecture decisions)
+
+**Status**: ✅ Complete - Phase 4 deliverable
+
+---
+
+### COMMON_BLOCK_MAP.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/COMMON_BLOCK_MAP.md`
+**Type**: Dependency analysis (state management)
+**Lines**: 563
+
+**Sources**:
+- upstream/castelli/source_codes/atlas12/atlas12.for (automated analysis)
+- ARCHITECTURE_INSIGHTS.md (COMMON block overview)
+- Deep Dives 01-07 (subroutine context)
+
+**Topics Covered**:
+- Complete inventory of 57 COMMON blocks in ATLAS12
+- Priority classification (CRITICAL: 7, HIGH: 10, MEDIUM: 11, LOW: 29)
+- Most-used blocks: RHOX (56 refs), STATE (49), TEMP (45), FREQ (42), XNF (37)
+- Subroutine dependency analysis for each block
+- Migration strategy recommendations
+
+**Related Synthesis**:
+- COMMON_BLOCK_ANALYSIS_SUMMARY.md (executive summary)
+- MIGRATION_ASSESSMENT.md (uses block counts for difficulty rating)
+- ARCHITECTURE_INSIGHTS.md Section IV (state management)
+
+**Status**: ✅ Complete - Phase 4 deliverable 1
+
+---
+
+### COMMON_BLOCK_ANALYSIS_SUMMARY.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/COMMON_BLOCK_ANALYSIS_SUMMARY.md`
+**Type**: Executive summary (state management)
+**Lines**: 228
+
+**Sources**:
+- COMMON_BLOCK_MAP.md (complete inventory)
+- ARCHITECTURE_INSIGHTS.md (architecture context)
+
+**Topics Covered**:
+- Executive summary of COMMON block architecture
+- Data flow diagram showing block interconnections
+- Deep analysis of 7 critical blocks (RHOX, STATE, TEMP, etc.)
+- Julia struct design examples
+- Validation requirements
+
+**Related Synthesis**:
+- COMMON_BLOCK_MAP.md (detailed analysis)
+- MIGRATION_ASSESSMENT.md (migration planning)
+
+**Status**: ✅ Complete - Phase 4 supporting document
+
+---
+
+### MIGRATION_ASSESSMENT.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/MIGRATION_ASSESSMENT.md`
+**Type**: Migration roadmap and planning
+**Lines**: 2,738
+
+**Sources**:
+- COMMON_BLOCK_MAP.md (dependency analysis)
+- Deep Dives 01-07 (subroutine complexity)
+- ARCHITECTURE_INSIGHTS.md (architecture decisions)
+- Atlas7v Phase 1-4 (library dependencies)
+
+**Topics Covered**:
+- Section 1: Module difficulty classification (80 ATLAS12 + 32 Atlas7v subroutines)
+  - Easy: 26 (32.5%), Medium: 5 (6.3%), Hard: 49 (61.2%)
+- Section 2: Quick wins (15 subroutines for Week 1-3)
+- Section 3: High-risk areas expansion (Ranks #8-15)
+- Section 4: External dependencies (22 Julia packages)
+- Section 5: Migration roadmap options (Foundation-First, Vertical Slice, Hybrid)
+- Section 6: Timeline estimates (9-18 months solo, 3-9 months with 3-person team)
+- Section 7: Validation strategy (6-tier: Smoke → Fortran → Physics → Edge → Stability → Cross)
+- Section 8: Risk mitigation actions (concrete actions for 15 high-risk components)
+
+**Related Synthesis**:
+- MIGRATION_ASSESSMENT_SUMMARY.md (executive summary)
+- COMMON_BLOCK_MAP.md (dependency context)
+- API_PROJECTION.md (cost estimates for implementation)
+- ARCHITECTURE_INSIGHTS.md (decisions and open questions)
+
+**Questions for Paula**: Deferred 4 architectural decisions (Decision 5.6-5.9) pending migration strategy selection
+
+**Status**: ✅ Complete - Phase 4 deliverable 2
+
+---
+
+### MIGRATION_ASSESSMENT_SUMMARY.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/MIGRATION_ASSESSMENT_SUMMARY.md`
+**Type**: Executive summary (migration planning)
+**Lines**: 443
+
+**Sources**:
+- MIGRATION_ASSESSMENT.md (detailed assessment)
+
+**Topics Covered**:
+- Timeline estimates and resource planning
+- Module classification summary
+- Optimization opportunities
+- Validation strategy overview
+- Key risks and mitigation
+
+**Related Synthesis**:
+- MIGRATION_ASSESSMENT.md (detailed analysis)
+- PHASE4_MIGRATION_INDEX.md (entry point)
+
+**Status**: ✅ Complete - Phase 4 supporting document
+
+---
+
+### API_PROJECTION.md
+**Created**: 2025-11-09 (Phase 4)
+**Location**: `docs/archaeology/API_PROJECTION.md`
+**Type**: Cost estimation and credit justification
+**Lines**: 1,547
+
+**Sources**:
+- MIGRATION_ASSESSMENT.md (module classification)
+- COMMON_BLOCK_MAP.md (complexity indicators)
+- Deep Dives 01-07 (iteration estimates)
+- ARCHITECTURE_INSIGHTS.md (open questions)
+
+**Topics Covered**:
+- Total estimated API cost: $2,500-5,700 for full ATLAS migration
+- Section 1: API iteration estimates per module type
+  - Easy modules (26): 65 iterations, $78-143
+  - Medium modules (5): 38 iterations, $50-88
+  - Hard modules (49): 467 iterations, $718-1,105
+- Section 2: Physics expertise bottlenecks (25 modules requiring consultation)
+- Section 3: High-iteration sections (11 modules >15 iterations each)
+  - POPS+PFSAHA: 28-35 iterations, $50-70
+  - LINOP1+XLINOP: 25-32 iterations, $45-65
+  - TCORR: 22-28 iterations, $40-55
+- Section 4: Total cost projection breakdown (ATLAS12 + Atlas7v + SYNTHE)
+- Section 5: Ready-to-paste credit application justification
+- Section 6: Cost reduction strategies (if budget limited)
+- Section 7: Confidence intervals and uncertainty analysis
+
+**Related Synthesis**:
+- MIGRATION_ASSESSMENT.md (roadmap context)
+- COMMON_BLOCK_MAP.md (complexity factors)
+- ARCHITECTURE_INSIGHTS.md (decision points)
+
+**Status**: ✅ Complete - Phase 4 deliverable 3
+
+---
+
 ## Potential Synthesis Opportunities
 
 ### Binary I/O Comprehensive Guide
@@ -258,7 +433,7 @@
 ### Future Synthesis Triggers
 - After processing 3+ opacity papers → Create opacity methods literature review
 - After processing Kurucz user guides → Create workflow best practices
-- After completing Phase 4 COMMON block analysis → Create state management guide
+- ✅ After completing Phase 4 COMMON block analysis → State management guide complete (COMMON_BLOCK_MAP.md, COMMON_BLOCK_ANALYSIS_SUMMARY.md)
 - Before implementation phase → Create "Implementation Kickoff Guide"
 
 ---
