@@ -2067,3 +2067,116 @@ For context: 1GB RAM can hold ~50 models simultaneously in double precision.
 **Breadth-first approach applied**: Documented clear aspects, flagged complex areas for future investigation, identified shared computational kernel (~10.5K lines reusable across codes).
 
 **Next**: Use insights from this document and ARCHITECTURE_INSIGHTS.md for Phase 3 (Physics Pipeline) and Phase 4 (Migration Assessment).
+
+---
+
+## VII. Linux Porting Experience (Sbordone et al. 2004)
+
+**Reference**: Sbordone, L., Bonifacio, P., Castelli, F., & Kurucz, R. L. 2004, Mem. S.A.It. Suppl. Vol. 5, 93
+
+This section documents the successful 2004 porting of ATLAS9, SYNTHE, and WIDTH from VMS to GNU Linux, providing valuable lessons for Julia migration.
+
+### 7.1 Porting Strategy
+
+**Goals**:
+1. Make codes available on Linux (more widespread, less expensive than VMS)
+2. **Minimal alterations** - preserve I/O formats and functionalities
+3. Enable smooth integration with existing line databases, opacities, model grids
+4. Allow easy incorporation of future VMS code modifications
+
+**Philosophy**: "Port the code introducing the smallest possible alterations"
+
+**Result**: Full compatibility maintained, dramatic performance improvements achieved
+
+---
+
+### 7.2 Code Modifications Required (Summary: Minimal)
+
+**1. FORMAT Statements**: Updated Fortran IV syntax to F90/F95 standard
+
+**2. OPEN Command Syntax**: Modified for UNIX file I/O conventions
+
+**3. Double Precision Consistency**: Redefined variables to maintain REAL*8 throughout routines
+
+**4. DATA Block Size Limits** ⚠️ **Critical Issue**:
+- **Problem**: Intel Fortran Compiler has hard limit on DATA block size
+- **Affected**: Partition functions, integration matrices, pretabulated values
+- **Solutions**:
+  - Split large DATA blocks into smaller blocks
+  - Move data to external files
+- **New file created**: **PFIRON.DAT** (iron group partition functions, Ca-Cu)
+  - Required at runtime in Linux version
+  - Was embedded in VMS source code
+  - Must be in same directory as executable
+
+**5. Molecular Data Format**: VMS binary → ASCII (programs modified to read ASCII)
+
+---
+
+### 7.3 Performance Improvements (Dramatic)
+
+**Benchmark**: ATLAS9 (135 iterations, 72 layers, Teff=5000K, log g=2.5, [Fe/H]=-0.5)
+
+| Platform | ATLAS9 (s) | Per iter (s) | SYNTHE (s) | Speedup |
+|----------|------------|--------------|------------|---------|
+| VMS AlphaServer 800 5-500 | 478 | 3.54 | 69 | 1.0× |
+| Pentium 4 1.9GHz + IFC 7.0 | 177 | 1.31 | 10 | 2.7× / 6.9× |
+| Pentium M 1.6GHz + IFC 8.0 | 122 | 0.9 | 10 | 3.9× / 6.9× |
+
+**Key insight**: Laptop (Pentium M) outperforms expensive AlphaServer by 3.9×
+
+**Enables**:
+- On-demand custom atmosphere calculation (no precomputed grids needed)
+- Monte Carlo error analysis (many model runs)
+- Automated spectral analysis pipelines
+
+---
+
+### 7.4 Binary File Conversions
+
+**Opacity Distribution Functions (ODFs)**:
+- VMS binary → ASCII (on VMS) → Linux binary (on Linux)
+- Binary format required (ODFs are ~100s MB, ASCII wastes space)
+- Both old Kurucz (1993) and new Castelli & Kurucz (2003) ODFs supported
+
+**Molecular data**: VMS binary → ASCII (portable, but larger)
+
+**ASCII files (unchanged)**:
+- Model atmospheres (.mod)
+- Line lists (gf*.100)
+- Rosseland opacities (.ros)
+- Control cards
+
+---
+
+### 7.5 Validation
+
+**Method**: Direct numerical comparison VMS vs Linux
+
+**Results**: "Indistinguishable" (Figures 1-3 in paper)
+- T vs log(τRoss): Perfect overlap
+- Synthetic spectra: Identical (Mg b triplet test)
+- Electron density: Perfect agreement
+
+**Validation philosophy**: Bit-level numerical accuracy, not just "runs without errors"
+
+---
+
+### 7.6 Implications for Julia Migration
+
+| Sbordone 2004 Lesson | Atlas.jl Strategy |
+|----------------------|-------------------|
+| Minimal code changes work | Preserve algorithms exactly, modernize structures |
+| Compiler has DATA block limits | Julia: no DATA blocks - use const arrays + files |
+| Binary conversion required | Use HDF5 from start (portable + compressed) |
+| 3-7× performance gain achievable | Target similar via Julia LLVM optimization |
+| External data files OK | Use DataDeps.jl for automatic management |
+| Validation is critical | Test each routine against Fortran output |
+| ~700 MB disk space | Similar or less (better compression) |
+| Enables laptop computing | Julia same - democratizes scientific computing |
+
+**Key takeaway**: VMS→Linux succeeded with <5% code changes while achieving 3-7× speedup. Julia migration can achieve similar or better results with modern language advantages.
+
+---
+
+**Status**: Phase 2B complete - ATLAS12, SYNTHE, ATLAS9, DFSYNTHE, KAPPA9 surveyed, Linux porting lessons documented.

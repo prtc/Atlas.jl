@@ -63,11 +63,22 @@ This file tracks the processing of reference papers and manuals for archaeologic
   - Archaeology docs updated:
   - Key findings:
 
-- [ ] **atlaslinux.pdf** - Linux implementation notes
-  - Date processed:
-  - Related components: Build/compilation, platform-specific
-  - Archaeology docs updated:
+- [x] **atlaslinux.pdf** - Linux implementation notes (Sbordone et al. 2004)
+  - Date processed: 2025-11-09
+  - Related components: Build/compilation, ATLAS9, SYNTHE, WIDTH
+  - Archaeology docs updated: ARCHITECTURE_DETAILS.md (porting section)
   - Key findings:
+    - **Compiler**: Intel Fortran Compiler (IFC) 7.0/8.0 (free for research, good Fortran IV compatibility)
+    - **Minimal code changes**: FORMAT updates, OPEN syntax, double precision fixes, DATA block splitting
+    - **New requirement**: PFIRON.DAT file (iron group partition functions) - IFC DATA block size limit
+    - **Molecular data**: VMS binary → ASCII format (program modified to read ASCII)
+    - **ODF conversion**: VMS binary → ASCII → Linux binary (saves disk space)
+    - **Performance gains**: ATLAS9 2.7-3.9× faster, SYNTHE 6.9× faster vs VMS AlphaServer
+    - **Laptop capable**: Pentium M 1.6GHz runs ATLAS9 in 122s (was 478s on AlphaServer)
+    - **Scripts**: VMS DCL → C-shell, program sequence unchanged
+    - **Validation**: Results indistinguishable from VMS (perfect T, ne agreement)
+    - **Disk space**: ~700 MB typical (BIG ODFs + line lists + molecules)
+    - Distribution contact: lsbordon@eso.org, bonifaci@ts.astro.it
 
 - [ ] **atlasodfnew.pdf** - Opacity Distribution Functions (ODF) documentation
   - Date processed:
