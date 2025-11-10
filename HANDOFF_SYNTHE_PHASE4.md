@@ -1,7 +1,6 @@
 # SYNTHE Phase 4 Session Handoff Document
 **Created**: 2025-11-10
 **Session**: Phase 4 - SYNTHE Edition continuation
-**Branch**: claude/mission-phase-4-011CUxTYGhcXAVnTi7UBuYA5
 
 ---
 
@@ -300,8 +299,6 @@ Structure:
 ---
 
 ## Git Workflow
-
-**Branch**: claude/mission-phase-4-011CUxTYGhcXAVnTi7UBuYA5
 
 **Already pushed** (safe):
 - SYNTHE_COMMON_BLOCK_MAP.md (commit cf5c7ab)
