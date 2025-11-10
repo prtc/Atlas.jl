@@ -311,6 +311,156 @@
 
 ---
 
+### SYNTHE_COMMON_BLOCK_MAP.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition)
+**Location**: `docs/archaeology/SYNTHE_COMMON_BLOCK_MAP.md`
+**Type**: Dependency analysis (SYNTHE pipeline)
+**Lines**: 1,200
+
+**Sources**:
+- SYNTHE programs (11 .for files)
+- atlas7v.for library
+- Deep Dives 08-12 (SYNTHE analysis)
+
+**Topics Covered**:
+- 50 COMMON blocks across SYNTHE suite
+- 32 atlas7v library blocks (shared state)
+- Fort.X file communication (external state)
+- Program classification: 8 Easy (0-4 blocks), 3 Hard (30-72 blocks)
+- Migration recommendations
+
+**Key Finding**: COMMON blocks are well-isolated in SYNTHE (unlike ATLAS12). Fort.X file elimination is the main challenge, NOT COMMON block refactoring.
+
+**Related Synthesis**:
+- SYNTHE_MIGRATION_ASSESSMENT.md
+- COMMON_BLOCK_MAP.md (ATLAS12 comparison)
+
+**Status**: ✅ Complete - Phase 4 SYNTHE Deliverable 1
+
+---
+
+### SYNTHE_MIGRATION_ASSESSMENT.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition)
+**Location**: `docs/archaeology/SYNTHE_MIGRATION_ASSESSMENT.md`
+**Type**: Migration roadmap (SYNTHE pipeline)
+**Lines**: 12,000
+
+**Sources**:
+- SYNTHE_COMMON_BLOCK_MAP.md
+- Deep Dives 08-12
+- PHYSICS_PIPELINE_SYNTHE.md
+- MIGRATION_ASSESSMENT.md (ATLAS12 template)
+
+**Topics Covered**:
+- 8 sections (same structure as ATLAS12 assessment)
+- Module classification: 8 Easy (67%), 4 Hard (33%)
+- Quick wins strategy (Weeks 1-3, all 8 easy programs)
+- Three migration roadmap options:
+  - Pipeline-First (recommended): Easy → atlas7v → hard → unification
+  - Vertical Slice: End-to-end minimal first
+  - Library-First: Atlas7v first (if shared with ATLAS12)
+- Timeline: 14-21 weeks vs ATLAS12's 36-58 weeks (2-3× faster)
+- Resource requirements (1-3 developers)
+- 10 open questions for Paula (strategy, atlas7v scope, test cases, etc.)
+
+**Key Finding**: SYNTHE is significantly more tractable than ATLAS12 due to modular pipeline architecture (11 programs vs 1 monolithic program).
+
+**Related Synthesis**:
+- SYNTHE_API_PROJECTION.md
+- MIGRATION_ASSESSMENT.md (ATLAS12 comparison)
+
+**Status**: ✅ Complete - Phase 4 SYNTHE Deliverable 2
+
+---
+
+### SYNTHE_API_PROJECTION.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition)
+**Location**: `docs/archaeology/SYNTHE_API_PROJECTION.md`
+**Type**: Cost estimation (SYNTHE-specific)
+**Lines**: 1,100+
+
+**Sources**:
+- SYNTHE_MIGRATION_ASSESSMENT.md
+- API_PROJECTION.md (ATLAS12 template)
+- Deep Dives 08-12
+
+**Topics Covered**:
+- Total API cost: $329-554 (with ATLAS12) or $485-814 (standalone)
+- Section 1: API iteration estimates per module type
+  - Easy programs (8): 35 iterations, $21-36
+  - Hard programs (3): 53 iterations, $76-131
+  - Atlas7v library: 80-120 iterations, $120-200 (or $0 if ATLAS12 done)
+  - Fort.X elimination: 15-25 iterations, $22-40
+- Section 2: Physics expertise bottlenecks (4 programs vs 25 ATLAS12 subroutines)
+- Section 3: High-iteration sections (atlas7v, synthe.for, Fort.X, spectrv.for)
+- Section 4: Total cost projection (standalone vs with ATLAS12)
+- Section 5: Credit application justification (1,516% ROI)
+- Section 6: Cost reduction strategies (minimal SYNTHE, defer atlas7v, keep fort.X)
+- Section 7: Confidence intervals (Medium-high ±35%, higher than ATLAS12's ±40%)
+
+**Key Finding**: SYNTHE-specific cost is $253-426 (excluding atlas7v). Atlas7v library is 52% of standalone cost but $0 if ATLAS12 already migrated.
+
+**Related Synthesis**:
+- API_PROJECTION.md (full ATLAS cost)
+- SYNTHE_MIGRATION_ASSESSMENT.md
+
+**Status**: ✅ Complete - Phase 4 SYNTHE Deliverable 3
+
+---
+
+### SYNTHE_API_PROJECTION_SUMMARY.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition)
+**Location**: `docs/archaeology/SYNTHE_API_PROJECTION_SUMMARY.md`
+**Type**: Executive summary (SYNTHE cost projection)
+**Lines**: 324
+
+**Sources**:
+- SYNTHE_API_PROJECTION.md (detailed analysis)
+
+**Topics Covered**:
+- Quick reference tables (cost breakdown, component details)
+- Decision guidance (standalone vs with ATLAS12)
+- Migration timeline (14-21 weeks)
+- ROI analysis (1,516% ROI, $8,400 savings)
+- Comparison to ATLAS12 (2-3× easier)
+
+**Related Synthesis**:
+- SYNTHE_API_PROJECTION.md (detailed analysis)
+- SYNTHE_PHASE4_INDEX.md (entry point)
+
+**Status**: ✅ Complete - Phase 4 SYNTHE supporting document
+
+---
+
+### SYNTHE_PHASE4_INDEX.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition)
+**Location**: `docs/archaeology/SYNTHE_PHASE4_INDEX.md`
+**Type**: Navigation hub (SYNTHE Phase 4)
+**Lines**: 545
+
+**Sources**:
+- SYNTHE_COMMON_BLOCK_MAP.md
+- SYNTHE_MIGRATION_ASSESSMENT.md
+- SYNTHE_API_PROJECTION.md
+- SYNTHE_API_PROJECTION_SUMMARY.md
+
+**Topics Covered**:
+- Quick reference to all 5 SYNTHE Phase 4 documents
+- Key findings summary (SYNTHE vs ATLAS12)
+- Document navigation guide (when to read what)
+- Decision trees (standalone vs with ATLAS12, migration strategy)
+- Timeline overview (14-21 weeks)
+- Resource requirements (1-3 developers, Paula time)
+- Comparison to ATLAS12 Phase 4
+
+**Related Synthesis**:
+- All SYNTHE Phase 4 documents
+- PHASE4_MIGRATION_INDEX.md (ATLAS12 equivalent)
+
+**Status**: ✅ Complete - Phase 4 SYNTHE entry point
+
+---
+
 ## Potential Synthesis Opportunities
 
 ### Binary I/O Comprehensive Guide

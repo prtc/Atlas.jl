@@ -354,6 +354,77 @@ Phase 4 completed three major deliverables (COMMON_BLOCK_MAP.md, MIGRATION_ASSES
 
 ---
 
+### Phase 4 - SYNTHE Edition: SYNTHE Suite Migration Assessment ✅ COMPLETE
+**Target**: Day 10 | **Status**: ✅ Complete (2025-11-10)
+
+**Purpose**: Parallel migration assessment for SYNTHE spectrum synthesis pipeline (Priority #2 after ATLAS12)
+
+#### Deliverables:
+
+21. **SYNTHE_COMMON_BLOCK_MAP.md** (1,200 lines):
+    - Analyzed 50 COMMON blocks across 11 SYNTHE programs + atlas7v library
+    - 8 easy programs (0-4 blocks each), 3 hard programs (30-72 blocks each)
+    - Fort.X file communication analysis (inter-program binary I/O)
+    - **Key finding**: COMMON blocks are well-isolated. Fort.X elimination is main challenge, not COMMON refactoring.
+
+22. **SYNTHE_MIGRATION_ASSESSMENT.md** (12,000 lines):
+    - Module classification: 8 Easy (67% of programs), 4 Hard (33% of programs)
+    - Section 1: Module difficulty classification (bimodal distribution: 8 trivial + 4 complex)
+    - Section 2: Quick wins strategy (all 8 easy programs in Weeks 1-3, ~$21-36 API cost)
+    - Section 3: High-risk areas (4 components: atlas7v library, Fort.X elimination, synthe.for loop, spectrv.for RT)
+    - Section 4: Migration dependencies (atlas7v library is critical path, blocks xnfpelsyn and spectrv)
+    - Section 5: Testing strategy (8 easy programs provide early validation capability)
+    - Section 6: Three migration roadmap options (Pipeline-First recommended)
+      - **Pipeline-First**: Easy programs (Weeks 1-3) → atlas7v (Weeks 4-9) → hard programs (Weeks 10-14) → unification (Week 15)
+      - **Vertical Slice**: Minimal end-to-end first, then expand
+      - **Library-First**: Atlas7v first (if shared with ATLAS12), then programs
+    - Section 7: Resource requirements (1-3 developers, 14-21 weeks)
+    - Section 8: Success criteria (all 11 programs + unified pipeline + fort.X elimination)
+    - Section 9: Open questions for Paula (10 decisions: strategy, atlas7v scope, test cases, etc.)
+    - **Timeline**: **14-21 weeks** (3.5-5 months) for complete SYNTHE migration vs ATLAS12's 36-58 weeks
+
+23. **SYNTHE_API_PROJECTION.md** (1,100+ lines):
+    - Total API cost: **$329-554** (with ATLAS12) or **$485-814** (standalone)
+    - Section 1: API iteration estimates per module type
+      - Easy programs (8): 35 iterations, $21-36
+      - Hard programs (3): 53 iterations, $76-131
+      - Atlas7v library: 80-120 iterations, $120-200 (or $0 if ATLAS12 migrated)
+      - Fort.X elimination: 15-25 iterations, $22-40
+    - Section 2: Physics expertise bottlenecks (4 programs vs 25 ATLAS12 subroutines)
+    - Section 3: High-iteration sections (atlas7v: 80-120, synthe.for: 26, Fort.X: 15-25, spectrv.for: 17)
+    - Section 4: Total cost projection ($329-554 with ATLAS12, $485-814 standalone, 30% overhead included)
+    - Section 5: Credit application justification (1,516% ROI, $8,400 savings from AI assistance)
+    - Section 6: Cost reduction strategies (minimal SYNTHE, defer atlas7v, keep fort.X files)
+    - Section 7: Confidence intervals (Medium-high ±35%, higher than ATLAS12's ±40%)
+    - **SYNTHE-specific work**: $253-426 (excluding atlas7v library which is shared with ATLAS12)
+
+**Supporting Documents**:
+
+24. **SYNTHE_API_PROJECTION_SUMMARY.md** (324 lines) - Executive summary with quick reference tables, decision guidance, ROI analysis
+
+25. **SYNTHE_PHASE4_INDEX.md** (545 lines) - Entry point for SYNTHE Phase 4 deliverables, navigation guide, comparison to ATLAS12 Phase 4
+
+**Summary**:
+Phase 4 - SYNTHE Edition completed parallel analysis of SYNTHE spectrum synthesis pipeline (Priority #2 after ATLAS12). **Key finding**: SYNTHE is significantly more tractable than ATLAS12 due to modular pipeline architecture (11 programs vs 1 monolithic program). 8 of 11 programs are trivial (0-4 COMMON blocks each, "quick wins" for Weeks 1-3). Only 3 programs + atlas7v library are complex. Main challenge is Fort.X file elimination (inter-process binary I/O), NOT COMMON block refactoring (blocks are well-isolated). Timeline: 14-21 weeks vs ATLAS12's 36-58 weeks (2-3× faster). API cost: $329-554 with ATLAS12 (atlas7v reused) or $485-814 standalone.
+
+**Critical Outputs**:
+- ✅ 50 COMMON blocks analyzed across SYNTHE suite
+- ✅ All 11 programs classified (8 Easy, 3 Hard)
+- ✅ Quick wins identified (8 programs, 2-3 weeks, $21-36)
+- ✅ Three migration roadmap options (Pipeline-First recommended)
+- ✅ API cost estimate ready for research credit application ($329-554 or $485-814)
+- ✅ Atlas7v library overlap with ATLAS12 identified (zero incremental cost if ATLAS12 done)
+- ✅ Fort.X elimination strategy specified (unified pipeline with optional stage-by-stage mode)
+
+**Comparison to ATLAS12 Phase 4**:
+- **SYNTHE**: 8 Easy (67%), 4 Hard (33%), 14-21 weeks, $329-554 (with ATLAS12)
+- **ATLAS12**: 26 Easy (33%), 49 Hard (61%), 36-58 weeks, $1,100-1,737
+- **Reason**: SYNTHE's modular pipeline naturally isolates concerns vs ATLAS12's monolithic tight coupling
+
+**Total Phase 1-4 (both editions) deliverables**: 20 ATLAS12 + 5 SYNTHE = **25 major documents** + **6 supporting documents** = **31 documents**
+
+---
+
 ### Phase 5: API Usage Projection ✅ MERGED INTO PHASE 4
 **Target**: Days 13-14 | **Status**: ✅ Complete (merged into Phase 4)
 
