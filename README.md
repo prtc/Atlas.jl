@@ -58,7 +58,7 @@ Two comprehensive physics synthesis documents (3,154 lines total):
 
 ## Methodology: Human-AI Collaboration
 
-This project represents an experiment in scientific software preservation through human-AI collaboration. Paula Coelho (astrophysicist, Universidade de São Paulo) brings deep domain expertise in stellar atmospheres and stellar populations. Claude (Anthropic's AI assistant) provides computational analysis capabilities, pattern recognition, and documentation support.
+This project represents an experiment in scientific software preservation through human-AI collaboration. Paula Coelho and Marcos Diaz (astrophysicists, Universidade de São Paulo) brings deep domain expertise in stellar atmospheres and stellar populations. Claude (Anthropic's AI assistant) provides computational analysis capabilities, pattern recognition, and documentation support.
 
 The collaboration leverages complementary strengths:
 - **Domain expertise**: Understanding why certain numerical approaches were chosen, what physics is being modeled, which changes are meaningful
@@ -128,7 +128,7 @@ The timeline and scope will evolve based on available resources and community in
   </figcaption>
 </figure>
 
-Decades of Fortran wizardry, intricate COMMON block choreography, implicit state dependencies and fort.X unit juggling was challenging even for AI pattern recognition. We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
+We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
 
 ---
 
