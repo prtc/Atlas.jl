@@ -120,7 +120,7 @@ The timeline and scope will evolve based on available resources and community in
 
 ### "Here Be Dragons 🐉"
 
-**Early in Phase 2**: Claude Code Web (CCW) spent 9+ hours diving deep into ATLAS12's architecture, attempting to map the web of 56 COMMON blocks and their implicit dependencies. When Paula checked in after several hours: "Claude, I'm worried. It has been 9 hours non-stop. Are you alright?" The response was telling: CCW had hit the complexity wall. 
+**Early in Phase 2**: Claude Code Web (CCW) spent in total 9+ hours diving deep into ATLAS12's architecture. When Paula checked in "Claude, I'm worried. It has been 9 hours non-stop. Are you alright? ... What happened about the false start?" The response was telling: CCW had hit the complexity wall. 
 <figure>
   <img src="media/14537.png" alt="Here be dragons" width="600"/>
   <figcaption>
