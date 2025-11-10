@@ -74,7 +74,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 6. Cost reduction strategies (if budget limited)
 7. Confidence intervals (Medium-high ±35%)
 
-**Key finding**: SYNTHE API cost is **$329-554** (with ATLAS12) or **$485-814** (standalone), compared to ATLAS12's $1,100-1,737.
+**Key finding**: SYNTHE API cost is **$379-634** (with ATLAS12) or **$485-814** (standalone), compared to ATLAS12's $1,100-1,737.
 
 ---
 
@@ -124,7 +124,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 | **Easy modules** | 26 (33%) | 8 (67%) |
 | **Hard modules** | 49 (61%) | 4 (33%) |
 | **Timeline** | 36-58 weeks | 14-21 weeks |
-| **API cost** | $1,100-1,737 | $329-554 (with ATLAS12) |
+| **API cost** | $1,100-1,737 | $379-634 (with ATLAS12) |
 | **Physics validation** | 25 subroutines | 4 programs |
 | **Paula time** | 20 hours | 8 hours |
 
@@ -220,7 +220,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 
 #### "I need the executive summary"
 → Read **SYNTHE_API_PROJECTION_SUMMARY.md** (5 minutes)
-- Cost: $329-554 (with ATLAS12) or $485-814 (standalone)
+- Cost: $379-634 (with ATLAS12) or $485-814 (standalone)
 - Timeline: 14-21 weeks
 - Decision guidance
 
@@ -285,7 +285,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
    - Timeline: 14-21 weeks
 
 3. **SYNTHE_API_PROJECTION.md** (1,100 lines)
-   - Cost: $329-554 (with ATLAS12) or $485-814 (standalone)
+   - Cost: $379-634 (with ATLAS12) or $485-814 (standalone)
    - 4 programs need physics validation
 
 ---
@@ -299,7 +299,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 | **Main challenge** | COMMON block refactoring | Fort.X file elimination |
 | **Quick wins** | 26 easy subroutines (33%) | 8 easy programs (67%) |
 | **Timeline** | 36-58 weeks | 14-21 weeks (2-3× faster) |
-| **API cost** | $1,100-1,737 | $329-554 or $485-814 |
+| **API cost** | $1,100-1,737 | $379-634 or $485-814 |
 | **Complexity** | Higher (monolithic spaghetti) | Lower (clean pipeline) |
 
 **Conclusion**: SYNTHE is significantly more tractable than ATLAS12.
@@ -311,10 +311,11 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 ### Decision 1: Standalone SYNTHE or With ATLAS12?
 
 **If ATLAS12 already migrated** → ✅ **Proceed with SYNTHE immediately**
-- Cost: **$329-554** (atlas7v reused, lowest cost)
+- Cost: **$379-634** (atlas7v 40-60% savings, lowest cost)
 - Timeline: **14-21 weeks**
-- Risk: **Low** (atlas7v proven via ATLAS12)
+- Risk: **Low** (atlas7v algorithms proven, adaptation needed for different data structures)
 - **Recommended**: Pipeline-First strategy
+- **Note**: See ATLAS12_VS_ATLAS7V_COMPARISON.md for atlas12/atlas7v differences
 
 **If ATLAS12 not yet migrated**:
 
@@ -325,7 +326,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 - **Use case**: SYNTHE urgently needed, ATLAS12 can wait
 
 **Option B: ATLAS12 first, then SYNTHE** (if both needed)
-- Cost: **$1,429-2,291** total ($1,100-1,737 + $329-554)
+- Cost: **$1,479-2,371** total ($1,100-1,737 + $379-634)
 - Timeline: **50-79 weeks** total (36-58 + 14-21)
 - Risk: **Low** (atlas7v validated twice)
 - **Use case**: Both codes needed, can afford longer timeline
@@ -393,7 +394,7 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 | **-** | 30% overhead | $72-122 or $36-62 | Debugging, validation |
 | **TOTAL** | **14-21 weeks** | **$311-529 or $155-269** | Complete SYNTHE migration |
 
-**With overhead**: **$485-814** (standalone) or **$329-554** (with ATLAS12)
+**With overhead**: **$485-814** (standalone) or **$379-634** (with ATLAS12)
 
 ---
 
@@ -423,11 +424,11 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 ### API Budget
 
 **Request amount** (from SYNTHE_API_PROJECTION.md Section 5):
-- **With ATLAS12**: $440 (midpoint with buffer)
+- **With ATLAS12**: $500 (midpoint with buffer)
 - **Standalone**: $650 (midpoint with buffer)
 
 **Conservative range**:
-- With ATLAS12: $329-554
+- With ATLAS12: $379-634
 - Standalone: $485-814
 
 **Confidence**: Medium-high (±35%)
