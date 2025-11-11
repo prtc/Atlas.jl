@@ -618,7 +618,7 @@ These require **Paula consultation** iterations (longer cycle time, but same API
 
 ### SYNTHE Pipeline (50+ subroutines)
 
-**Programs**: synbeg, rgfalllinesnew, rmolecasc, rschwenk, rh2ofast, rpredict, spectrv, rotate, broaden, synthe
+**Programs** (13 total): xnfpelsyn, synbeg, rgfalllinesnew, rpredict, rmolecasc, rschwenk, rh2ofast, synthe, spectrv, rotate, broaden, converfsynnmtoa, fluxaverage1a_nmtoa
 
 **Deep Dive coverage**:
 - DD08: spectrv (synthesis core) - analyzed
@@ -626,6 +626,7 @@ These require **Paula consultation** iterations (longer cycle time, but same API
 - DD10: xnfpelsyn (atmosphere prep, uses Atlas7v) - analyzed
 - DD11: Broadening (rotation, instrumental) - analyzed
 - DD12: Line readers (5 programs) - analyzed
+- DD13: synthe (line opacity engine, STANDALONE) - analyzed
 
 **Complexity tiers**:
 
