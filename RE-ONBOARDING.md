@@ -1,8 +1,8 @@
 # RE-ONBOARDING: Atlas.jl Code Archaeology Project
 *Quick-start guide for future Claude instances and collaborators*
 
-**Last Updated**: 2025-11-10
-**Project Status**: Phase 4 Complete ✅ | Ahead of schedule, credits remaining
+**Last Updated**: 2025-11-11
+**Project Status**: Phase 5 In Progress 🔄 | Tasks 0-4 complete, atlas7v ccall interface implemented
 
 ---
 
@@ -16,7 +16,7 @@
 
 **Project owner**: Paula (prtc)
 **Timeline**: Started ~Nov 4, 2025 | 2-week budget with Nov 18 deadline
-**Credits**: $250 allocated, $126 remaining after Phase 4 completion
+**Credits**: $250 allocated, ~$57-62 remaining after Phase 5 Tasks 0-4
 
 ---
 
@@ -115,12 +115,25 @@ We're analyzing ancient Fortran 77 astrophysics code to plan its migration to mo
 
 **~50,000+ lines of analysis** written (not counting this document)
 
+**Phase 5: Minimal Working SYNTHE Pipeline** (Day 15) - **IN PROGRESS** 🔄
+- **Goal**: Implement minimal viable Julia SYNTHE pipeline (5000-5100 Å solar spectrum)
+- **Approach**: Test-Driven Development with atlas7v Fortran ccall fallback
+- **Tasks Complete**: 0 (Preparation), 2 (synbeg), 3 (rgfalllines), 4 (rmolecasc), 1 (atlas7v ccall)
+- **Code Stats**: ~2,124 lines Julia code, ~808 lines tests
+- **Key Deliverables**:
+  - test/phase5_minimal_synthe/ directory structure with README.md
+  - PHASE5_MIGRATION_PLAN.md (923 lines)
+  - src/Synthe/ package: synbeg.jl, line_readers.jl, line_readers_molecular.jl, atlas7v.jl
+  - Comprehensive tests: test_synbeg.jl, test_rgfalllines.jl, test_rmolecasc.jl, test_atlas7v.jl
+- **Phase 5 Limitations**: Julia not available in sandbox, COMMON blocks need Fortran wrapper
+- **Next**: Handoff to local Claude Code for testing, Paula to compile atlas7v.so
+
 ### Current Status
 
-🎯 **All planned phases complete**
-⏰ **Ahead of schedule** (4 days ahead)
-💰 **Credits remaining** $126
-🤔 **Next steps**: Paula brainstorming how to use remaining credits
+🔄 **Phase 5 in progress** (Tasks 0-4 complete, 5-9 pending)
+⏰ **On schedule** for minimal viable pipeline
+💰 **Credits remaining** ~$57-62 of $107 Phase 5 budget
+🎯 **Next steps**: Local testing, atlas7v.so compilation, continue Tasks 5-9
 
 ---
 
@@ -616,10 +629,10 @@ Keep it up! 🚀
 - **SYNTHE source**: `/home/user/Atlas.jl/upstream/kurucz/synthe/*.for`
 - **Atlas7v source**: `/home/user/Atlas.jl/upstream/kurucz/synthe/atlas7v.for`
 
-**Branch**: `claude/phase-4-part-2-011CUzBNTY6YjUUooAa6rntZ`
+**Branch**: `claude/update-architecture-decisions-011CV2LStyiHtmFBZauabVQ1`
 
 **Contact**: Paula (prtc) - Project owner, domain expert, decision maker
 
 ---
 
-*Version 1.0 - 2025-11-10*
+*Version 1.1 - 2025-11-11* (Updated for Phase 5 progress)
