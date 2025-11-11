@@ -364,48 +364,55 @@ Output: fort.7 (converged atmosphere model)
 
 **Typical runtime**: Stage 1 = 5-10 minutes, Stage 2 = 30-120 minutes depending on convergence.
 
-### Complete SYNTHE Pipeline (11 Programs)
+### Complete SYNTHE Pipeline (13 Programs)
 
-**Critical correction from Phase 2A**: SYNTHE is not a single 3K-line program but an **11-program sequential pipeline**. The "SYNTHE" analyzed above is just step 8 of 11.
+**Critical correction from Phase 2A**: SYNTHE is not a single 3K-line program but a **13-program sequential pipeline**. The "synthe" analyzed above is just step 8 of 13.
 
 **Full Pipeline**:
 
 ```
 1. xnfpelsyn (+ atlas7v.o)
-   Input:  fort.3 (input parameters)
+   Input:  fort.3 (input parameters), fort.2 (molecules.dat), fort.17 (continua.dat)
    Output: fort.10 (abundance/partition function data)
+   Links:  atlas7v.for (calls POPS, KAPP)
 
 2. synbeg
-   Input:  fort.10
-   Output: fort.12 (wavelength grid), fort.14 (initialization)
+   Input:  stdin (control parameters)
+   Output: fort.12 (wavelength grid header), fort.14 (control params)
 
 3-7. Line Data Readers (executed sequentially, multiple times):
-   - rgfalllinesnew: Read Kurucz/Fall atomic line lists
-   - rmolecasc: Read molecular line lists
-   - rschwenk: Read Schwenk TiO lines
-   - rh2ofast: Read H2O lines (Partridge-Schwenke database)
-   - (rpredict: Read NIST predicted lines - optional)
+   - rgfalllinesnew: Read Kurucz gfall atomic line lists
+   - rpredict: Read predicted atomic lines (optional)
+   - rmolecasc: Read molecular line lists (ASCII)
+   - rschwenk: Read Schwenk TiO lines (binary)
+   - rh2ofast: Read H2O lines (Partridge-Schwenke binary database)
    Each appends to: fort.12 (accumulated line data)
 
-8. synthe
-   Input:  fort.12 (all line data), fort.14
-   Output: fort.16 (high-res spectrum), fort.18 (continuum)
+8. synthe (STANDALONE - does NOT link atlas7v)
+   Input:  fort.10 (atmosphere), fort.12 (all line data), fort.14, fort.18 (He I Stark tables), fort.19 (NLTE lines)
+   Output: fort.9 (opacity vectors), fort.13 (line IDs), fort.15 (line center opacities)
+   Note:   20+ embedded subroutines (see DD13), computational bottleneck
 
 9. spectrv (+ atlas7v.o)
-   Input:  fort.16, fort.18
-   Output: fort.7 (flux vs wavelength)
+   Input:  stdin (ATLAS model), fort.2 (molecules.dat), fort.16 (line opacities from synthe), fort.25 (PRD params)
+   Output: fort.7 (emergent intensity/flux)
+   Links:  atlas7v.for (calls READIN, JOSH)
 
 10. rotate
-    Input:  fort.7
-    Output: ROT1 (rotationally broadened spectrum)
+    Input:  fort.1 (spectrum from spectrv, linked from fort.7), stdin (rotation params)
+    Output: ROT1, ROT2, etc. (rotationally broadened spectra)
 
 11. broaden
-    Input:  ROT1
-    Output: fort.22 (broadened spectrum)
+    Input:  fort.21 (from rotate, linked from ROT1), stdin (broadening params)
+    Output: fort.22 (broadened spectrum, binary)
 
 12. converfsynnmtoa (optional)
-    Input:  fort.22
-    Output: ASCII spectrum (nm → Angstrom conversion)
+    Input:  fort.1 (from broaden, linked from fort.22)
+    Output: fort.2 (ASCII spectrum, nm → Angstrom conversion)
+
+13. fluxaverage1a_nmtoa (optional)
+    Input:  Spectrum file
+    Output: Flux-averaged spectrum
 ```
 
 **Key architectural insight**: Steps 3-7 are run **multiple times** to read different line lists, all appending to fort.12. Example from r7000-7210.com:
@@ -511,10 +518,12 @@ Output: fort.7 (converged atmosphere model)
                                   ▼
                         ┌──────────────────┐
                         │ SYNTHE Pipeline  │
-                        │  (11 programs)   │
+                        │  (13 programs)   │
                         │   ~25K loc total │
-                        │   + ATLAS7V lib  │
-                        │     (17K loc)    │
+                        │ + ATLAS7V lib    │
+                        │  (17K loc, used  │
+                        │ by xnfpelsyn +   │
+                        │   spectrv only)  │
                         └────────┬─────────┘
                                  │
                                  │ writes
@@ -557,11 +566,17 @@ Where are these 50-80 subroutines **defined**?
 
 ### 2. ATLAS7V Linking
 
-SYNTHE calls subroutines not found in synthe.for itself. Where?
+✅ **RESOLVED** by Phase 4-5 analysis (ATLAS7V_PHASE1-4, DD13):
 
-**Answer**: ATLAS7V library files (17K lines each, 4 copies identified).
+**Question**: Where are subroutines called by SYNTHE programs defined?
 
-**Action for Phase 2**: Document ATLAS7V API - what subroutines does it export?
+**Answer**:
+- **synthe.for** (8): Has 20+ embedded subroutines, **STANDALONE** (does NOT link atlas7v)
+- **xnfpelsyn.for** (1): Links atlas7v.for, calls POPS (44 times), KAPP
+- **spectrv.for** (9): Links atlas7v.for, calls READIN, JOSH (6 times)
+- **Other programs** (2-7, 10-13): Self-contained, no atlas7v linkage
+
+**ATLAS7V library**: 17K lines, 72 subroutines, only used by xnfpelsyn and spectrv
 
 ### 3. Compilation and Linking
 

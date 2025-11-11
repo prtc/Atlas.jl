@@ -1656,15 +1656,20 @@ atmosphere = atlas12(config, line_databases, initial_guess;
 
 ### 5.3 SYNTHE Pipeline Unification
 
-**Context**: SYNTHE is 11 separate Fortran programs:
-1. **synbeg** - Process atmosphere model
-2. **rgfalllinesmol** - Read molecular lines
-3. **rgfalllines** - Read atomic lines
-4. **rwavedf** - Accumulate more lines
-5. **spectrv** - Calculate spectrum (core RT solver)
-6. **rotate** - Apply rotational broadening
-7. **broaden** - Apply instrumental broadening
-8-11. Additional line accumulation steps
+**Context**: SYNTHE is 13 separate Fortran programs:
+1. **xnfpelsyn.for** - Atmosphere preparation (populations, continuum opacity)
+2. **synbeg.for** - Initialize synthesis (wavelength range, resolution)
+3. **rgfalllinesnew.for** - Read Kurucz gfall atomic lines
+4. **rpredict.for** - Read predicted atomic lines
+5. **rmolecasc.for** - Read molecular lines (CH, MgH, CN, CO, etc.)
+6. **rschwenk.for** - Read TiO Schwenke lines
+7. **rh2ofast.for** - Read H₂O Partridge-Schwenke lines
+8. **synthe.for** - Calculate line opacity at each depth and wavelength (core bottleneck)
+9. **spectrv.for** - Radiative transfer, compute emergent intensity/flux
+10. **rotate.for** - Apply rotational broadening (v sin i)
+11. **broaden.for** - Apply instrumental broadening
+12. **converfsynnmtoa.for** - Convert spectrum format
+13. **fluxaverage1a_nmtoa.for** - Flux averaging
 
 **Fortran workflow**: Run sequentially, communicate via fort.X files.
 
@@ -1708,7 +1713,7 @@ spec = synthe_broaden(spec, instrument)
 
 **Drawbacks**:
 - ❌ More complex API
-- ❌ Requires understanding 11-step pipeline
+- ❌ Requires understanding 13-step pipeline
 - ❌ Intermediate data structures exposed
 
 **Option C - Both (Recommended)**:
