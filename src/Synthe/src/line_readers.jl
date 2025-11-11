@@ -1,13 +1,118 @@
 """
 Line readers for SYNTHE pipeline
 
-**Tasks 2-4**: Implement rgfalllinesnew and rmolecasc
+**Tasks 3-4**: Implement rgfalllinesnew and rmolecasc
 
 Based on Deep Dive 12: SYNTHE Line Reading Pipeline
 """
 
 """
-    read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64)
+    parse_gfall_line(line_str::String)
+
+Parse a single gfall format line
+
+**Format** (from Deep Dive 12):
+```
+F11.4  F7.3  F6.2  F12.3  F5.1  F12.3  F5.1  A1  A10  A10
+```
+
+**Returns**: `SpectralLine` or `nothing` if parsing fails
+"""
+function parse_gfall_line(line_str::String)
+    # Skip empty or comment lines
+    if isempty(strip(line_str)) || startswith(line_str, "#")
+        return nothing
+    end
+
+    # Ensure line is long enough
+    if length(line_str) < 58
+        return nothing
+    end
+
+    try
+        # Parse fixed-width fields
+        wavelength = parse(Float64, line_str[1:11])
+        loggf = parse(Float64, line_str[12:18])
+        element_ion = parse(Float64, line_str[19:24])
+        e_lower = parse(Float64, line_str[25:36])
+        j_lower = parse(Float64, line_str[37:41])
+        e_upper = parse(Float64, line_str[42:53])
+        j_upper = parse(Float64, line_str[54:58])
+
+        # Extract element and ionization stage
+        iz = floor(Int, element_ion)
+        ion_stage = round(Int, (element_ion - iz) * 100)
+
+        # Compute damping parameters
+        # Radiative damping: Unsöld approximation (approximate)
+        gamma_rad = compute_radiative_damping(wavelength, e_lower, e_upper, loggf)
+
+        # Collisional damping: Default values (order of magnitude estimates)
+        # Stark (electron collisions)
+        gamma_stark = 1.0e-5  # Default for neutrals
+
+        # van der Waals (H collisions)
+        gamma_vdw = 1.0e-7    # Default
+        alpha = 0.4           # Typical exponent
+
+        # Note: NBUFF will be set later if params provided
+        nbuff = 0
+
+        return SpectralLine(
+            nbuff,
+            wavelength,
+            loggf,
+            element_ion,
+            e_lower,
+            e_upper,
+            j_lower,
+            j_upper,
+            gamma_rad,
+            gamma_stark,
+            gamma_vdw,
+            alpha
+        )
+    catch e
+        # Failed to parse - skip this line
+        return nothing
+    end
+end
+
+"""
+    compute_radiative_damping(wavelength::Float64, e_lower::Float64, e_upper::Float64, loggf::Float64)
+
+Compute radiative damping width using Unsöld approximation
+
+**Formula** (approximate):
+```
+Γ_rad ≈ (2π e² / (m_e c)) × (ν² / c) × gf
+```
+
+**Returns**: Radiative damping in Hz
+"""
+function compute_radiative_damping(wavelength::Float64, e_lower::Float64, e_upper::Float64, loggf::Float64)
+    # Constants (CGS)
+    c = 2.99792458e10      # cm/s
+    e = 4.80320425e-10     # esu
+    m_e = 9.10938356e-28   # g
+
+    # Frequency
+    nu = c / (wavelength * 1.0e-8)  # Hz (wavelength in Å → cm)
+
+    # gf value
+    gf = 10.0^loggf
+
+    # Classical damping constant
+    gamma_classical = (8 * π^2 * e^2) / (3 * m_e * c^3)  # s⁻¹ Hz⁻²
+
+    # Radiative damping
+    gamma_rad = gamma_classical * nu^2 * gf  # Hz
+
+    return gamma_rad
+end
+
+"""
+    read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64, params::Union{Fort93Params,Nothing}=nothing)
 
 Read atomic lines from Kurucz gfall format
 
@@ -40,14 +145,55 @@ F11.4  F7.3  F6.2  F12.3  F5.1  F12.3  F5.1  A1  A10  A10
 2. Read each line with fixed-width format
 3. Filter by wavelength range [wave_start - 10, wave_end + 10]
 4. Convert to SpectralLine struct
-5. Return vector of lines
+5. If params provided, compute NBUFF index
+6. Return vector of lines
 
 **Returns**: `Vector{SpectralLine}`
-
-**Status**: NOT IMPLEMENTED (Task 3)
 """
-function read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64)
-    error("Task 3 not yet implemented: rgfalllinesnew atomic line reader")
+function read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64, params::Union{Fort93Params,Nothing}=nothing)
+    lines = SpectralLine[]
+
+    # Wavelength filtering margin (for Voigt wings)
+    margin = 10.0  # Å
+
+    open(filename, "r") do file
+        for line_str in eachline(file)
+            # Parse line
+            line = parse_gfall_line(line_str)
+
+            if isnothing(line)
+                continue  # Skip invalid lines
+            end
+
+            # Wavelength filtering
+            if line.wavelength < wave_start - margin || line.wavelength > wave_end + margin
+                continue  # Outside wavelength range
+            end
+
+            # Compute NBUFF if params provided
+            if !isnothing(params)
+                nbuff = wavelength_to_nbuff(line.wavelength, params)
+                line = SpectralLine(
+                    nbuff,
+                    line.wavelength,
+                    line.loggf,
+                    line.element_ion,
+                    line.e_lower,
+                    line.e_upper,
+                    line.j_lower,
+                    line.j_upper,
+                    line.gamma_rad,
+                    line.gamma_stark,
+                    line.gamma_vdw,
+                    line.alpha
+                )
+            end
+
+            push!(lines, line)
+        end
+    end
+
+    return lines
 end
 
 """

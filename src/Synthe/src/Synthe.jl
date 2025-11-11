@@ -70,6 +70,7 @@ export
 
     # Line readers (Tasks 3-4)
     read_gfalllines,
+    parse_gfall_line,
     read_molecular_lines,
 
     # Pipeline
