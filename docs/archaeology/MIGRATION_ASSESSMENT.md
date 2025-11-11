@@ -1232,16 +1232,19 @@ See `docs/archaeology/DEEP_DIVES/` for complete analysis.
 
 ## File I/O Packages
 
-7. **HDF5.jl** - HDF5 file format
-   - For: Modern line database storage (replace fort.11/fort.12)
+7. **HDF5.jl** - HDF5 file format ✅ **DECISION 5.7 RESOLVED**
+   - For: Primary line database storage format
    - Maturity: ✅ Excellent
-   - Use case: Long-term storage, not initial validation
+   - Decision: Use HDF5 as primary format (Paula + Marcos, 2025-11-11)
+   - Benefits: Memory-mapped I/O, compression, queryable, astronomy-standard
+   - Use case: Production line databases (convert Kurucz lists to HDF5)
+   - See: ARCHITECTURE_INSIGHTS.md Decision 5.7
 
 8. **FortranFiles.jl** - Read Fortran unformatted files
-   - For: Read fort.11, fort.12 for validation
+   - For: Read fort.11, fort.12 for validation, maintain backward compatibility
    - Maturity: ✅ Good
    - Critical for: Binary I/O compatibility (Deep Dive 04)
-   - Usage: Validation phase only, not production
+   - Usage: Validation phase + backward compatibility with legacy files
 
 9. **JLD2.jl** - Julia-native binary format
    - For: Fast checkpointing, intermediate results
@@ -1946,11 +1949,21 @@ end
    end
    ```
 
-3. **Tolerance selection**
-   - Easy subroutines (pure math): rtol=1e-12 (machine precision)
-   - Medium (physics): rtol=1e-6 (0.0001%)
-   - Hard (iterative): rtol=1e-4 to 1e-3 (0.01-0.1%)
-   - Float32 arrays: rtol=1e-5 (Float32 limit)
+3. **Tolerance selection** ✅ **UPDATED per Decision 5.4** (Paula + Marcos, 2025-11-11)
+
+   **Julia uses Float64 everywhere**, Fortran mixes REAL*4 (Float32) and REAL*8 (Float64):
+
+   - **Cannot expect bit-for-bit equality** for REAL*4 data (Julia has higher precision)
+   - **Use approximate equality** (`≈`) with appropriate `rtol`:
+     - **General comparison**: rtol=1e-6 (recommended default)
+     - **REAL*8 to Float64**: rtol=1e-12 (near machine precision, may be achievable)
+     - **REAL*4 to Float64**: rtol=1e-5 to 1e-6 (Julia exceeds Fortran precision)
+     - **Iterative convergence**: rtol=1e-4 to 1e-3 (0.01-0.1%, physics validation)
+     - **Physics validation**: rtol=1e-3 to 1e-4 (0.1-0.01% accuracy acceptable)
+
+   **Important**: Julia results should match or exceed Fortran accuracy (never worse)
+
+   See: ARCHITECTURE_INSIGHTS.md Decision 5.4 for complete precision strategy
 
 ### Integration Test Level (Iteration-by-Iteration)
 
@@ -2592,9 +2605,96 @@ For each risk:
 
 ---
 
-## Medium Risks (Ranks #8-15)
+### Risk 8: Vacuum ↔ Air Wavelength Conversion (Rank #8) ⚠️ **NEW**
 
-### Risk 8: READIN Input Format Archaeology
+**Risk**: Line lists transition between vacuum and air wavelengths at different ranges → wrong conversions = wrong line identifications
+
+**Identified by**: Marcos Diaz (2025-11-11 during Decision 5.7 resolution)
+
+**Why critical**:
+- Line lists use **different wavelength conventions** by region:
+  - UV (λ < ~2000 Å): Vacuum wavelengths
+  - Optical (λ > ~2000 Å): Air wavelengths
+  - IR (mid-K band?): Possibly back to vacuum (needs verification)
+- **Multiple conversion standards exist** with subtle differences:
+  - Edlén (1953) - older standard
+  - Edlén (1966) - improved version
+  - Ciddor (1996) - current IAU standard
+  - **Unknown**: Which formula does Fortran code use?
+- Different standards differ by **~0.1-0.5 Å** (significant for line ID)
+- **Subtle bugs**: Spectrum "looks right" but lines are misidentified
+- Wrong wavelengths → wrong element/ion assignments → wrong abundances
+
+**Consequences if wrong**:
+- Spectral lines misidentified (Fe I line called Fe II, etc.)
+- Abundance determinations incorrect
+- Synthetic spectra don't match observations (but hard to diagnose why)
+- Published science could be wrong
+
+**Mitigation Actions**:
+
+1. **Document Fortran's conversion standard**
+   - Timing: Pre-migration (Week 1)
+   - Owner: Paula + Code
+   - Priority: 🔴 Critical
+   - Action: Search Fortran code for vacuum-air conversion routines
+   - Action: Identify which Edlén/Ciddor formula is used
+   - Output: Document in validation strategy section
+
+2. **Document wavelength conventions in line lists**
+   - Timing: Pre-migration (Week 1-2)
+   - Owner: Paula + Code
+   - Priority: 🔴 Critical
+   - Action: Review Kurucz line list documentation
+   - Action: Identify wavelength cutoffs (verify ~2000 Å boundary)
+   - Action: Check IR convention (vacuum vs air)
+   - Output: Add to AtlasLineFormats.jl documentation with **clear warnings**
+
+3. **Add explicit conversion formula to Julia code**
+   - Timing: During line database migration (Week 4-6)
+   - Owner: Code
+   - Priority: 🔴 Critical
+   - Action: Implement exact conversion formula from Fortran
+   - Action: Add unit tests (vacuum→air→vacuum roundtrip)
+   - Action: Comment: `# ⚠️ CRITICAL: Must match Fortran's formula exactly`
+
+4. **Validate against known spectral lines**
+   - Timing: During validation (Week 8-10)
+   - Owner: Paula + Code
+   - Priority: 🔴 Critical
+   - Test cases: Solar atlas (known line positions)
+   - Validation: H-alpha (6562.8 Å air), Ca II H&K (3968.5 Å / 3933.7 Å air)
+   - Tolerance: < 0.01 Å error for strong lines
+
+5. **Cross-check wavelength ranges**
+   - Timing: During line accumulation testing (Week 8-10)
+   - Owner: Code
+   - Priority: 🟡 High
+   - Action: Plot wavelengths from UV to IR, check for discontinuities at ~2000 Å
+   - Action: Verify line densities match Fortran (lines per Å)
+
+6. **Add wavelength convention metadata to HDF5**
+   - Timing: During line database HDF5 conversion (Week 4-6)
+   - Owner: Code
+   - Priority: 🟡 High
+   - Action: Store metadata: `wavelength_type = "vacuum"` or `"air"`
+   - Action: Store conversion formula used
+   - Benefit: Future users know which convention applies
+
+**Estimated investigation effort**: 1 week (pre-migration)
+**Estimated implementation effort**: Included in line database migration (no additional time if done correctly)
+**Estimated validation effort**: 0.5 weeks (solar atlas comparison)
+
+**References**:
+- ARCHITECTURE_INSIGHTS.md Decision 5.7 (HDF5 line database strategy)
+- Need to cross-reference: Kurucz line list documentation
+- Need to verify: Which Edlén/Ciddor standard is astronomy-standard for this wavelength range
+
+---
+
+## Medium Risks (Ranks #9-16)
+
+### Risk 9: READIN Input Format Archaeology
 
 **Mitigation**:
 1. **Document format before coding** (Week 2-3, Code + Paula, 🔴 Critical)
@@ -2604,7 +2704,7 @@ For each risk:
 3. **Error messages for invalid input** (During migration, Code, 🟡 Medium)
    - Don't silently fail like Fortran - report parse errors
 
-### Risk 9: STATEQ Convergence
+### Risk 10: STATEQ Convergence
 
 **Mitigation**:
 1. **Validate hydrostatic equilibrium** (Week 8, Code, 🔴 Critical)
@@ -2612,27 +2712,27 @@ For each risk:
 2. **Test extreme log g** (Validation phase, Code, 🟡 High)
    - log g = 1.0 (giant), log g = 5.0 (dwarf)
 
-### Risk 10: POPSALL Order Dependencies
+### Risk 11: POPSALL Order Dependencies
 
 **Mitigation**:
 1. **Migrate after POPS validated** (Week 11-13, Code, 🔴 Critical)
 2. **Test abundance conservation** (Week 13, Code, 🟡 High)
    - Sum of all element abundances = total abundance
 
-### Risk 11: SELECTLINES Performance
+### Risk 12: SELECTLINES Performance
 
 **Mitigation**:
 1. **Profile with 10M lines** (Week 16, Code, 🟡 High)
 2. **Migrate after Binary I/O validated** (Week 16, Code, 🔴 Critical)
 
-### Risk 12: NMOLEC+MOLEC Physics
+### Risk 13: NMOLEC+MOLEC Physics
 
 **Mitigation**:
 1. **Defer if focusing on hot stars initially** (Flexible, Paula, 🟢 Low)
 2. **Validate molecular abundances** (When migrated, Code + Paula, 🟡 Medium)
    - Test H2 dissociation curve (known from literature)
 
-### Risk 13: Element Opacity Suite Systematic Errors
+### Risk 14: Element Opacity Suite Systematic Errors
 
 **Mitigation**:
 1. **Prototype approach** (Week 15-17, Code, 🟡 High)
@@ -2642,7 +2742,7 @@ For each risk:
 3. **Batch validation** (Week 20, Code, 🟡 High)
    - Run all 30+ opacity routines against Fortran test cases
 
-### Risk 14: Data Blocks (PFIRON, ISOTOPES, etc.)
+### Risk 15: Data Blocks (PFIRON, ISOTOPES, etc.)
 
 **Mitigation**:
 1. **Auto-convert option** (Week 22-24, Code, 🟢 Medium)
@@ -2652,7 +2752,7 @@ For each risk:
 3. **Spot-check validation** (Week 24, Code + Paula, 🟡 Medium)
    - Don't validate all 9000 numbers - check key values (Fe I, Fe II, etc.)
 
-### Risk 15: PUTOUT Validation Compatibility
+### Risk 16: PUTOUT Validation Compatibility
 
 **Mitigation**:
 1. **Migrate early** (Week 4-5, Code, 🔴 Critical)
