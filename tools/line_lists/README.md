@@ -95,11 +95,13 @@ python3 gfall_to_hdf5.py --help
 pip3 install h5py numpy
 ```
 
+**Note**: pip works perfectly in Claude Code Web sandbox (tested 2025-11-11).
+
 **Tested with**:
 - Python 3.11.14
-- h5py 3.x
-- numpy 1.x
-- Claude Code Web sandbox environment
+- h5py 3.15.1 (installed via pip)
+- numpy 2.3.4 (installed via pip)
+- Claude Code Web sandbox environment ✅
 
 ---
 
