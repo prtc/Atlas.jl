@@ -85,7 +85,7 @@
 
 **The solution**: Breadth-first with explicit flagging
 - Document what's immediately visible (inputs, outputs, purpose)
-- Flag complex/unclear sections with markers
+- Flag complex/unclear sections with markers 🐉
 - Create TODOs for later investigation
 - Keep moving - breadth before depth
 
