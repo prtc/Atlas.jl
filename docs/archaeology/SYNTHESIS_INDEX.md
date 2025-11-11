@@ -3,7 +3,7 @@
 
 **Purpose**: This index tracks all synthesis documents that combine multiple source materials (deep dives, papers, analyses). It helps avoid duplicate work and identifies gaps where synthesis would be valuable.
 
-**Last Updated**: 2025-11-09 (Deep clean session)
+**Last Updated**: 2025-11-10 (Phase 4 Part 2 - cost revision house cleaning)
 
 ---
 
@@ -385,20 +385,20 @@
 - Deep Dives 08-12
 
 **Topics Covered**:
-- Total API cost: $329-554 (with ATLAS12) or $485-814 (standalone)
+- Total API cost: $379-634 (with ATLAS12, revised from $329-554) or $485-814 (standalone)
 - Section 1: API iteration estimates per module type
   - Easy programs (8): 35 iterations, $21-36
   - Hard programs (3): 53 iterations, $76-131
-  - Atlas7v library: 80-120 iterations, $120-200 (or $0 if ATLAS12 done)
+  - Atlas7v library: 80-120 iterations, $120-200 (or $50-120 if ATLAS12 done, 40-60% savings)
   - Fort.X elimination: 15-25 iterations, $22-40
 - Section 2: Physics expertise bottlenecks (4 programs vs 25 ATLAS12 subroutines)
 - Section 3: High-iteration sections (atlas7v, synthe.for, Fort.X, spectrv.for)
 - Section 4: Total cost projection (standalone vs with ATLAS12)
-- Section 5: Credit application justification (1,516% ROI)
+- Section 5: Credit application justification (279% ROI, revised from 1,516%)
 - Section 6: Cost reduction strategies (minimal SYNTHE, defer atlas7v, keep fort.X)
 - Section 7: Confidence intervals (Medium-high ±35%, higher than ATLAS12's ±40%)
 
-**Key Finding**: SYNTHE-specific cost is $253-426 (excluding atlas7v). Atlas7v library is 52% of standalone cost but $0 if ATLAS12 already migrated.
+**Key Finding**: SYNTHE-specific cost is $329-514 (excluding atlas7v). Atlas7v library shows 40-60% savings from ATLAS12 (not 100% reuse). See ATLAS12_VS_ATLAS7V_COMPARISON.md for details.
 
 **Related Synthesis**:
 - API_PROJECTION.md (full ATLAS cost)
@@ -421,7 +421,7 @@
 - Quick reference tables (cost breakdown, component details)
 - Decision guidance (standalone vs with ATLAS12)
 - Migration timeline (14-21 weeks)
-- ROI analysis (1,516% ROI, $8,400 savings)
+- ROI analysis (279% ROI, $1,766-2,071 savings, revised from 1,516%)
 - Comparison to ATLAS12 (2-3× easier)
 
 **Related Synthesis**:
@@ -458,6 +458,39 @@
 - PHASE4_MIGRATION_INDEX.md (ATLAS12 equivalent)
 
 **Status**: ✅ Complete - Phase 4 SYNTHE entry point
+
+---
+
+### ATLAS12_VS_ATLAS7V_COMPARISON.md
+**Created**: 2025-11-10 (Phase 4 - SYNTHE Edition, cost revision)
+**Location**: `docs/archaeology/ATLAS12_VS_ATLAS7V_COMPARISON.md`
+**Type**: Code comparison analysis (cost correction)
+**Lines**: 488
+
+**Sources**:
+- upstream/castelli/source_codes/atlas12/atlas12.for
+- upstream/kurucz/synthe/atlas7v.for
+- SYNTHE_MIGRATION_ASSESSMENT.md (atlas7v dependencies)
+- ATLAS7V_PHASE2_STRUCTURE.md (7 subroutines used by SYNTHE)
+
+**Topics Covered**:
+- Detailed comparison of 7 atlas7v subroutines used by SYNTHE vs atlas12 counterparts
+- Grid size differences (kw=72 vs kw=99)
+- COMMON block structure differences
+- Subroutine signature differences (KAPP parameters)
+- Array indexing patterns (2D XABUND in atlas12, 1D in atlas7v)
+- Migration cost impact: 40-60% savings (not 100%) if ATLAS12 migrated
+- Transitive dependency closure (~5,400-7,400 lines total)
+
+**Key Finding**: Atlas7v subroutines are ~70-80% algorithmically similar to ATLAS12, but different data structures require adaptation. Cost revised from $0 to $50-120 when ATLAS12 already migrated.
+
+**Related Synthesis**:
+- SYNTHE_API_PROJECTION.md (updated with revised costs)
+- SYNTHE_API_PROJECTION_SUMMARY.md (cost tables revised)
+- ATLAS7V_PHASE2_STRUCTURE.md (7 subroutines identified)
+- ATLAS7V_PHASE4_CRITICAL_DEEP_DIVE.md (POPS, KAPP, JOSH, READIN analysis)
+
+**Status**: ✅ Complete - Phase 4 SYNTHE cost correction document
 
 ---
 
