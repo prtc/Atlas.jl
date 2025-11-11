@@ -13,7 +13,7 @@ SYNTHE has a **fundamentally different architecture** than ATLAS12:
 
 **ATLAS12**: Monolithic (80 subroutines, 57 COMMON blocks, all tightly coupled within one program)
 
-**SYNTHE**: Modular pipeline (11 programs, ~50 COMMON blocks, loosely coupled via fort.X files)
+**SYNTHE**: Modular pipeline (13 programs, ~50 COMMON blocks, loosely coupled via fort.X files)
 
 ### Key Architectural Findings
 
@@ -438,7 +438,7 @@ save("spectrum.h5", spectrum)  # HDF5, not fort.7
 | SPECTRV-specific blocks | 4 | spectrv.for only | LOW |
 | XNFPELSYN-specific blocks | 0 | (uses atlas7v blocks) | N/A |
 | Line reader utility blocks | 5 | Various utilities | LOW |
-| **TOTAL UNIQUE BLOCKS** | **~50** | **11 programs** | — |
+| **TOTAL UNIQUE BLOCKS** | **~50** | **13 programs** | — |
 
 **Programs by COMMON block complexity**:
 - **High** (30+ blocks): synthe.for (72), spectrv.for (40), xnfpelsyn.for (39), atlas7v.for (38)
@@ -447,7 +447,7 @@ save("spectrum.h5", spectrum)  # HDF5, not fort.7
 
 **Comparison to ATLAS12**:
 - ATLAS12: 57 blocks, all in one 23K-line program, 80 subroutines tightly coupled
-- SYNTHE: 50 blocks, distributed across 11 programs, only 3 programs are complex
+- SYNTHE: 50 blocks, distributed across 13 programs, only 3 programs are complex
 
 ---
 
@@ -497,7 +497,7 @@ Priority order:
 
 ### Tier 4: Fort.X File Elimination (Not COMMON blocks, but critical!)
 
-**Problem**: 11 programs communicate via binary fort.X files
+**Problem**: 13 programs communicate via binary fort.X files
 
 **Solution**: Unified pipeline architecture (per Decision 5.3)
 
