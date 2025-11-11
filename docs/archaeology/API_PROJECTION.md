@@ -318,6 +318,16 @@ These require **Paula consultation** iterations (longer cycle time, but same API
     - **Trigger**: During SYNTHE migration
     - **Iterations**: 1-2 reviews
 
+11. **Vacuum ↔ Air Wavelength Conversion** - Line list wavelength conventions ⚠️ **NEW CRITICAL**
+    - **Paula input**: Identify Fortran's conversion formula (Edlén 1953/1966 vs Ciddor 1996)
+    - **Paula input**: Verify wavelength ranges (UV vacuum, optical air, IR?)
+    - **Paula input**: Review Kurucz line list documentation for conventions
+    - **Trigger**: Pre-migration (Week 1, before line database work)
+    - **Iterations**: 1-2 reviews
+    - **Identified by**: Marcos Diaz (2025-11-11)
+    - **Why critical**: Wrong conversions → wrong line identifications → wrong science
+    - **See**: MIGRATION_ASSESSMENT.md Risk 8, ARCHITECTURE_INSIGHTS.md Decision 5.7
+
 #### Uncertainty Clarification (15 modules)
 
 **Undocumented constants/algorithms** requiring Paula's judgment:
@@ -333,11 +343,13 @@ These require **Paula consultation** iterations (longer cycle time, but same API
 
 ### Paula Time Budget Impact
 
-**Total Paula consultation iterations**: ~25-35 iterations
-**API cost**: Same as code iterations (~$40-70 total, included in module costs above)
-**Paula time cost**: ~10-20 hours over migration (not API cost, but project timeline)
+**Total Paula consultation iterations**: ~26-37 iterations (updated to include wavelength conversion)
+**API cost**: Same as code iterations (~$45-75 total, included in module costs above)
+**Paula time cost**: ~11-21 hours over migration (not API cost, but project timeline)
 
-**Critical path**: Paula availability is a bottleneck for 10 critical modules. Can parallelize Easy/Medium modules while waiting for physics validation.
+**Critical path**: Paula availability is a bottleneck for 11 critical modules. Can parallelize Easy/Medium modules while waiting for physics validation.
+
+**NEW addition** (2025-11-11): Wavelength conversion documentation added as Critical Physics Validation item #11, requires 1-2 Paula review iterations pre-migration (Week 1).
 
 **Mitigation**: Batch physics questions to minimize Paula's context-switching overhead.
 
