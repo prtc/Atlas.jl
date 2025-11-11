@@ -122,13 +122,13 @@ The timeline and scope will evolve based on available resources and community in
 
 **Early in Phase 2** Claude Code Web (CCW) spent in total 9+ hours diving deep into ATLAS12's architecture. When Paula checked in "Claude, I'm worried. It has been 9 hours non-stop. Are you alright? ... What happened about the false start?" The response was telling, CCW had hit the complexity wall: 
 <figure>
-  <img src="media/14537.png" alt="Here be dragons" width="600"/>
+  <img src="media/14537.png" alt="Here be dragons" width="650"/>
   <figcaption>
     Kurucz's logic confuses even Claude...
   </figcaption>
 </figure>
 
-We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
+We learned a lesson, and CCW named it "Here Be Dragons". Legacy code archaeology is more than reading code - it's about understanding the implicit knowledge, the contextual decisions, the "why" behind the "what." Sometimes you need to step back, regroup, and acknowledge when you're lost in the labyrinth. We documented this experience in `docs/archaeology/METHODOLOGY_NOTES.md`, it taught us that we're working on this together. When one of us gets stuck, we pause, discuss, and recalibrate. 
 
 ---
 
@@ -142,7 +142,7 @@ For questions about the project, please open an issue in this repository.
 ---
 
 <figure>
-  <img src="media/PHOTO-2016-ASOS12-SaoPaulo.jpg" alt="Paula with Robert Kurucz at ASOS-12 Colloquium, São Paulo, 2016" width="400"/>
+  <img src="media/PHOTO-2016-ASOS12-SaoPaulo.jpg" alt="Paula with Robert Kurucz at ASOS-12 Colloquium, São Paulo, 2016" width="500"/>
   <figcaption>
     This photo was taken at the ASOS-12 Colloquium in São Paulo, Brazil (2016) - the only time I met Robert Kurucz in person. This project is dedicated to preserving his legacy and continuing his commitment to open scientific computing.
   </figcaption>
