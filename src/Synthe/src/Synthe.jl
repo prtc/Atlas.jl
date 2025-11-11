@@ -38,6 +38,7 @@ include("synbeg.jl")
 
 # Line readers (Tasks 3-4)
 include("line_readers.jl")
+include("line_readers_molecular.jl")
 
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
@@ -72,6 +73,10 @@ export
     read_gfalllines,
     parse_gfall_line,
     read_molecular_lines,
+    parse_molecular_line,
+    iso_to_nelion,
+    get_isotopic_abundance,
+    combine_line_lists,
 
     # Pipeline
     synthe_pipeline,
