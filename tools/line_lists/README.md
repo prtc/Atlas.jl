@@ -103,19 +103,89 @@ pip3 install h5py numpy
 
 ---
 
-## Planned Tools (TODO)
-
 ### 2. molecular_to_hdf5.py - Molecular Line Lists
 
-Converts Kurucz molecular line formats to HDF5:
-- CH lines (chbx.asc format)
-- OH, NH, MgH, etc.
-- TiO (Schwenke format)
-- H2O (fast format)
+Converts Kurucz molecular line formats (CH, OH, NH, CO, TiO, etc.) to HDF5.
 
-**Example input**: `upstream/kurucz/input_data/chbx.asc`
+**Input format**: Kurucz molecular line format (68-74 chars/line)
+- Example: `upstream/kurucz/input_data/chbx.asc` (CH lines, 4,270 lines)
+- Format spec: `upstream/castelli/source_codes/synthe/rmolecasc.for:105`
+- Documentation: `docs/archaeology/DEEP_DIVES/09_SYNTHE_LINE_ACCUMULATION.md`
 
-**Status**: Format analysis needed (see `rmolecasc.for`)
+**Output format**: HDF5 with datasets:
+```
+/lines/
+  wavelength        Float64  Vacuum wavelength (Å)
+  log_gf            Float32  log10(oscillator strength)
+  j_lower           Float32  Lower level J quantum number
+  energy_lower      Float32  Lower level energy (cm^-1)
+  j_upper           Float32  Upper level J quantum number
+  energy_upper      Float32  Upper level energy (cm^-1)
+  molecule_code     Int16    Molecule identifier (106=CH, 608=CO, etc.)
+  label_lower       String   Lower level label (8 chars)
+  label_upper       String   Upper level label (8 chars)
+  isotope           Int16    Isotope number (12=12C, 13=13C, etc.)
+  log_gamma_rad     Float32  log10(radiative damping)
+
+/metadata/
+  format_version         "1.0"
+  source_format          "Kurucz molecular"
+  source_file            Original filename
+  conversion_time        ISO8601 timestamp
+  lines_total            Number of lines
+  wavelength_min         Minimum wavelength (Å)
+  wavelength_max         Maximum wavelength (Å)
+  molecules_count        Number of unique molecules
+  predominant_molecule   Name of main molecule (e.g., "CH")
+  predominant_code       Code of main molecule (e.g., 106)
+  molecule_codes         Array of molecule codes found
+  molecule_names         Array of molecule names
+  isotopes               Array of isotope numbers found
+  compressed             Boolean (gzip used?)
+```
+
+**Supported molecules** (via molecule_code):
+- **106**: CH (carbon monohydride)
+- **107**: NH (nitrogen monohydride)
+- **108**: OH (hydroxyl radical)
+- **112, 607**: CN (cyanogen)
+- **606**: C2 (dicarbon)
+- **608**: CO (carbon monoxide)
+- **101**: H2 (molecular hydrogen)
+- **102**: HD (deuterium hydride)
+- **814**: NO (nitric oxide)
+- **2222**: TiO (titanium oxide)
+- **2608**: SiO (silicon monoxide)
+- **2828**: FeH (iron monohydride)
+- ... and more (see MOLECULE_NAMES dict in source code)
+
+**Usage**:
+```bash
+# Basic conversion
+python3 molecular_to_hdf5.py input.asc output.h5
+
+# With compression and validation
+python3 molecular_to_hdf5.py chbx.asc chbx.h5 --compress --validate --verbose
+
+# Help
+python3 molecular_to_hdf5.py --help
+```
+
+**Performance**:
+- `chbx.asc` (4,270 CH lines): 0.09 MB compressed HDF5, <1 second
+- Expected ~50-100× faster access than reading ASCII
+
+**Dependencies**: Same as gfall_to_hdf5.py (h5py, numpy)
+
+**Tested with**:
+- Python 3.11.14
+- chbx.asc (CH B-X transitions, 4,270 lines, 0 errors)
+
+**Status**: ✅ **COMPLETE** (v1.0, 2025-11-11)
+
+---
+
+## Planned Tools (TODO)
 
 ### 3. continua_to_hdf5.py - Continuum Opacity Tables
 
@@ -316,15 +386,19 @@ Atlas.jl/
 **v1.0** (2025-11-11):
 - ✅ `gfall_to_hdf5.py` - Atomic line converter
 - ✅ Tested with gf_tiny.dat (1,197 lines, 0 errors)
-- ✅ HDF5 schema documented
+- ✅ `molecular_to_hdf5.py` - Molecular line converter
+- ✅ Tested with chbx.asc (4,270 CH lines, 0 errors)
+- ✅ HDF5 schemas documented
 - ✅ Compression and validation working
-- ✅ README created
+- ✅ Vacuum/air wavelength tracking (atomic lines)
+- ✅ README created and updated
 
 **Planned v1.1**:
-- ⏳ Molecular line converter
-- ⏳ Continuum opacity converter
-- ⏳ Query tool
-- ⏳ Fort.12 inspector
+- ⏳ Continuum opacity converter (continua.dat)
+- ⏳ Query tool (line_query.py)
+- ⏳ Fort.12 inspector (fort12_inspector.py)
+- ⏳ TiO lines (Schwenke format, rschwenk.for)
+- ⏳ H2O lines (fast format, rh2ofast.for)
 
 ---
 
