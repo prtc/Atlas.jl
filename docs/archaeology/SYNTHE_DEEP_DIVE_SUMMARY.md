@@ -289,31 +289,37 @@ spectrv
 
 ---
 
-## Shared Code with ATLAS12
+## ATLAS7V Library (NOT Shared with ATLAS12)
 
 ### ATLAS7V Library Components
 
-The following subroutines are **shared** between ATLAS12 and SYNTHE:
+✅ **IMPORTANT CORRECTION** (from ATLAS12_VS_ATLAS7V_COMPARISON.md and DD13):
 
-| Subroutine | Purpose | Lines | ATLAS Use | SYNTHE Use | Priority |
-|------------|---------|-------|-----------|------------|----------|
-| **READIN** | Parse atmosphere model | ~500 | Read initial model | Read converged model | Critical |
-| **POPS** | Saha-Boltzmann solver | ~800 | Every iteration | Pre-compute once | Critical |
-| **KAPP** | Continuum opacity | ~1200 | Every iteration | Pre-compute once | Critical |
-| **JOSH** | Radiative transfer | ~600 | Flux/λ correction | Emergent intensity | Critical |
-| **FREEFF** | Free-free opacity | ~400 | H⁻ opacity | H⁻ opacity | High |
-| **CONT3** | Bound-free dispatcher | ~300 | Metal opacities | Metal opacities | High |
-| **HOP** | H bound-free opacity | ~200 | H I opacity | H I opacity | High |
-| **HEOP** | He bound-free opacity | ~150 | He I/II opacity | He I/II opacity | High |
-| **H2OP** | H₂ opacity | ~250 | Cool stars | Cool stars | Medium |
-| **IONPOTS** | Element indexing | ~100 | COMMON setup | COMMON setup | High |
+The following subroutines are in **atlas7v.for**, which is **SIMILAR BUT NOT IDENTICAL** to ATLAS12:
 
-**Total Shared**: ~4500 lines of core physics code
+| Subroutine | Purpose | Lines | Used By | Priority |
+|------------|---------|-------|---------|----------|
+| **READIN** | Parse atmosphere model | ~870 | spectrv.for | Critical |
+| **POPS** | Saha-Boltzmann solver (dispatcher) | ~101 | xnfpelsyn.for (44 calls) | Critical |
+| **KAPP** | Continuum opacity dispatcher | ~118 | xnfpelsyn.for | Critical |
+| **JOSH** | Radiative transfer (Feautrier) | ~239 | spectrv.for (6 calls) | Critical |
+| **PFIRON** | Partition function tables | ~6037 | POPS (transitive) | Critical |
+| **20+ opacity subroutines** | HOP, HEOP, H2OP, etc. | ~2900 | KAPP (conditional) | High |
 
-**Migration Strategy**: Develop ATLAS7V as a **separate Julia module** that both ATLAS12 and SYNTHE depend on. This enables:
-- Shared unit tests (test once, use twice)
-- Consistent physics across codes
-- Easier maintenance (bug fixes propagate)
+**Total atlas7v library**: ~10,500 lines (32 subroutines via transitive closure)
+
+**NOT Shared with ATLAS12**: atlas7v and ATLAS12 have **different implementations**:
+- Grid size: kw=99 (atlas7v) vs kw=72 (ATLAS12)
+- Abundance model: 1D constant (atlas7v) vs 2D stratified (ATLAS12)
+- COMMON block structures differ
+- ATLAS12 has its own POPS, KAPP, JOSH, READIN (in atlas12.for)
+
+**Programs that link atlas7v**:
+- **xnfpelsyn.for**: Calls POPS (44 times for different elements), KAPP
+- **spectrv.for**: Calls READIN, JOSH (6 times)
+- **Other 11 programs**: STANDALONE (synthe, synbeg, line readers, rotate, broaden, converters)
+
+**Migration Strategy**: Develop atlas7v as **separate Julia module** (`Atlas7vPhysics.jl` or `SynthePhysics.jl`), **independent from ATLAS12**. This is NOT shared between ATLAS12 and SYNTHE.
 
 ### COMMON Block Architecture
 
