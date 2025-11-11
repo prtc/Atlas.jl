@@ -782,7 +782,7 @@ CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO
 2. **XLINOP** - Line opacity calculation (shared with ATLAS12)
 3. **MAP1** - Map opacity to wavelength/frequency grid
 4. **INTEG** - Numerical integration (shared with ATLAS12)
-5. **PARCOE** - Parabolic coefficients for interpolation (shared with ATLAS12)
+5. **PARCOE** - Parabolic coefficients for interpolation (Do not call atlas 7. with ATLAS12)
 6. **READBCS** - Read boundary conditions from ATLAS model
 7. **EXIT** - Program termination
 8-9. ❓ **Two more** (not yet identified - require source inspection)

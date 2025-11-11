@@ -2054,10 +2054,10 @@ end
 - Detect oscillations and adjust damping
 
 **Questions for Paula**:
-1. Are Fortran's convergence criteria scientifically adequate?
-2. Do you ever manually adjust CONVL/CONVT? Why?
-3. Have you observed convergence problems (oscillations, premature stop)?
-4. Would adaptive tolerances be useful?
+1. Are Fortran's convergence criteria scientifically adequate? **Paula here:** keep it for validation purposes
+2. Do you ever manually adjust CONVL/CONVT? Why? **Paula here:** Never did.
+3. Have you observed convergence problems (oscillations, premature stop)? **Paula here:** Yes. Not common, maybe affect 5% of the runs.
+4. Would adaptive tolerances be useful?  **Paula here:** Yes but only in the future, after validation.
 
 📋 **Decision needed**: Convergence criteria design?
 
@@ -2091,9 +2091,9 @@ end
 - `legacy=true` mode for Fortran compatibility
 
 **Questions for Paula**:
-1. Would you prefer Julia to catch unphysical inputs early?
-2. Or match Fortran behavior even when it's wrong?
-3. Are there known "bad inputs" that Fortran silently accepts?
+1. Would you prefer Julia to catch unphysical inputs early? **Paula here:** yes, but flagging them without stopping (validation mode)
+2. Or match Fortran behavior even when it's wrong? **Paula here:** continue as fortran for validation purposes
+3. Are there known "bad inputs" that Fortran silently accepts? **Paula here:** not that i am aware off
 
 📋 **Decision needed**: Error handling strategy?
 
