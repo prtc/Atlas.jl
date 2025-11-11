@@ -1,9 +1,9 @@
-# Claude Code Technical Guide
+# Claude Code Web Technical Guide
 **For AI assistants working in this interface**
 
 **Created**: 2025-11-10
 **Purpose**: Technical instructions and lessons learned from ATLAS.jl code archaeology project
-**Audience**: Future Claude sessions, other AI assistants working in Claude Code interface
+**Audience**: Future Claude sessions, other AI assistants working in Claude Code web interface
 
 ---
 
@@ -40,7 +40,7 @@
 
 ### 1.2 Connection Sensitivity
 
-**Observed patterns** (November 2024):
+**Observed patterns** (November 2025):
 - Intermittent connection issues (messages arrive out of order)
 - "Interrupted by user" messages when user didn't interrupt (likely hooks or timeouts)
 - Browser interface: Hangs silently with no feedback
@@ -66,7 +66,7 @@
 - Handoffs can happen silently mid-work
 - Summary may lose some detail
 - Always check MISSION.md and recent commits when starting
-- Handoff documents (like HANDOFF_SYNTHE_PHASE4.md) are critical for continuity
+- Handoff documents are critical for continuity
 
 **Best practice**: Create explicit handoff docs if approaching context limit or session end
 
@@ -76,7 +76,7 @@
 
 *Based on `docs/archaeology/METHODOLOGY_NOTES.md` from Phase 2B + subsequent sessions*
 
-### 2.1 The Core Principle: "Document What's Clear, Flag the Mess"
+### 2.1 The Core Principle: "Here Be Dragons 🐉" (aka Document What's Clear, Flag the Mess)
 
 **The trap**: Perfectionism
 - "I need to understand EVERYTHING before writing ANYTHING"
