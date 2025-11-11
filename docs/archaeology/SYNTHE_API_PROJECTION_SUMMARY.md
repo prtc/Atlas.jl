@@ -62,9 +62,9 @@
 ## Key Insights
 
 1. **SYNTHE is 2-3× easier than ATLAS12**
-   - SYNTHE: 14-21 weeks, $379-634 (with ATLAS12)
+   - SYNTHE: 15-22 weeks, $379-634 (with ATLAS12, revised after DD13)
    - ATLAS12: 36-58 weeks, $1,100-1,737
-   - Reason: Modular pipeline (11 programs) vs monolithic (1 program)
+   - Reason: Modular pipeline (13 programs) vs monolithic (1 program)
 
 2. **Atlas7v library is 52% of standalone cost, partially shared with ATLAS12**
    - Standalone: $120-200 (25-35% of total)
@@ -84,7 +84,7 @@
 
 5. **Fort.X elimination is one-time cost**
    - Cost: $22-40 (5-7% of standalone total)
-   - Architectural investment (benefits all 11 programs)
+   - Architectural investment (benefits all 13 programs)
    - Replaces binary fort.X files with Julia structs
 
 ---

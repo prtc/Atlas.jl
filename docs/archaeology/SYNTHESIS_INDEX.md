@@ -318,7 +318,7 @@
 **Lines**: 1,200
 
 **Sources**:
-- SYNTHE programs (11 .for files)
+- SYNTHE programs (13 .for files)
 - atlas7v.for library
 - Deep Dives 08-12 (SYNTHE analysis)
 
@@ -359,11 +359,11 @@
   - Pipeline-First (recommended): Easy → atlas7v → hard → unification
   - Vertical Slice: End-to-end minimal first
   - Library-First: Atlas7v first (if shared with ATLAS12)
-- Timeline: 14-21 weeks vs ATLAS12's 36-58 weeks (2-3× faster)
+- Timeline: 15-22 weeks vs ATLAS12's 36-58 weeks (2-3× faster)
 - Resource requirements (1-3 developers)
 - 10 open questions for Paula (strategy, atlas7v scope, test cases, etc.)
 
-**Key Finding**: SYNTHE is significantly more tractable than ATLAS12 due to modular pipeline architecture (11 programs vs 1 monolithic program).
+**Key Finding**: SYNTHE is significantly more tractable than ATLAS12 due to modular pipeline architecture (13 programs vs 1 monolithic program).
 
 **Related Synthesis**:
 - SYNTHE_API_PROJECTION.md
@@ -420,7 +420,7 @@
 **Topics Covered**:
 - Quick reference tables (cost breakdown, component details)
 - Decision guidance (standalone vs with ATLAS12)
-- Migration timeline (14-21 weeks)
+- Migration timeline (15-22 weeks)
 - ROI analysis (279% ROI, $1,766-2,071 savings, revised from 1,516%)
 - Comparison to ATLAS12 (2-3× easier)
 
@@ -449,7 +449,7 @@
 - Key findings summary (SYNTHE vs ATLAS12)
 - Document navigation guide (when to read what)
 - Decision trees (standalone vs with ATLAS12, migration strategy)
-- Timeline overview (14-21 weeks)
+- Timeline overview (15-22 weeks)
 - Resource requirements (1-3 developers, Paula time)
 - Comparison to ATLAS12 Phase 4
 

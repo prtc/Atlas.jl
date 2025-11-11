@@ -602,22 +602,25 @@ SYNTHE is an **11-program sequential pipeline** for synthetic spectrum calculati
 
 ### SYNTHE Pipeline Programs - Quick Reference
 
-| # | Program | Lines | Subs | Purpose | Complexity |
-|---|---------|-------|------|---------|------------|
-| 1 | xnfpelsyn | 317 | 1 | Atmosphere processor (+ atlas7v) | Medium |
-| 2 | synbeg | 133 | 0 | Initialize wavelength grid | Simple |
-| 3 | rgfalllinesnew | 648 | 1 | Read atomic line lists | Simple |
-| 4 | rpredict | 450 | ? | Read predicted lines (optional) | Simple |
-| 5 | rmolecasc | 569 | 0 | Read molecular lines | Simple |
-| 6 | rschwenk | 222 | 1 | Read TiO lines (special format) | Simple |
-| 7 | rh2ofast | 190 | 1 | Read H2O lines (binary) | Simple |
-| 8 | synthe | 2,993 | 9 | Calculate line opacity | Complex |
-| 9 | spectrv | 438 | 4 | Solve radiative transfer (+ atlas7v) | Medium |
-| 10 | rotate | 360 | 2 | Rotational broadening | Simple |
-| 11 | broaden | 221 | 0 | Instrumental broadening | Simple |
-| 12 | converfsynnmtoa | 78 | 0 | Binary to ASCII conversion (optional) | Simple |
+| # | Program | Lines | Subs | Purpose | Links atlas7v? | Complexity |
+|---|---------|-------|------|---------|----------------|------------|
+| 1 | xnfpelsyn | 317 | 1 | Atmosphere processor | ✅ Yes (POPS, KAPP) | Medium |
+| 2 | synbeg | 133 | 0 | Initialize wavelength grid | ❌ No | Simple |
+| 3 | rgfalllinesnew | 648 | 1 | Read atomic line lists | ❌ No | Simple |
+| 4 | rpredict | 450 | 0 | Read predicted lines (optional) | ❌ No | Simple |
+| 5 | rmolecasc | 569 | 0 | Read molecular lines | ❌ No | Simple |
+| 6 | rschwenk | 222 | 1 | Read TiO lines (special format) | ❌ No | Simple |
+| 7 | rh2ofast | 190 | 1 | Read H2O lines (binary) | ❌ No | Simple |
+| 8 | synthe | 2,993 | 20+ | Calculate line opacity (bottleneck) | ❌ **STANDALONE** | **HARD** |
+| 9 | spectrv | 438 | 4 | Solve radiative transfer | ✅ Yes (READIN, JOSH) | Medium |
+| 10 | rotate | 360 | 2 | Rotational broadening | ❌ No | Simple |
+| 11 | broaden | 221 | 0 | Instrumental broadening | ❌ No | Simple |
+| 12 | converfsynnmtoa | 78 | 0 | Binary to ASCII conversion | ❌ No | Simple |
+| 13 | fluxaverage1a_nmtoa | ? | 0 | Flux averaging | ❌ No | Simple |
 
-**Total**: ~6,600 lines (excluding atlas7v library which is 17K lines)
+**Total**: ~6,600+ lines SYNTHE programs + 17,336 lines atlas7v library (linked by programs 1 & 9 only)
+
+**Key Insight**: Only **2 out of 13** programs (xnfpelsyn, spectrv) link atlas7v. The remaining 11 are standalone.
 
 ---
 
@@ -770,22 +773,37 @@ CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO
 
 ---
 
-### Program 8: synthe (Main Synthesis Engine)
+### Program 8: synthe (Main Line Opacity Engine)
 
 **File**: `synthe.for` (2,993 lines Castelli / 2,985 Kurucz)
-**Subroutines**: 9 embedded
-**Complexity**: ⚠️ High - This is the computational core
+**Subroutines**: 20+ embedded (see DD13 for complete list)
+**Links with**: **STANDALONE** - Does NOT link atlas7v.for (unlike xnfpelsyn and spectrv)
+**Complexity**: ⚠️ HARD - Computational bottleneck (millions of lines × thousands of wavelengths × 99 depths)
 
-#### Embedded Subroutines
+**Analysis**: See `DEEP_DIVES/13_SYNTHE_CORE.md` (700 lines) for complete focused analysis
 
-1. **TABVOIGT** - Pretabulate Voigt profiles (shared with ATLAS12)
-2. **XLINOP** - Line opacity calculation (shared with ATLAS12)
-3. **MAP1** - Map opacity to wavelength/frequency grid
-4. **INTEG** - Numerical integration (shared with ATLAS12)
-5. **PARCOE** - Parabolic coefficients for interpolation (Do not call atlas 7. with ATLAS12)
-6. **READBCS** - Read boundary conditions from ATLAS model
-7. **EXIT** - Program termination
-8-9. ❓ **Two more** (not yet identified - require source inspection)
+#### Embedded Subroutines (All Self-Contained)
+
+**Line opacity calculation**:
+1. **XLINOP** - NLTE line opacity with H/He Stark broadening (~490 lines)
+2. **HPROF4** - Hydrogen line profiles with fine structure (~425 lines, 34 components for Balmer α)
+3. **HE1PROF** - Helium I profile dispatcher
+4. **HE4471, HE4026, HE4387, HE4921** - Specific He I Stark profiles (empirical lab data)
+5. **GRIEM, DIMITRI** - General Stark broadening theories
+
+**Voigt profiles**:
+6. **TABVOIGT** - Pretabulate Voigt profiles (H0TAB, H1TAB lookup tables)
+7. **VOIGT** - Voigt profile function (Humlicek-like algorithm)
+
+**Utilities**:
+8. **MAP1** - Parabolic interpolation for table mapping
+9. **PARCOE** - Parabolic coefficients calculator
+10. **READBCS** - Read He I Stark boundary conditions from fort.18
+11. **AIRVAC, VACAIR** - Air-vacuum wavelength conversion
+12. **EXPI, FASTE1** - Exponential integral functions
+13. **HFNM, VCSE1F, SOFBET** - Hydrogen line helper functions
+
+**NOTE**: These are **separate implementations** from atlas7v/ATLAS12, NOT shared code. Similar names but different for synthesis vs atmosphere iteration.
 
 #### Input
 
@@ -1002,16 +1020,17 @@ Convolve spectrum with instrumental profile:
 ✅ **FULLY ANALYZED** - See `ATLAS7V_PHASE1-4_*.md` (4-phase analysis, 2,127 lines):
 
 **Phase 1: Evidence-Based Discovery** (243 lines)
-- Identified 13 unique dependencies (7 in atlas7v, 6 in SYNTHE programs)
-- Only 3/11 SYNTHE programs call atlas7v: xnfpelsyn, spectrv, rotate, synthe
+- Identified which SYNTHE programs link atlas7v.for
+- **ONLY 2 out of 13** SYNTHE programs link atlas7v: **xnfpelsyn.for**, **spectrv.for**
+- 11 programs are STANDALONE (synbeg, line readers, synthe, rotate, broaden, converters)
 
 **Phase 2: Structure Survey** (361 lines)
 - Mapped all 72 subroutines in atlas7v.for (17,336 lines)
-- Located 7 SYNTHE-needed subroutines: POPS, KAPP, READIN, JOSH, W, MAP1, PARCOE
+- Located 4 SYNTHE-needed subroutines: POPS, KAPP (xnfpelsyn), READIN, JOSH (spectrv)
 - PFIRON: 6,037 lines (35% of file) - massive partition function tables
 
 **Phase 3: Transitive Dependencies** (419 lines)
-- 7 direct → 32 total subroutines via transitive closure (~10,500 lines, 61% of atlas7v)
+- 4 direct → 32 total subroutines via transitive closure (~10,500 lines, 61% of atlas7v)
 - KAPP dispatcher calls 20 opacity subroutines conditionally (IFOP flags)
 
 **Phase 4: Critical Subroutines** (1,104 lines)
@@ -1021,9 +1040,17 @@ Convolve spectrum with instrumental profile:
 - **READIN** (870 lines): Keyword-based atmosphere parser (MIAC encoding, DECK6 format)
 - Documented ~50 COMMON blocks, 400 arrays
 
-**Shared with ATLAS12**: Yes - POPS, KAPP, JOSH, READIN used by both ATLAS12 and SYNTHE
+**Subroutines called by SYNTHE programs**:
+- **xnfpelsyn.for** calls from atlas7v: **POPS** (44 calls for different elements), **KAPP** (continuum opacity)
+- **spectrv.for** calls from atlas7v: **READIN** (atmosphere parser), **JOSH** (radiative transfer, 6 calls)
 
-**Migration strategy**: ATLAS7V should be migrated as separate Julia module (`AtlasPhysics.jl`), imported by both ATLAS12 and SYNTHE. Estimated 12-13 weeks for Tier 1 critical subroutines (excluding PFIRON).
+**NOT shared with ATLAS12**: atlas7v subroutines are **DIFFERENT** from ATLAS12 versions:
+- Grid size: kw=99 (atlas7v) vs kw=72 (ATLAS12)
+- Abundance model: 1D constant (atlas7v) vs 2D stratified (ATLAS12)
+- COMMON block structures differ
+- ATLAS12 has its own POPS, KAPP, JOSH, READIN implementations (in atlas12.for)
+
+**Migration strategy**: ATLAS7V should be migrated as separate Julia module (`Atlas7vPhysics.jl` or `SynthePhysics.jl`), independent from ATLAS12. Estimated 4-6 weeks for critical subroutines + 12-13 weeks including transitive dependencies and PFIRON.
 
 ---
 
@@ -1283,19 +1310,35 @@ end
 
 ### Questions for Further Investigation
 
-1. **synthe.for**: What are the other 2 subroutines (besides the 7 identified)? Check source.
+✅ **RESOLVED** (Phases 4-5 - 2025-11-09 to 2025-11-11):
 
-2. **spectrv.for**: What are the 4 embedded subroutines? Check source.
+1. **synthe.for subroutines**: ✅ **ANSWERED** by `DEEP_DIVES/13_SYNTHE_CORE.md`
+   - 20+ subroutines documented (XLINOP, HPROF4, HE1PROF, 5 He I profiles, GRIEM, DIMITRI, VOIGT, TABVOIGT, MAP1, PARCOE, READBCS, AIRVAC, VACAIR, EXPI, FASTE1, HFNM, VCSE1F, SOFBET)
+   - synthe.for is **STANDALONE** (does not link atlas7v)
 
-3. **ATLAS7V interface**: Which subroutines are exported and called by xnfpelsyn vs spectrv? Are they the same or different?
+2. **spectrv.for subroutines**: ✅ **PARTIALLY ANSWERED**
+   - 4 embedded: LINCEN (line 428), CORINT (line 431), plus 2 others (require full source inspection)
+   - spectrv.for links atlas7v.for and calls: READIN, JOSH (6 calls)
 
-4. **Fort.16 vs fort.18**: Some documentation mentions fort.16, some fort.18 for synthe output. Version-dependent or mode-dependent?
+3. **ATLAS7V interface**: ✅ **FULLY ANSWERED** by `ATLAS7V_PHASE1-4_*.md` (4 phases, 2,127 lines)
+   - **xnfpelsyn.for** calls from atlas7v: **POPS** (44 calls for elements), **KAPP** (continuum opacity)
+   - **spectrv.for** calls from atlas7v: **READIN** (atmosphere parser), **JOSH** (radiative transfer)
+   - **NOT shared with ATLAS12**: atlas7v has different grid (kw=99 vs 72), structures, abundance model (1D vs 2D)
 
-5. **Partial redistribution** (fort.25 in spectrv): Is this used only for NLTE? What parameters are actually needed?
+4. **Performance bottleneck**: ✅ **ANSWERED** by DD13
+   - **synthe.for is the bottleneck**: billions of operations (millions of lines × thousands of wavelengths × 99 depths)
+   - Early exit optimization critical: rejects ~90% of lines before Voigt calls
+   - Computational time: 10-60 minutes depending on wavelength range, resolution, molecules
 
-6. **Line list formats**: How many different molecular line formats exist? Can they be unified?
+5. **Line list formats**: ✅ **ANSWERED** by `DEEP_DIVES/12_SYNTHE_LINE_READERS.md`
+   - 5 formats documented: gfall atomic (30 fields), predicted (similar), molecular ASCII, TiO binary (Schwenke), H₂O binary (Partridge-Schwenke)
+   - Migration: Can unify into Julia SpectralLine struct with format-specific readers
 
-7. **Performance bottleneck**: Is synthe (line opacity) always the slowest step? Or does spectrv (radiative transfer) dominate for certain parameter ranges?
+⚠️ **STILL OPEN**:
+
+6. **Fort.16 vs fort.18**: Some documentation mentions fort.16, some fort.18 for synthe output. Version-dependent or mode-dependent?
+
+7. **Partial redistribution** (fort.25 in spectrv): Is this used only for NLTE? What parameters are actually needed?
 
 8. **Molecule priority** (from WORKFLOW_ANALYSIS.md Q6): Paula wants to start with molecules sharing common format (excluding TiO and H2O initially). Need to document which molecules share format with CH, MgH, etc.
 
