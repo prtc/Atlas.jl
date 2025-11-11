@@ -2,8 +2,9 @@
 **Phase 4 - SYNTHE Edition | Entry Point**
 
 **Created**: 2025-11-10
-**Purpose**: Navigation hub for SYNTHE migration analysis (Phase 4 deliverables)
-**Status**: ✅ COMPLETE (All 3 deliverables + supporting docs)
+**Updated**: 2025-11-11 (DD13 added)
+**Purpose**: Navigation hub for SYNTHE migration analysis (Phase 4 deliverables + Phase 5 deep dive)
+**Status**: ✅ COMPLETE (All 3 Phase 4 deliverables + DD13 focused analysis)
 
 ---
 
@@ -13,7 +14,9 @@
 
 Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parallel to Phase 4 - ATLAS12. Provides detailed analysis of SYNTHE's 11 programs + atlas7v library, migration roadmap, and API cost projection.
 
-**Key finding**: SYNTHE is **2-3× easier** than ATLAS12 due to modular pipeline architecture.
+**Key finding**: SYNTHE is **2-2.5× easier** than ATLAS12 due to modular pipeline architecture (revised after DD13: 15-22 weeks vs ATLAS12's 36-58 weeks).
+
+**Phase 5 addition**: DD13 (SYNTHE Core) - focused analysis of synthe.for computational bottleneck before implementation kickstart.
 
 ---
 
@@ -78,7 +81,39 @@ Complete migration assessment for the SYNTHE spectrum synthesis pipeline, parall
 
 ---
 
-## Supporting Documents
+## Supporting Documents & Deep Dives
+
+### ✅ DD13: SYNTHE_CORE.md (Phase 5)
+**Location**: `docs/archaeology/DEEP_DIVES/13_SYNTHE_CORE.md`
+**Lines**: 700
+**Status**: ✅ Complete (2025-11-11)
+
+**Purpose**: Focused analysis of synthe.for computational bottleneck before implementation
+
+**Contents** (12 sections):
+1. Program structure (standalone, no atlas7v linkage)
+2. XLINOP NLTE line opacity (~490 lines)
+3. HPROF4 hydrogen profiles with fine structure (~425 lines)
+4. Helium Stark profiles (5 specialized functions, ~700 lines)
+5. Memory management (2M-element BUFFER, direct I/O transposition)
+6. LTE line loop with early exit optimization
+7. Critical subroutines summary
+8. Migration strategy (4-5 weeks, phased approach)
+9. Open questions (alpha parameter, fort.18 format, empirical formulas)
+10. Key takeaways and validation requirements
+11. Comparison to existing deep dives (DD01, DD03, DD04, DD09)
+12. Recommendations for Phase 5 implementation
+
+**Key findings**:
+- synthe.for is **STANDALONE** (no atlas7v linkage, can migrate in parallel)
+- Performance bottleneck: billions of operations (millions of lines × thousands of wavelengths × 99 depths)
+- Early exit optimization critical: rejects ~90% of lines before expensive Voigt calls
+- Empirical H/He Stark profiles need validation data (fort.18 tables)
+- Memory transposition pattern unnecessary in modern Julia (enough RAM)
+
+**Use case**: Implementation guidance for synthe.for migration (Weeks 7-11 of SYNTHE migration)
+
+---
 
 ### ✅ SYNTHE_API_PROJECTION_SUMMARY.md
 **Location**: `docs/archaeology/SYNTHE_API_PROJECTION_SUMMARY.md`
