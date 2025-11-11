@@ -187,9 +187,79 @@ python3 molecular_to_hdf5.py --help
 
 ---
 
+### 3. line_query.py - HDF5 Line List Query Tool
+
+Interactive command-line tool to query atomic and molecular line lists in HDF5 format.
+
+**Features**:
+- Query by wavelength range
+- Filter by element/molecule/ionization
+- Export results to CSV, JSON, or ASCII table
+- Display file info and statistics
+- Fast queries using HDF5 slicing
+
+**Usage**:
+```bash
+# Show file information
+python3 line_query.py gf_tiny.h5 --info
+
+# Query wavelength range
+python3 line_query.py gf_tiny.h5 --wavelength 402 403
+
+# Filter by element (Fe I = 26.00)
+python3 line_query.py gfall.h5 --wavelength 5000 5100 --element 26.00
+
+# Export to CSV
+python3 line_query.py gfall.h5 --wavelength 5000 5100 --output subset.csv
+
+# Show statistics
+python3 line_query.py gf_tiny.h5 --stats
+```
+
+**Performance**:
+- Wavelength query: 1-10 ms for 1000-10000 lines (SSD)
+- Lazy loading: Only reads requested datasets
+- Memory efficient: Slicing without loading full file
+
+**Dependencies**: Same as converters (h5py, numpy)
+
+**Tested with**:
+- Python 3.11.14
+- gf_tiny.h5 (1,197 atomic lines) ✅
+- chbx.h5 (4,270 molecular lines) ✅
+
+**Status**: ✅ **COMPLETE** (v1.0, 2025-11-11)
+
+---
+
+### 4. HDF5_SCHEMA_GUIDE.md - Visual Schema Documentation
+
+Comprehensive visual guide to HDF5 line list schemas with diagrams, examples, and cross-language usage.
+
+**Contents**:
+- Atomic line list schema (21 datasets)
+- Molecular line list schema (11 datasets)
+- Field descriptions with units and precision
+- Data flow diagrams (ASCII→HDF5)
+- Molecule code reference table
+- Usage examples (Python, Julia, R)
+- Schema comparison and performance notes
+
+**File location**: `tools/line_lists/HDF5_SCHEMA_GUIDE.md`
+
+**Use cases**:
+- Quick reference for HDF5 structure
+- Integration guide for Julia/Python/R
+- Schema documentation for SYNTHE migration
+- Cross-language compatibility guide
+
+**Status**: ✅ **COMPLETE** (v1.0, 2025-11-11)
+
+---
+
 ## Planned Tools (TODO)
 
-### 3. continua_to_hdf5.py - Continuum Opacity Tables
+### 5. continua_to_hdf5.py - Continuum Opacity Tables
 
 Converts continua.dat format to HDF5:
 - H, H-, He I, He II continua
@@ -340,10 +410,11 @@ Atlas.jl/
 ├── tools/
 │   └── line_lists/
 │       ├── README.md                    # This file
-│       ├── gfall_to_hdf5.py             # Atomic line converter (DONE)
-│       ├── molecular_to_hdf5.py         # Molecular line converter (TODO)
+│       ├── HDF5_SCHEMA_GUIDE.md         # Visual schema documentation ✅
+│       ├── gfall_to_hdf5.py             # Atomic line converter ✅
+│       ├── molecular_to_hdf5.py         # Molecular line converter ✅
+│       ├── line_query.py                # HDF5 query tool ✅
 │       ├── continua_to_hdf5.py          # Continuum opacity (TODO)
-│       ├── line_query.py                # Query tool (TODO)
 │       └── fort12_inspector.py          # Binary inspector (TODO)
 │
 ├── upstream/castelli/input_data/
@@ -386,21 +457,25 @@ Atlas.jl/
 ## Version History
 
 **v1.0** (2025-11-11):
-- ✅ `gfall_to_hdf5.py` - Atomic line converter
-- ✅ Tested with gf_tiny.dat (1,197 lines, 0 errors)
-- ✅ `molecular_to_hdf5.py` - Molecular line converter
-- ✅ Tested with chbx.asc (4,270 CH lines, 0 errors)
-- ✅ HDF5 schemas documented
+- ✅ `gfall_to_hdf5.py` - Atomic line converter (557 lines)
+- ✅ Tested with gf_tiny.dat (1,197 lines, 0 errors, 0.10 MB)
+- ✅ `molecular_to_hdf5.py` - Molecular line converter (574 lines)
+- ✅ Tested with chbx.asc (4,270 CH lines, 0 errors, 0.09 MB)
+- ✅ `line_query.py` - HDF5 query tool (463 lines)
+- ✅ Tested with gf_tiny.h5 and chbx.h5 (info, query, stats, export)
+- ✅ `HDF5_SCHEMA_GUIDE.md` - Visual schema documentation (600+ lines)
+- ✅ HDF5 schemas documented with diagrams and examples
 - ✅ Compression and validation working
 - ✅ Vacuum/air wavelength tracking (atomic lines)
+- ✅ Cross-language examples (Python, Julia, R)
 - ✅ README created and updated
 
 **Planned v1.1**:
 - ⏳ Continuum opacity converter (continua.dat)
-- ⏳ Query tool (line_query.py)
 - ⏳ Fort.12 inspector (fort12_inspector.py)
 - ⏳ TiO lines (Schwenke format, rschwenk.for)
 - ⏳ H2O lines (fast format, rh2ofast.for)
+- ⏳ Interactive web interface (optional)
 
 ---
 
