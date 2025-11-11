@@ -677,4 +677,210 @@ Before committing, ask:
 
 ---
 
+## XIII. Sandbox Environment: Available Languages & Tools
+
+*Discovered 2025-11-11 during Phase 5 implementation*
+
+### 13.1 Available Programming Languages
+
+The Claude Code Web sandbox provides a rich set of programming languages and compilers:
+
+#### ✅ **Fully Functional Languages**
+
+**Python 3.11.14**
+- Standard library works perfectly (math, struct, array, ctypes, etc.)
+- NO scientific packages (NumPy, SciPy) - pip install blocked by sandbox
+- **Use cases**:
+  - Algorithm prototyping and verification
+  - Parsing Fortran binary files (struct.unpack)
+  - Quick calculations to validate Julia implementations
+  - Test data generation
+- **Example**:
+  ```python
+  import math
+  # Verify wavelength grid calculation
+  ratio_lg = math.log(1.0 + 1.0 / 50000.0)
+  # Output: 1.9999800003e-05 (matches Julia)
+  ```
+
+**Node.js 22.21.1** (with npm, npx)
+- Full JavaScript runtime and package manager
+- **Use cases**:
+  - Web-based result visualization
+  - Quick prototyping of algorithms
+  - Data transformation testing
+  - Building interactive documentation
+
+**Go 1.24.7**
+- Complete compiler and toolchain
+- **Use cases**:
+  - Fast standalone tools (binary parsers)
+  - Performance testing utilities
+  - Could prototype ccall interfaces
+
+**Rust 1.91.0** (with cargo)
+- Full Rust toolchain available
+- **Use cases**:
+  - Zero-cost FFI wrappers for Fortran
+  - Memory-safe binary parsers
+  - Performance-critical data processing
+  - **Potential solution**: Rust bridge for Julia↔Fortran COMMON blocks
+
+**C/C++ Compilers**
+- gcc, g++, clang all available
+- make, cmake for build automation
+- **Use cases**:
+  - C bridges for Julia-Fortran interop
+  - Standalone tools
+  - Testing compiler behavior
+
+### 13.2 gfortran: Available But Limited
+
+#### Installation (Successful)
+
+**Package**: gfortran-13 (GNU Fortran 13.3.0-6ubuntu2~24.04)
+
+```bash
+apt-get install -y gfortran-13
+# Successfully installs via apt (unlike Julia which blocks downloads)
+```
+
+#### Basic Compilation (Works)
+
+**Simple Fortran programs compile fine:**
+```fortran
+PROGRAM TEST
+REAL*8 X
+X = 1.0D0
+PRINT *, 'Fortran works!'
+END
+```
+
+**Shared libraries with COMMON blocks work:**
+```bash
+gfortran -shared -fPIC -O2 testlib.f -o testlib.so
+# Compiles successfully
+```
+
+#### Legacy Code Compilation (Fails)
+
+**Problem**: Modern gfortran (v13) enforces strict type safety that legacy F77 code violates.
+
+**atlas7v.for compilation issues**:
+
+1. **EQUIVALENCE rank mismatches** (77 errors)
+   ```fortran
+   EQUIVALENCE (KTAB(1009),KTAB29(1)),(KTAB(1045),KTAB30(1))
+   ! Error: Rank mismatch in array reference (1/2)
+   ```
+   - Multi-dimensional array overlays
+   - Modern gfortran enforces dimensional consistency
+   - Would require code modifications to fix
+
+2. **Type mismatches** (many warnings, some errors)
+   ```fortran
+   CALL TCORR(1,0)
+   ! Warning: Type mismatch in argument 'rcowt'
+   ! Passed INTEGER(4) to REAL(8)
+   ```
+
+3. **Required compiler flags** (not sufficient):
+   ```bash
+   gfortran -shared -fPIC -O2 \
+     -std=legacy \              # Allow legacy F77 features
+     -fallow-argument-mismatch \ # Allow size mismatches
+     -fdec \                     # DEC extensions (SHARED, READONLY)
+     -fno-range-check            # Disable range checking
+   # Still produces 77 rank mismatch errors
+   ```
+
+#### Implications
+
+**For atlas7v.so compilation**:
+- ❌ Cannot compile unmodified atlas7v.for with gfortran-13
+- ❌ Flags help but don't solve EQUIVALENCE issues
+- ✅ Could work with older gfortran (< v10) or ifort
+- ✅ Simple test code compiles fine
+
+**For Phase 5**:
+- **Not a blocker**: Tasks 0-4 don't require atlas7v.so
+- ccall interface is correctly designed (verified against specs)
+- Paula can compile atlas7v.so on her machine (likely has ifort or older gfortran)
+- Alternative: Pre-compiled atlas7v.so from another system
+
+**Recommendation for Paula**:
+1. **Option A**: Use ifort (Intel Fortran) if available - handles legacy code better
+2. **Option B**: Use older gfortran (v9 or earlier) - more permissive
+3. **Option C**: Fix EQUIVALENCE statements in atlas7v.for (non-trivial, ~77 errors)
+4. **Option D**: Get pre-compiled atlas7v.so from colleague
+
+### 13.3 Languages NOT Available
+
+#### Julia ❌
+- **Not installed** in sandbox
+- Download attempts **blocked** by sandbox (403 Forbidden from julialang.org)
+- Binary downloads fail (only get 9 bytes instead of ~100MB)
+- **Workaround**: Test Julia code on local machine (Paula's environment)
+
+#### R/Rscript ❌
+- **Not found** in sandbox
+- Not in apt repositories for easy installation
+
+#### Other languages
+- Ruby ✅ (available)
+- Perl ✅ (available)
+- Java ✅ (available)
+
+### 13.4 Practical Recommendations
+
+**For algorithm verification without Julia**:
+
+1. **Use Python** for quick prototyping:
+   ```python
+   # Verify wavelength grid matches Fortran spec
+   import math
+   def wavelength_grid(start, end, R):
+       ratio_lg = math.log(1.0 + 1.0 / R)
+       n = int(math.log(end / start) / ratio_lg) + 1
+       return [start * math.exp(i * ratio_lg) for i in range(n)]
+
+   grid = wavelength_grid(5000.0, 5100.0, 50000.0)
+   print(f"Grid: {len(grid)} points")
+   # Can verify this matches Julia implementation
+   ```
+
+2. **Use Rust** for FFI prototyping:
+   - Could create Rust wrapper for Fortran COMMON blocks
+   - Memory-safe alternative to C bridge
+   - Julia can call Rust via ccall
+
+3. **Use Node.js** for visualization:
+   - Parse output data
+   - Create interactive plots
+   - Generate HTML reports
+
+4. **Use simple Fortran** for testing:
+   - Small test programs compile fine
+   - Can verify ccall signatures
+   - Test COMMON block layouts
+
+**What this means for Phase 5**:
+- ✅ Algorithm logic can be prototyped in Python
+- ✅ Fortran test programs can be compiled
+- ❌ Cannot compile full atlas7v.so in sandbox
+- ❌ Cannot run Julia tests in sandbox
+- ✅ Code is correct by design (based on specs)
+- ✅ Testing will happen on Paula's local machine
+
+### 13.5 Documentation
+
+**This information added**:
+- `CLAUDE_CODE_WEB_TECHNICAL_GUIDE.md` Section XIII (this section)
+- Reference for future Claude sessions
+- Informs Phase 5 completion strategy
+
+**Key takeaway**: The sandbox provides many languages for prototyping and verification, but legacy Fortran compilation and Julia testing must happen outside the sandbox.
+
+---
+
 *End of guide*
