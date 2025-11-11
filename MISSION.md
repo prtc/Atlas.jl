@@ -3,8 +3,8 @@
 
 ## Mission Status
 **Current Phase**: Phase 4 - Migration Complexity Assessment ✅ COMPLETE
-**Last Updated**: 2025-11-09
-**Days Remaining**: 9
+**Last Updated**: 2025-11-11 (Decision resolution with Paula + Marcos Diaz)
+**Days Remaining**: 7
 
 ---
 
@@ -121,7 +121,7 @@ Phase 3 added **two major deliverables** (PHYSICS_PIPELINE_ATLAS12.md, PHYSICS_P
    - Section II: Computational patterns across codes (~10.5K lines shared kernel)
    - Section III: Data flow analysis (ATLAS12 stages, SYNTHE pipeline, redesign principles)
    - Section IV: State management redesign (57 COMMON → 5 Julia struct types)
-   - Section V: **10 critical decision points requiring Paula's domain expertise** (1 RESOLVED via code analysis)
+   - Section V: **9 critical decision points** ✅ **ALL RESOLVED** (with Paula + Marcos Diaz, 2025-11-11)
    - Section VI: Migration risk assessment (validation strategy, high-risk code sections)
 
 5. **METHODOLOGY_NOTES.md** (303 lines) - Documents "here be dragons" methodology breakthrough: breadth-first documentation beats depth-first analysis paralysis. Key lesson for human-AI collaboration on complex legacy codebases.
@@ -135,7 +135,7 @@ Phase 3 added **two major deliverables** (PHYSICS_PIPELINE_ATLAS12.md, PHYSICS_P
 
 7. **DEEP_DIVES/02_POPULATIONS.md** (731 lines) - Deep analysis of Rank #1 highest-risk code section:
    - Saha-Boltzmann population calculations spanning 40+ orders of magnitude
-   - RESOLVED Decision V.4 (Precision): Float64 REQUIRED for populations
+   - RESOLVED Decision V.4 (Precision): Float64 REQUIRED for populations (updated 2025-11-11: Float64 everywhere)
    - Validated COMMON block categorization and Julia struct design
    - Identified damping factor 0.3 in electron density iteration
    - 2190-line partition function tables documented
@@ -438,6 +438,52 @@ Phase 4 - SYNTHE Edition completed parallel analysis of SYNTHE spectrum synthesi
 **This is the key deliverable for the research credit application**
 
 **Notes**: Phase 5 was completed as part of Phase 4 (2025-11-09). API_PROJECTION.md (deliverable #20) provides complete cost estimates ($2,500-5,700) with ready-to-paste justification text for Paula's research credit application. All five Phase 5 tasks completed ahead of schedule.
+
+---
+
+### Decision Resolution Session: 2025-11-11 ✅ **ALL CRITICAL DECISIONS RESOLVED**
+
+**Participants**: Paula (project owner) + Marcos Diaz (domain expert collaborator)
+
+**Purpose**: Resolve remaining deferred decisions (5.4, 5.7, 5.8, 5.9) in ARCHITECTURE_INSIGHTS.md Section V
+
+**Decisions made**:
+
+1. **Decision 5.4 (Precision)** - **UPDATED**: Uniform Float64 everywhere
+   - Changed from mixed precision (Float64/Float32) to Float64 throughout
+   - Rationale: Simplifies implementation, exceeds Fortran precision
+   - Validation: Use approximate equality (rtol=1e-6) rather than bit-for-bit comparison
+   - Impact: Simpler codebase, easier validation, acceptable memory overhead
+
+2. **Decision 5.7 (Line Database Strategy)** - **RESOLVED**: HDF5 format
+   - Primary format: HDF5 for line databases (astronomy-standard, memory-mapped, queryable)
+   - Benefits: Compression, lazy loading, cross-platform, mature Julia support (HDF5.jl)
+   - Maintain FortranFiles.jl for backward compatibility and validation
+   - **CRITICAL addition** (Marcos Diaz): Vacuum ↔ air wavelength conversion risk identified
+     - Line lists transition between vacuum (UV) and air (optical) wavelengths
+     - Must document which conversion formula Fortran uses (Edlén 1953/1966 vs Ciddor 1996)
+     - Wrong conversions → wrong line identifications → wrong science
+     - Added as Risk #8 in MIGRATION_ASSESSMENT.md Critical Risks
+
+3. **Decision 5.8 (Convergence Criteria)** - **RESOLVED**: Match Fortran exactly
+   - Use Fortran's CONVL, CONVT, ITMAXL values exactly for validation
+   - Optimization/enhancements deferred to post-validation phase
+   - Rationale: Cannot validate if convergence criteria differ
+
+4. **Decision 5.9 (Error Handling)** - **RESOLVED**: Dual-mode approach
+   - Production mode (default): Strict Julia-style error handling (fail fast)
+   - Validation mode: Flag problems but continue (for Fortran comparison)
+   - Rationale: Need both safety (production) and compatibility (validation)
+
+**Updated documents**:
+- ARCHITECTURE_INSIGHTS.md: Section V decisions updated, Section V.10 summary shows 9/9 resolved
+- MIGRATION_ASSESSMENT.md: Added Risk #8 (wavelength conversion), updated validation tolerances, updated HDF5 dependency
+- API_PROJECTION.md: Added wavelength conversion to physics bottlenecks (11 critical items)
+- MISSION.md: Noted all decisions resolved (this update)
+
+**Status**: **All 9 critical decision points now resolved** (5.1-5.9) 🎉
+
+**Remaining work**: Paula to select migration roadmap option from Phase 4 deliverables (Foundation-First / Vertical Slice / Hybrid)
 
 ---
 
