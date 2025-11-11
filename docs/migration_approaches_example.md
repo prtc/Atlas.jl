@@ -1,7 +1,3 @@
-# Architecture Insights
-
-Questons 5.6 to 5.9
-
 # Migration Approaches
 
 > "Migration: Three approaches proposed (direct translation, modern Faddeeva, hybrid)". Can you give me an overview of what each one means?

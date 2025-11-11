@@ -15,8 +15,8 @@
 2. **SYNTHE** - Spectrum synthesis pipeline (11 programs, 17K atlas7v library, 50 COMMON blocks)
 
 **Project owner**: Paula (prtc)
-**Timeline**: Started ~Nov 7, 2025 | 2-week budget with Nov 18 deadline
-**Credits**: $250 allocated, some remaining after Phase 4 completion
+**Timeline**: Started ~Nov 4, 2025 | 2-week budget with Nov 18 deadline
+**Credits**: $250 allocated, $126 remaining after Phase 4 completion
 
 ---
 
@@ -119,7 +119,7 @@ We're analyzing ancient Fortran 77 astrophysics code to plan its migration to mo
 
 🎯 **All planned phases complete**
 ⏰ **Ahead of schedule** (4 days ahead)
-💰 **Credits remaining** (exact amount TBD)
+💰 **Credits remaining** $126
 🤔 **Next steps**: Paula brainstorming how to use remaining credits
 
 ---
@@ -307,13 +307,6 @@ Atlas.jl/
 ✅ **Document thoroughly** (future-proofing for next instances)
 ✅ **Ask when unclear** (she appreciates clarifying questions)
 ✅ **Use markdown well** (tables, lists, headers - she likes organization)
-
-### Common Phrases from Paula
-
-- "commit and push frequently please, the connection is horrible today" → Do it NOW
-- "Ah the differences only the subroutines used by synthe. Ignore the rest" → Narrow scope
-- "You are amazing. Thank you." → Keep doing what you're doing
-- "i want to revise one detail" → Listen carefully, cost/accuracy matters
 
 ### Paula's Expertise
 
