@@ -10,14 +10,16 @@
 ## Bottom Line
 
 **Total SYNTHE migration API cost**:
-- **With ATLAS12 already migrated**: **$329 - $554**
+- **With ATLAS12 already migrated**: **$379 - $634** (revised from $329-554)
 - **Standalone SYNTHE migration**: **$485 - $814**
 
 **Recommended budget**:
-- With ATLAS12: **$440** (midpoint with buffer)
+- With ATLAS12: **$500** (midpoint with buffer, revised from $440)
 - Standalone: **$650** (midpoint with buffer)
 
 **Confidence**: Medium-high (±35%)
+
+**Revision Note**: Cost revised upward by +$50 due to atlas12/atlas7v code comparison revealing ~70-80% similarity (not 100%). Atlas7v cost with ATLAS12 done: $50-120 (not $0). See ATLAS12_VS_ATLAS7V_COMPARISON.md.
 
 ---
 
@@ -39,33 +41,36 @@
 
 ---
 
-### With ATLAS12 Migrated ($329-554)
+### With ATLAS12 Migrated ($379-634)
 
 | Component | Iterations | Cost | % of Total |
 |-----------|-----------|------|------------|
-| Easy programs (8) | 35 | $21-36 | 6-11% |
-| Hard programs (3) | 53 | $76-131 | 23-40% |
-| Atlas7v library | 0 | **$0** | **0%** (reused) |
-| Fort.X elimination | 15-25 | $22-40 | 7-12% |
-| **Subtotal** | **103-113** | **$119-207** | **36-63%** |
-| **30% overhead** | **31-34** | **$36-62** | **37-64%** |
-| **TOTAL** | **134-147** | **$155-269** | **100%** |
+| Easy programs (8) | 35 | $21-36 | 6-9% |
+| Hard programs (3) | 53 | $76-131 | 20-35% |
+| Atlas7v library | 20-60 | **$50-120** | **13-32%** (40-60% savings) |
+| Fort.X elimination | 15-25 | $22-40 | 6-11% |
+| **Subtotal** | **123-173** | **$169-327** | **45-87%** |
+| **30% overhead** | **37-52** | **$51-98** | **13-55%** |
+| **TOTAL** | **160-225** | **$220-425** | **100%** |
 
-**With 30% overhead**: **$329-554** (rounded: $329-554)
+**With 30% overhead**: **$379-634** (rounded: $379-634)
+
+**Note**: Atlas7v library shows 40-60% savings from ATLAS12 migration due to ~70-80% algorithm similarity but different data structures. See ATLAS12_VS_ATLAS7V_COMPARISON.md.
 
 ---
 
 ## Key Insights
 
 1. **SYNTHE is 2-3× easier than ATLAS12**
-   - SYNTHE: 14-21 weeks, $329-554 (with ATLAS12)
+   - SYNTHE: 14-21 weeks, $379-634 (with ATLAS12)
    - ATLAS12: 36-58 weeks, $1,100-1,737
    - Reason: Modular pipeline (11 programs) vs monolithic (1 program)
 
-2. **Atlas7v library is 52% of standalone cost**
+2. **Atlas7v library is 52% of standalone cost, partially shared with ATLAS12**
    - Standalone: $120-200 (25-35% of total)
-   - With ATLAS12: $0 (reused from ATLAS12 migration)
+   - With ATLAS12: $50-120 (40-60% savings, not 100% - see ATLAS12_VS_ATLAS7V_COMPARISON.md)
    - Critical path: Blocks xnfpelsyn and spectrv
+   - **Key**: Atlas7v subroutines in SYNTHE differ from ATLAS12 (grid sizes, COMMON blocks, indexing)
 
 3. **8 easy programs are trivial**
    - Cost: $21-36 (4-6% of standalone total)
@@ -87,9 +92,9 @@
 ## Decision Guidance
 
 ### If ATLAS12 Already Migrated → **Proceed with SYNTHE**
-- Cost: **$329-554** (atlas7v reused)
+- Cost: **$379-634** (atlas7v partially reused, 40-60% savings)
 - Timeline: **14-21 weeks**
-- Risk: Low (atlas7v proven, SYNTHE is simpler)
+- Risk: Low (atlas7v algorithms proven, but adaptation needed for different data structures)
 - **Recommendation**: Pipeline-First strategy (easy programs → hard programs)
 
 ### If ATLAS12 Not Yet Migrated → **Two Options**
@@ -101,7 +106,7 @@
 - **Use case**: SYNTHE is higher priority than ATLAS12
 
 **Option 2: Migrate ATLAS12 First, Then SYNTHE**
-- Cost: **$1,100-1,737** (ATLAS12) + **$329-554** (SYNTHE) = **$1,429-2,291** (total)
+- Cost: **$1,100-1,737** (ATLAS12) + **$379-634** (SYNTHE) = **$1,479-2,371** (total)
 - Timeline: **36-58 weeks** (ATLAS12) + **14-21 weeks** (SYNTHE) = **50-79 weeks**
 - Risk: Low (atlas7v validated twice, SYNTHE reuses library)
 - **Use case**: Both codes needed, can afford longer timeline
@@ -125,7 +130,7 @@
 
 ## ROI Analysis
 
-**API cost**: $329-554 (with ATLAS12) or $485-814 (standalone)
+**API cost**: $379-634 (with ATLAS12) or $485-814 (standalone)
 
 **Human cost without AI**:
 - Developer: $150/hr × 40 hr/week × 17.5 weeks = $105,000
@@ -133,14 +138,14 @@
 - **Total**: **$109,000**
 
 **AI-assisted cost**:
-- API credits: $329-554 (with ATLAS12)
+- API credits: $379-634 (with ATLAS12)
 - Developer: $105,000 (same timeline, less archaeology burden)
 - Physics consultant (Paula): $200/hr × 8 hours = $1,600 (reduced by AI pre-validation)
 - **Total**: **$106,929-107,154**
 
-**Savings**: $109,000 - $107,154 = **$1,846 - $2,071**
+**Savings**: $109,000 - $107,234 = **$1,766 - $2,071**
 
-**ROI**: ($1,846 / $554) × 100 = **333% ROI** (conservative)
+**ROI**: ($1,766 / $634) × 100 = **279% ROI** (conservative, based on high estimate)
 
 **Additional benefits**:
 - Faster delivery (AI handles boilerplate, archaeology)
@@ -217,16 +222,19 @@
 
 **From SYNTHE_MIGRATION_ASSESSMENT.md** (Pipeline-First strategy):
 
-| Week | Task | API Cost | Cumulative |
-|------|------|----------|------------|
-| 1-3 | Easy programs (8) | $21-36 | $21-36 |
-| 4-9 | Atlas7v library | $120-200 or $0 | $141-236 or $21-36 |
-| 10-12 | synthe.for | $38-65 | $179-301 or $59-101 |
-| 13-14 | spectrv.for + xnfpelsyn | $38-66 | $217-367 or $97-167 |
-| 15 | Fort.X elimination | $22-40 | $239-407 or $119-207 |
-| - | +30% overhead | $72-122 or $36-62 | **$311-529 or $155-269** |
+| Week | Task | API Cost | Cumulative (Standalone / With ATLAS12) |
+|------|------|----------|----------------------------------------|
+| 1-3 | Easy programs (8) | $21-36 | $21-36 / $21-36 |
+| 4-9 | Atlas7v library | $120-200 / $50-120 | $141-236 / $71-156 |
+| 10-12 | synthe.for | $38-65 | $179-301 / $109-221 |
+| 13-14 | spectrv.for + xnfpelsyn | $38-66 | $217-367 / $147-287 |
+| 15 | Fort.X elimination | $22-40 | $239-407 / $169-327 |
+| - | +30% overhead | varies | **$311-529 / $220-425** |
+| **Final** | **After overhead** | - | **$485-814 / $379-634** |
 
-**Total**: **14-21 weeks**, **$485-814** (standalone) or **$329-554** (with ATLAS12)
+**Total**: **14-21 weeks**, **$485-814** (standalone) or **$379-634** (with ATLAS12)
+
+**Note**: Atlas7v cost with ATLAS12 done is $50-120 (40-60% savings), not $0. See ATLAS12_VS_ATLAS7V_COMPARISON.md.
 
 ---
 
@@ -255,7 +263,7 @@
 | Metric | ATLAS12 | SYNTHE (with ATLAS12) | SYNTHE (standalone) |
 |--------|---------|------------------------|----------------------|
 | **Timeline** | 36-58 weeks | 14-21 weeks | 14-21 weeks |
-| **API Cost** | $1,100-1,737 | $329-554 | $485-814 |
+| **API Cost** | $1,100-1,737 | $379-634 | $485-814 |
 | **Programs** | 1 (monolithic) | 11 (modular) | 11 (modular) |
 | **Lines** | 23,000 | 23,000 | 23,000 |
 | **Easy modules** | 26 (33%) | 8 (67%) | 8 (67%) |
@@ -274,7 +282,7 @@
 
 **If ATLAS12 already migrated**:
 - ✅ **Proceed with SYNTHE immediately**
-- Budget: **$440** (recommended)
+- Budget: **$500** (recommended)
 - Timeline: **14-21 weeks**
 - Strategy: Pipeline-First (easy programs → hard programs)
 - Risk: Low
@@ -285,14 +293,14 @@
   - Timeline: **14-21 weeks**
   - Risk: Medium (atlas7v not validated via ATLAS12)
 - **Option 2**: ATLAS12 first, then SYNTHE (if both needed)
-  - Budget: **$1,800** (ATLAS12) + **$440** (SYNTHE) = **$2,240** (total)
+  - Budget: **$1,800** (ATLAS12) + **$500** (SYNTHE) = **$2,290** (total)
   - Timeline: **50-79 weeks**
   - Risk: Low (atlas7v validated twice)
 
 ### For Credit Application
 
 **Request amount**:
-- With ATLAS12: **$440** (midpoint with buffer)
+- With ATLAS12: **$500** (midpoint with buffer)
 - Standalone: **$650** (midpoint with buffer)
 
 **Justification**:
@@ -307,7 +315,7 @@
 
 1. **Review SYNTHE_API_PROJECTION.md** (full analysis)
 2. **Decide migration strategy** (standalone vs with ATLAS12)
-3. **Submit research credit request** ($440 or $650)
+3. **Submit research credit request** ($500 or $650)
 4. **Plan migration timeline** (14-21 weeks)
 5. **Allocate resources** (senior developer, Paula availability)
 
