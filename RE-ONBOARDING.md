@@ -130,10 +130,12 @@ We're analyzing ancient Fortran 77 astrophysics code to plan its migration to mo
 
 ### Current Status
 
-🔄 **Phase 5 in progress** (Tasks 0-4 complete, 5-9 pending)
-⏰ **On schedule** for minimal viable pipeline
-💰 **Credits remaining** ~$57-62 of $107 Phase 5 budget
-🎯 **Next steps**: Local testing, atlas7v.so compilation, continue Tasks 5-9
+🔄 **Phase 5 in progress** (Tasks 0-4 complete, Task Bundle 1 complete, Tasks 5-9 deferred)
+⚡ **PIVOT** (2025-11-11): Due to sandbox limitations (Julia unavailable, gfortran-13 errors), pivoted to standalone Python tools
+✅ **Task Bundle 1 COMPLETE**: 5 Python tools for line list conversion (gfall, molecular, continua → HDF5)
+⏰ **On schedule** - Tools have immediate research utility
+💰 **Credits remaining** ~$52-57 of $107 Phase 5 budget (~$5-10 for tools)
+🎯 **Next steps**: Handoff to local Claude Code for Julia testing OR continue building Python tools
 
 ---
 
@@ -512,12 +514,20 @@ Paula mentioned we're **ahead of schedule with credits to spare**. Potential use
 
 ### Available Tools
 
+**Claude Code Tools**:
 - **Read** - Read Fortran source files
 - **Grep** - Search for patterns across files
 - **Glob** - Find files by pattern
 - **Bash** - Run git commands, check line counts, etc.
 - **Edit/Write** - Create/modify documentation
 - **TodoWrite** - Track multi-step tasks (USE THIS FREQUENTLY)
+
+**Project Tools** (created during Phase 5):
+- **tools/line_lists/gfall_to_hdf5.py** - Convert Kurucz atomic lines to HDF5
+- **tools/line_lists/molecular_to_hdf5.py** - Convert molecular lines to HDF5
+- **tools/line_lists/continua_to_hdf5.py** - Convert continuum opacity edges to HDF5
+- **tools/line_lists/line_query.py** - Query HDF5 line lists (wavelength range, element filter)
+- See `tools/line_lists/README.md` for usage and documentation
 
 ### Key Grep Patterns
 

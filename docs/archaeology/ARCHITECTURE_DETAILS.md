@@ -769,7 +769,14 @@ CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO
 - Final fort.12 contains complete line list (atomic + molecular)
 - Typical line count: tens to hundreds of thousands
 
-⚠️ **TODO for migration**: Define unified line list format in Julia. Provide conversion utilities for Kurucz/Castelli formats. Consider using Arrow or HDF5 for binary storage instead of Fortran UNFORMATTED.
+✅ **PARTIALLY COMPLETE** (2025-11-11): HDF5 conversion utilities now available in `tools/line_lists/`:
+- `gfall_to_hdf5.py` - Kurucz atomic line converter (tested, working)
+- `molecular_to_hdf5.py` - Molecular line converter (CH, OH, NH, CO, etc.)
+- `continua_to_hdf5.py` - Continuum opacity edges
+- `line_query.py` - Query tool for HDF5 files
+- See `tools/line_lists/README.md` and `HDF5_SCHEMA_GUIDE.md` for documentation
+
+⚠️ **REMAINING**: Define Julia-native line list types and readers for HDF5 format
 
 ---
 
