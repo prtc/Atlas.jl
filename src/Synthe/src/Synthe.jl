@@ -33,7 +33,10 @@ include("structs.jl")
 # Atlas7v Fortran library interface (ccall wrappers)
 include("atlas7v.jl")
 
-# Line readers (Tasks 2-4)
+# synbeg: Parameter initialization (Task 2)
+include("synbeg.jl")
+
+# Line readers (Tasks 3-4)
 include("line_readers.jl")
 
 # Atmosphere preparation (Task 5)
@@ -58,8 +61,14 @@ export
     AtmosphereModel,
     SyntheConfig,
     Spectrum,
+    Fort93Params,
 
-    # Line readers
+    # synbeg (Task 2)
+    synbeg_initialize,
+    wavelength_grid,
+    wavelength_to_nbuff,
+
+    # Line readers (Tasks 3-4)
     read_gfalllines,
     read_molecular_lines,
 
