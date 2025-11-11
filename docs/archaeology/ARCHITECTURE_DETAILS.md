@@ -1310,19 +1310,35 @@ end
 
 ### Questions for Further Investigation
 
-1. **synthe.for**: What are the other 2 subroutines (besides the 7 identified)? Check source.
+✅ **RESOLVED** (Phases 4-5 - 2025-11-09 to 2025-11-11):
 
-2. **spectrv.for**: What are the 4 embedded subroutines? Check source.
+1. **synthe.for subroutines**: ✅ **ANSWERED** by `DEEP_DIVES/13_SYNTHE_CORE.md`
+   - 20+ subroutines documented (XLINOP, HPROF4, HE1PROF, 5 He I profiles, GRIEM, DIMITRI, VOIGT, TABVOIGT, MAP1, PARCOE, READBCS, AIRVAC, VACAIR, EXPI, FASTE1, HFNM, VCSE1F, SOFBET)
+   - synthe.for is **STANDALONE** (does not link atlas7v)
 
-3. **ATLAS7V interface**: Which subroutines are exported and called by xnfpelsyn vs spectrv? Are they the same or different?
+2. **spectrv.for subroutines**: ✅ **PARTIALLY ANSWERED**
+   - 4 embedded: LINCEN (line 428), CORINT (line 431), plus 2 others (require full source inspection)
+   - spectrv.for links atlas7v.for and calls: READIN, JOSH (6 calls)
 
-4. **Fort.16 vs fort.18**: Some documentation mentions fort.16, some fort.18 for synthe output. Version-dependent or mode-dependent?
+3. **ATLAS7V interface**: ✅ **FULLY ANSWERED** by `ATLAS7V_PHASE1-4_*.md` (4 phases, 2,127 lines)
+   - **xnfpelsyn.for** calls from atlas7v: **POPS** (44 calls for elements), **KAPP** (continuum opacity)
+   - **spectrv.for** calls from atlas7v: **READIN** (atmosphere parser), **JOSH** (radiative transfer)
+   - **NOT shared with ATLAS12**: atlas7v has different grid (kw=99 vs 72), structures, abundance model (1D vs 2D)
 
-5. **Partial redistribution** (fort.25 in spectrv): Is this used only for NLTE? What parameters are actually needed?
+4. **Performance bottleneck**: ✅ **ANSWERED** by DD13
+   - **synthe.for is the bottleneck**: billions of operations (millions of lines × thousands of wavelengths × 99 depths)
+   - Early exit optimization critical: rejects ~90% of lines before Voigt calls
+   - Computational time: 10-60 minutes depending on wavelength range, resolution, molecules
 
-6. **Line list formats**: How many different molecular line formats exist? Can they be unified?
+5. **Line list formats**: ✅ **ANSWERED** by `DEEP_DIVES/12_SYNTHE_LINE_READERS.md`
+   - 5 formats documented: gfall atomic (30 fields), predicted (similar), molecular ASCII, TiO binary (Schwenke), H₂O binary (Partridge-Schwenke)
+   - Migration: Can unify into Julia SpectralLine struct with format-specific readers
 
-7. **Performance bottleneck**: Is synthe (line opacity) always the slowest step? Or does spectrv (radiative transfer) dominate for certain parameter ranges?
+⚠️ **STILL OPEN**:
+
+6. **Fort.16 vs fort.18**: Some documentation mentions fort.16, some fort.18 for synthe output. Version-dependent or mode-dependent?
+
+7. **Partial redistribution** (fort.25 in spectrv): Is this used only for NLTE? What parameters are actually needed?
 
 8. **Molecule priority** (from WORKFLOW_ANALYSIS.md Q6): Paula wants to start with molecules sharing common format (excluding TiO and H2O initially). Need to document which molecules share format with CH, MgH, etc.
 
