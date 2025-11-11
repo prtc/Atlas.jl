@@ -725,7 +725,7 @@ Three strategies for completion:
 
 3. **Pure Julia Rewrite** (Phase 6+):
    Reimplement POPS, KAPP, JOSH in Julia. This is the long-term goal but
-   requires ~$500-1000 in development time.
+   requires ~500-1000 USD in development time.
 
 For Phase 5 minimal viable pipeline, we will:
 - Document the interface design (this file)
