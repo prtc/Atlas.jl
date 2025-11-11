@@ -257,36 +257,80 @@ Comprehensive visual guide to HDF5 line list schemas with diagrams, examples, an
 
 ---
 
-## Planned Tools (TODO)
+### 5. continua_to_hdf5.py - Continuum Opacity Wavelength Edges
 
-### 5. continua_to_hdf5.py - Continuum Opacity Tables
+Converts Kurucz continua.dat format to HDF5.
 
-Converts continua.dat format to HDF5:
-- H, H-, He I, He II continua
-- Rayleigh scattering
-- Electron scattering
+**Input format**: Kurucz continua wavelength edges (free-format with auto-detection)
+- Example: `upstream/castelli/input_data/continua.dat` (5KB, 345 edges)
+- Format spec: `upstream/castelli/source_codes/synthe/xnfpelsyn.for:174-194`
+- Documentation: `docs/archaeology/DEEP_DIVES/10_SYNTHE_XNFPELSYN.md` (Section 3)
 
-**Example input**: `upstream/castelli/input_data/continua.dat` (5K)
+**Format auto-detection** (by magnitude):
+- |value| < 10^6:           Wavelength (Å)
+- 10^6 ≤ |value| < 10^25:   Frequency (Hz)
+- |value| ≥ 10^25:          Wavenumber × 10^25 (cm^-1)
 
-**Status**: Format analysis needed (see `synbeg.for`)
+**Special markers**:
+- "SAME": Repeat previous value
+- 0 or blank: End of group
 
-### 4. line_query.py - HDF5 Line List Query Tool
+**Output format**: HDF5 with datasets:
+```
+/edges/
+  wavelength_angstrom    Float64  Wavelength (Å, converted from input)
+  frequency_hz           Float64  Frequency (Hz)
+  wavenumber_cm          Float32  Wavenumber (cm^-1)
+  source_element         String   Element label (H, HE, C, etc.)
+  source_value           Float64  Original value from file (before conversion)
+  source_type            String   Original format (wavelength, frequency, or wavenumber)
 
-Interactive tool to query HDF5 line lists:
-```bash
-# Find all Fe I lines in wavelength range
-python3 line_query.py gfall.h5 --element 26.00 --wavelength 5000 5100
-
-# Export subset to CSV
-python3 line_query.py gfall.h5 --wavelength 5000 5100 --output subset.csv
-
-# Statistics
-python3 line_query.py gfall.h5 --stats
+/metadata/
+  format_version              "1.0"
+  source_format               "Kurucz continua.dat"
+  source_file                 Original filename
+  conversion_time             ISO8601 timestamp
+  edges_total                 Number of edges
+  wavelength_min_angstrom     Minimum wavelength (Å)
+  wavelength_max_angstrom     Maximum wavelength (Å)
+  wavelength_min_nm           Minimum wavelength (nm)
+  wavelength_max_nm           Maximum wavelength (nm)
+  compressed                  Boolean (gzip used?)
+  elements                    Array of unique element labels
+  note                        Auto-detection explanation
 ```
 
-**Status**: Not started
+**Usage**:
+```bash
+# Basic conversion
+python3 continua_to_hdf5.py continua.dat continua.h5
 
-### 5. fort12_inspector.py - Binary Fort.12 Inspector
+# With compression and verbose output
+python3 continua_to_hdf5.py continua.dat continua.h5 --compress --verbose
+
+# Help
+python3 continua_to_hdf5.py --help
+```
+
+**Performance**:
+- `continua.dat` (345 edges): 30.50 KB HDF5, <1 second
+- All three representations (wavelength, frequency, wavenumber) stored for convenience
+- Auto-detection based on xnfpelsyn.for logic
+
+**Dependencies**: Same as other converters (h5py, numpy)
+
+**Tested with**:
+- Python 3.11.14
+- continua.dat (345 edges, 0 errors, 11 unique elements)
+- Range: -500000.00 to 20514.67 Å (-50000.00 to 2051.47 nm)
+
+**Status**: ✅ **COMPLETE** (v1.0, 2025-11-11)
+
+---
+
+## Planned Tools (TODO)
+
+### 6. fort12_inspector.py - Binary Fort.12 Inspector
 
 Read and analyze SYNTHE fort.12 binary line databases:
 - Parse Fortran unformatted records
@@ -414,7 +458,7 @@ Atlas.jl/
 │       ├── gfall_to_hdf5.py             # Atomic line converter ✅
 │       ├── molecular_to_hdf5.py         # Molecular line converter ✅
 │       ├── line_query.py                # HDF5 query tool ✅
-│       ├── continua_to_hdf5.py          # Continuum opacity (TODO)
+│       ├── continua_to_hdf5.py          # Continuum opacity edges ✅
 │       └── fort12_inspector.py          # Binary inspector (TODO)
 │
 ├── upstream/castelli/input_data/
@@ -464,14 +508,16 @@ Atlas.jl/
 - ✅ `line_query.py` - HDF5 query tool (463 lines)
 - ✅ Tested with gf_tiny.h5 and chbx.h5 (info, query, stats, export)
 - ✅ `HDF5_SCHEMA_GUIDE.md` - Visual schema documentation (600+ lines)
+- ✅ `continua_to_hdf5.py` - Continuum opacity edges converter (376 lines)
+- ✅ Tested with continua.dat (345 edges, 0 errors, 30.50 KB)
 - ✅ HDF5 schemas documented with diagrams and examples
 - ✅ Compression and validation working
 - ✅ Vacuum/air wavelength tracking (atomic lines)
+- ✅ Auto-detection for continua format (wavelength/frequency/wavenumber)
 - ✅ Cross-language examples (Python, Julia, R)
 - ✅ README created and updated
 
 **Planned v1.1**:
-- ⏳ Continuum opacity converter (continua.dat)
 - ⏳ Fort.12 inspector (fort12_inspector.py)
 - ⏳ TiO lines (Schwenke format, rschwenk.for)
 - ⏳ H2O lines (fast format, rh2ofast.for)
