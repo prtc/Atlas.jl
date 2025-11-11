@@ -444,6 +444,8 @@ Reads Kurucz atomic line lists (gf*.100 files) and selects lines in wavelength r
 - Columns 70-74: Landé g (I5) for upper level (× 1000)
 - Columns 75-80: Isotope shift (I6) in milli-Angstroms
 
+**✅ TOOL AVAILABLE** (2025-11-11): See `tools/line_lists/gfall_to_hdf5.py` - Python converter implementing this exact fixed-width parser to convert Kurucz gfall format to HDF5. Includes vacuum/air wavelength tracking (>200nm = air). Tested with gf_tiny.dat (1,197 lines, 0 errors).
+
 ### Key Processing Steps
 
 **1. Vacuum wavelength calculation** (lines 145-146):
@@ -514,6 +516,8 @@ Details are in the code but not well-commented. Need to cross-reference with syn
 - Molecular number densities computed via equilibrium constants
 - Partition functions temperature-dependent
 - Isotope fractions handled differently
+
+**✅ TOOL AVAILABLE** (2025-11-11): See `tools/line_lists/molecular_to_hdf5.py` - Python converter for ASCII molecular line formats (CH, OH, NH, CN, CO, MgH, SiH, etc.) to HDF5. Implements isotope abundance corrections. Tested with chbx.asc (4,270 CH lines, 0 errors). Also see `tools/line_lists/line_query.py` for querying converted files.
 
 ### Rschwenk: TiO Line Reader
 

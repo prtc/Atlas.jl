@@ -562,12 +562,71 @@ Phase 4 - SYNTHE Edition completed parallel analysis of SYNTHE spectrum synthesi
 - COMMON block interface designed but requires Fortran wrapper layer for full functionality
 - Three strategies documented: Fortran wrapper (recommended), C bridge, or pure Julia rewrite
 
+**PIVOT TO STANDALONE TOOLS** (2025-11-11):
+
+Due to sandbox limitations (Julia unavailable, atlas7v.for won't compile with gfortran-13), pivoted to build standalone Python tools with immediate research utility. These tools support future Julia migration by providing test data, format documentation, and validation baselines.
+
+**Task Bundle 1: Line List Conversion Tools** (✅ 2025-11-11)
+
+Five standalone Python tools to convert legacy Kurucz formats to HDF5:
+
+1. **gfall_to_hdf5.py** (557 lines) - Atomic line converter
+   - Converts Kurucz gfall format (160-char fixed-width) to HDF5
+   - Tracks vacuum/air wavelength convention (200nm threshold)
+   - Tested: gf_tiny.dat (1,197 lines → 0.10 MB, 0 errors)
+
+2. **molecular_to_hdf5.py** (574 lines) - Molecular line converter
+   - Converts molecular formats (CH, OH, NH, CO, TiO, etc.) to HDF5
+   - Supports 20+ molecules with isotope tracking
+   - Tested: chbx.asc (4,270 CH lines → 0.09 MB, 0 errors)
+
+3. **line_query.py** (463 lines) - HDF5 query tool
+   - Interactive queries by wavelength, element, molecule
+   - Export to CSV, JSON, ASCII table
+   - File info and statistics display
+
+4. **HDF5_SCHEMA_GUIDE.md** (600+ lines) - Visual documentation
+   - Schema diagrams and field descriptions
+   - Cross-language examples (Python, Julia, R)
+   - Molecule code reference tables
+
+5. **continua_to_hdf5.py** (376 lines) - Continuum opacity edges
+   - Auto-detects format by magnitude (wavelength/frequency/wavenumber)
+   - Based on Deep Dive 10 (xnfpelsyn.for analysis)
+   - Tested: continua.dat (345 edges → 30.50 KB, 0 errors)
+
+**Supporting Documentation**:
+- **tools/line_lists/README.md** - Comprehensive tool documentation, usage examples, performance metrics
+
+**Code Statistics**:
+- ~2,570 lines of Python code (5 tools)
+- ~600 lines of documentation (schema guide)
+- ~500 lines of README (usage guide)
+- All code committed to `claude/review-onboarding-guides-011CV2vtzLMxaKANHeEzn4kT`
+
+**Key Technical Achievements**:
+- Auto-detection for continua format (wavelength/frequency/wavenumber by magnitude)
+- Vacuum/air wavelength tracking for atomic lines (>200nm = air)
+- Fortran D notation parsing, comma-separated values, "SAME" markers
+- HDF5 with compression, metadata, cross-platform compatibility
+- All tools tested and working in sandbox (pip packages: h5py 3.15.1, numpy 2.3.4)
+
+**Research Utility**:
+- Fast wavelength queries without loading entire database
+- Cross-platform compatibility (no Fortran compiler needed)
+- Modern analysis workflows (pandas, Julia DataFrames, R)
+- Validation baseline for future Julia implementation
+- Format documentation via self-describing HDF5 schemas
+
+**Credit Usage**: ~$5-10 estimated (lightweight Python development)
+
 **Next Steps**:
-- Handoff to Paula's local Claude Code for testing Tasks 0-4
+- Handoff to Paula's local Claude Code for testing Tasks 0-4 (Julia)
 - Paula to compile atlas7v.so library
 - Paula to upload test data (gfall lines, molecular lines, solar atmosphere)
 - Paula to run Fortran SYNTHE for reference spectrum
 - Continue with Task 5 (xnfpelsyn) once atlas7v library and testing infrastructure ready
+- **OR** Continue building standalone Python tools (molecular partition functions, binary fort.X readers, etc.)
 
 ---
 

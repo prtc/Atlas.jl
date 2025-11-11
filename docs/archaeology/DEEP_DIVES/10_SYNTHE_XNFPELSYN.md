@@ -207,6 +207,8 @@ END
 **Clever but fragile!** 🐉 **Dragon**: What if someone inputs wavelength 10^6 Å (100 m, radio)?
 Would be misinterpreted as frequency! No validation.
 
+**✅ TOOL AVAILABLE** (2025-11-11): See `tools/line_lists/continua_to_hdf5.py` - Python converter implementing this exact auto-detection logic to convert continua.dat to HDF5 format. Tested with actual continua.dat (345 edges, 11 elements).
+
 ### Sorting Edges
 
 ```fortran
