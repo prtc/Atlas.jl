@@ -601,8 +601,8 @@
 **API cost**: $379-634 (with ATLAS12) or $485-814 (standalone)
 
 **Human cost without AI assistance**:
-- Estimated 14-21 weeks (from SYNTHE_MIGRATION_ASSESSMENT.md)
-- Senior developer: $150/hr × 40 hr/week × 17.5 weeks (avg) = **$105,000**
+- Estimated 15-22 weeks (from SYNTHE_MIGRATION_ASSESSMENT.md, revised after DD13)
+- Senior developer: $150/hr × 40 hr/week × 18.5 weeks (avg) = **$111,000**
 - Physics consultant (Paula): $200/hr × 20 hours = **$4,000**
 - **Total human cost**: **$109,000**
 
@@ -641,7 +641,7 @@
 
 **Timeline urgency**: Paula's active research requires SYNTHE within 6 months
 
-**API credits accelerate delivery**: 14-21 weeks with AI vs 25+ weeks manual
+**API credits accelerate delivery**: 15-22 weeks with AI vs 25+ weeks manual
 
 ---
 
