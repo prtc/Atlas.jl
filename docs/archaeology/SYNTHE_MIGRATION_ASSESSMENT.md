@@ -232,33 +232,40 @@ SYNTHE migration is **significantly more tractable** than ATLAS12 due to its mod
 - **COMMON blocks**: 72 total (7 unique + subset of atlas7v)
 - **Purpose**: Line opacity calculation at each depth and wavelength
 - **Dependencies**:
-  - Reads: fort.10 (atmosphere from xnfpelsyn), fort.12 (line list), fort.14 (control), fort.18 (He I Stark tables)
-  - Writes: fort.16 (line opacities)
+  - Reads: fort.10 (atmosphere from xnfpelsyn), fort.12 (line list), fort.93 (control), fort.18 (He I Stark tables), fort.19 (NLTE lines)
+  - Writes: fort.9 (opacity vectors), fort.13 (line IDs), fort.15 (line center opacities)
 - **Complexity**: HARD - Computationally intensive, millions of line profile calculations
-  - Unique blocks: BUFFER (spectrum buffer), CONTIN (continuum), NLINES (wavelength grid), LINDAT, XNFDOP (partition functions), TXNXN (emergent intensity), EXTAB/H1TAB (lookup tables)
-  - Atlas7v subset: BHYD, BHE (hydrogen/helium for Stark broadening)
-- **Physics**: Voigt profile calculation, line opacity accumulation, microturbulence
-- **Performance**: This is the bottleneck (millions of lines × thousands of wavelengths × 99 depths)
-- **Migration effort**: 3-4 weeks
+  - Unique blocks: BUFFER (spectrum buffer, 2M elements), CONTIN (continuum), NLINES (wavelength grid), LINDAT, XNFDOP (partition functions), TXNXN (emergent intensity), EXTAB/H1TAB (lookup tables)
+  - Atlas7v subset: BHYD, BHE (hydrogen/helium for Stark broadening) - **NOTE**: No atlas7v linkage (standalone program)
+- **Physics**: Voigt profile calculation, line opacity accumulation, H/He Stark broadening
+- **Performance**: This is the bottleneck (millions of lines × thousands of wavelengths × 99 depths = billions of operations)
+- **Migration effort**: 4-5 weeks (revised from 3-4 weeks after DD13 analysis)
 - **Rationale**:
-  - Core synthesis algorithm is well-defined (Deep Dive 08)
+  - Core LTE synthesis algorithm well-defined (DD13)
+  - XLINOP NLTE synthesis adds complexity (H/He Stark profiles)
   - Voigt profile calculation already analyzed (DD01, reuse ATLAS12 analysis)
-  - Main challenge: Fort.12 binary line list format (DD09, DD12)
-  - BUFFER/CONTIN are large arrays (2M elements) but straightforward
+  - Memory transposition pattern (direct I/O) can be simplified in Julia
+  - Early exit optimization critical for performance (~90% line rejection)
 
 **Deep Dive coverage**:
+- **DD13: SYNTHE Core** (NEW) - Complete focused analysis
+  - XLINOP NLTE line opacity (~490 lines)
+  - HPROF4 hydrogen profiles with fine structure (~425 lines)
+  - He I Stark profiles (5 specialized functions, ~700 lines)
+  - LTE line loop with early exit optimization
+  - Memory management (2M-element BUFFER, direct I/O transposition)
 - DD01: Voigt profile (reusable from ATLAS12)
 - DD09: Fort.12 line list format
 - DD12: Line readers (5 formats)
 
-**Critical sections**:
-1. **Line loop** - Iterate over all lines in fort.12
-2. **Voigt profile** - Calculate line shape at each wavelength
-3. **Opacity accumulation** - Sum contributions from all lines
-4. **Doppler width** - Element-specific thermal broadening
-5. **Stark broadening** - Hydrogen/helium Stark tables (He I fort.18)
+**Critical sections** (from DD13):
+1. **LTE line loop** (lines 235-308) - Core synthesis, 90% of lines rejected by early exit
+2. **XLINOP** (lines 469-958) - NLTE line opacity with H/He Stark broadening
+3. **HPROF4** (lines 959-1382) - Hydrogen line profiles with fine structure components
+4. **He I profiles** (lines 1762-2746) - 5 specialized functions for He I Stark broadening
+5. **Memory transposition** (lines 314-347) - Direct I/O optimization (can simplify in Julia)
 
-**Validation**: Compare line opacities against Fortran fort.16 output
+**Validation**: Compare opacity vectors (fort.9) and line center opacities (fort.15) against Fortran output
 
 ---
 
@@ -296,9 +303,13 @@ SYNTHE migration is **significantly more tractable** than ATLAS12 due to its mod
 
 ---
 
-**Total Hard Programs + Library Effort**: 10-15 weeks
+**Total Hard Programs + Library Effort**: 11-17 weeks (revised from 10-15 weeks after DD13)
+- atlas7v library: 4-6 weeks
+- xnfpelsyn: 1-2 weeks (after atlas7v)
+- synthe: 4-5 weeks (revised from 3-4 weeks, standalone)
+- spectrv: 2-3 weeks (after atlas7v)
 
-**Critical path**: atlas7v library (4-6 weeks) must be completed before xnfpelsyn and spectrv can be migrated.
+**Critical path**: atlas7v library (4-6 weeks) must be completed before xnfpelsyn and spectrv can be migrated. **Note**: synthe.for is STANDALONE (no atlas7v linkage), can be migrated in parallel.
 
 ---
 
@@ -308,17 +319,19 @@ SYNTHE migration is **significantly more tractable** than ATLAS12 due to its mod
 |------------|-------|----------|-------|---------------|------------------|
 | **Easy** | 8 | synbeg, broaden, 6 line readers, rotate | ~1,800 | 0-4 each | 2-3 weeks |
 | **Medium** | 0 | (none) | 0 | N/A | 0 weeks |
-| **Hard** | 4 | atlas7v, synthe, spectrv, xnfpelsyn | ~21,000 | 30-72 each | 10-15 weeks |
-| **TOTAL** | 12 | 11 programs + library | ~23,000 | ~50 unique | **14-21 weeks** |
+| **Hard** | 4 | atlas7v, synthe, spectrv, xnfpelsyn | ~21,000 | 30-72 each | 11-17 weeks |
+| **TOTAL** | 12 | 11 programs + library | ~23,000 | ~50 unique | **15-22 weeks** |
+
+**Revised after DD13**: synthe.for effort increased from 3-4 weeks to 4-5 weeks (H/He Stark profiles more complex than initially estimated)
 
 **Distribution**:
-- Easy: 67% of programs, 8% of lines, 17% of effort
-- Hard: 33% of programs, 92% of lines, 83% of effort
+- Easy: 67% of programs, 8% of lines, 15% of effort
+- Hard: 33% of programs, 92% of lines, 85% of effort
 
 **Comparison to ATLAS12**:
 - ATLAS12: 26 easy (33%), 5 medium (6%), 49 hard (61%) → 36-58 weeks
-- SYNTHE: 8 easy (67%), 0 medium (0%), 4 hard (33%) → 14-21 weeks
-- **SYNTHE is ~2.5× faster** due to cleaner architecture
+- SYNTHE: 8 easy (67%), 0 medium (0%), 4 hard (33%) → 15-22 weeks (revised from 14-21)
+- **SYNTHE is ~2-2.5× faster** due to cleaner architecture
 
 ---
 

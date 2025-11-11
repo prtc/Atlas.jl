@@ -32,7 +32,7 @@
 | 07 | Convective Transport | N/A | 1,371 | Physics, Numerics | 🐲✨ Complete |
 | **ATLAS12 Total** | | | **6,703** | | |
 
-### SYNTHE Deep Dives (08-12)
+### SYNTHE Deep Dives (08-13)
 
 | # | Title | Priority | Lines | Key Topic | Status |
 |---|-------|----------|-------|-----------|--------|
@@ -41,7 +41,8 @@
 | 10 | XNFPELSYN (Populations) | High | 1,004 | ATLAS7V, Opacities | 🐲✨ Complete |
 | 11 | Broadening | Medium | 760 | Rotation, Convolution | 🐲✨ Complete |
 | 12 | Line Readers | High | 1,379 | Input Formats, Validation | 🐲✨ Complete |
-| **SYNTHE Total** | | | **5,325** | | |
+| 13 | SYNTHE Core | Critical | 700 | Line Opacity Engine | 🐲✨ Complete |
+| **SYNTHE Total** | | | **6,025** | | |
 
 ### ATLAS7V Dependency Analysis (4 Phases)
 
@@ -58,9 +59,9 @@
 | Suite | Deep Dives | Lines | Synthesis Docs | Total |
 |-------|------------|-------|----------------|-------|
 | ATLAS12 | 7 | 6,703 | 1,547 (physics) | 8,250 |
-| SYNTHE | 5 | 5,325 | 2,529 (physics + migration) | 7,854 |
+| SYNTHE | 6 | 6,025 | 2,529 (physics + migration) | 8,554 |
 | ATLAS7V | - | 2,127 | - | 2,127 |
-| **TOTAL** | **12** | **14,155** | **4,076** | **18,231** |
+| **TOTAL** | **13** | **14,855** | **4,076** | **18,931** |
 
 **Note**: Risk ranks for ATLAS12 from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
 
@@ -337,6 +338,36 @@
 **Cross-References**:
 - Populates Deep Dive 09 (fort.12 binary format)
 - Requires damping formulas (shared with Deep Dive 03)
+
+---
+
+### 13: SYNTHE Core - Line Opacity Engine
+**File**: `DEEP_DIVES/13_SYNTHE_CORE.md` (700 lines)
+**Code**: synthe.for (2,993 lines) - main synthesis program
+**Focus**: XLINOP NLTE subroutine, H/He Stark profiles, memory management, LTE line loop
+
+**Key Findings**:
+- **synthe.for is STANDALONE** - no atlas7v linkage (unlike xnfpelsyn/spectrv)
+- **Performance bottleneck** - millions of lines × thousands of wavelengths × 99 depths
+- **XLINOP subroutine** (~490 lines): NLTE line opacity with special H/He Stark broadening
+- **HPROF4** (~425 lines): Hydrogen profiles with fine structure (34 components for Balmer α)
+- **He I profiles** (~700 lines): 5 specialized functions (HE4471, HE4026, HE4387, HE4921) + GRIEM/DIMITRI theories
+- **LTE line loop** (~190 lines): Early exit optimization rejects ~90% of lines before Voigt calls
+- **Memory transposition**: Direct I/O pattern (2M-element BUFFER) - unnecessary in modern Julia
+- **Empirical Stark tables**: Fort.18 (He I), CUTOFFH2PLUS, CUTOFFH2 (quasi-molecular)
+
+**Migration Strategy**: Phase 1: LTE loop (1 week), Phase 2: XLINOP structure (1 week), Phase 3: H/He Stark (1-2 weeks). Total: 4-5 weeks (revised from 3-4 after analysis).
+
+**Open Questions**:
+- Q1: What is `alpha` parameter (non-standard, appears in lines 249-258)?
+- Q2: Fort.18 format for He I Stark tables - where to find examples?
+- Q3: HPROF4 empirical formulas - citations for Inglis-Teller, quasi-molecular cutoffs?
+
+**Cross-References**:
+- Uses Deep Dive 01 (Voigt profile - reusable)
+- Uses Deep Dive 09 (fort.12 format reading)
+- Uses Deep Dive 04 (binary I/O patterns)
+- Similar algorithms to Deep Dive 03 (ATLAS12 XLINOP)
 
 ---
 
