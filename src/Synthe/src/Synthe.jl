@@ -64,6 +64,28 @@ export
     Spectrum,
     Fort93Params,
 
+    # Atlas7v ccall interface (Task 1)
+    ATLAS7V_LIBRARY,
+    atlas7v_library_available,
+    call_pops,
+    call_kapp,
+    call_josh,
+    set_rhox!,
+    get_rhox,
+    set_temp!,
+    get_temp,
+    set_state!,
+    get_xnatom,
+    set_wavelength!,
+    get_continuum_absorption,
+    get_continuum_scattering,
+    set_total_opacity!,
+    get_mean_intensity,
+    get_eddington_flux,
+    initialize_atlas7v!,
+    initialize_atmosphere_for_kapp!,
+    initialize_atmosphere_for_josh!,
+
     # synbeg (Task 2)
     synbeg_initialize,
     wavelength_grid,
