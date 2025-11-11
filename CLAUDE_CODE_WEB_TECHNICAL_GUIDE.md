@@ -689,7 +689,7 @@ The Claude Code Web sandbox provides a rich set of programming languages and com
 
 **Python 3.11.14**
 - Standard library works perfectly (math, struct, array, ctypes, etc.)
-- NO scientific packages (NumPy, SciPy) - pip install blocked by sandbox
+- **pip install WORKS** - can install packages from PyPI (h5py, numpy confirmed working)
 - **Use cases**:
   - Algorithm prototyping and verification
   - Parsing Fortran binary files (struct.unpack)
@@ -821,6 +821,7 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
 - Download attempts **blocked** by sandbox (403 Forbidden from julialang.org)
 - Binary downloads fail (only get 9 bytes instead of ~100MB)
 - **Workaround**: Test Julia code on local machine (Paula's environment)
+- **Note**: This is specific to Julia downloads; pip (Python) works fine
 
 #### R/Rscript ❌
 - **Not found** in sandbox
@@ -864,13 +865,14 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
    - Can verify ccall signatures
    - Test COMMON block layouts
 
-**What this means for Phase 5**:
+**What this means for development**:
 - ✅ Algorithm logic can be prototyped in Python
-- ✅ Fortran test programs can be compiled
-- ❌ Cannot compile full atlas7v.so in sandbox
-- ❌ Cannot run Julia tests in sandbox
-- ✅ Code is correct by design (based on specs)
-- ✅ Testing will happen on Paula's local machine
+- ✅ Python packages installable via pip (h5py, numpy, pandas, etc.)
+- ✅ Fortran test programs can be compiled (simple code)
+- ❌ Cannot compile full atlas7v.so in sandbox (legacy F77 EQUIVALENCE issues)
+- ❌ Cannot run Julia tests in sandbox (julialang.org downloads blocked)
+- ✅ Standalone Python tools work perfectly (see tools/line_lists/)
+- ✅ Testing complex Fortran/Julia happens on Paula's local machine
 
 ### 13.5 Documentation
 
