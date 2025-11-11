@@ -1810,38 +1810,44 @@ opacity::Vector{Float64}      # Matches Fortran REAL*8
 2. How closely must Julia outputs match Fortran? (Exact? ~1e-6 tolerance? ~1%)
 3. Do you have reference calculations to test against?
 
-✅ **Decision V.4 RESOLVED** (from Deep Dive 02 - Saha-Boltzmann Populations):
+✅ **Decision V.4 RESOLVED** (Updated 2025-11-11 with Paula + Marcos Diaz):
 
-**Mixed precision strategy**:
-- **Populations: Float64 REQUIRED** (no compromise)
-  - Ratios span 40+ orders of magnitude: exp(-χ/kT) ranges from 10^(-50) to 10^(0)
-  - Example: H ionization at 5000K → exp(-31.6) = 1.7 × 10^(-14)
-  - Float32 would underflow to exactly 0.0 → catastrophic failure
-  - See `docs/archaeology/DEEP_DIVES/02_POPULATIONS.md` Section 4 for analysis
+**Uniform Float64 strategy** (simplified from previous mixed precision):
 
-- **Voigt profiles: Float32 acceptable**
-  - Target accuracy: ~1-2% (from code comments)
-  - Performance critical (~1 million calls/iteration)
-  - Float32 sufficient for this accuracy level
-  - See `docs/archaeology/DEEP_DIVES/01_VOIGT_PROFILE.md` Section 4 for analysis
+**Decision**: **Float64 everywhere** in Julia implementation
 
-- **Line opacity summation: Float32 adequate, Float64 recommended**
-  - XLINES accumulates opacity from millions of lines
-  - Float32 tested adequate (Deep Dive 03), but Float64 safer
-  - See `docs/archaeology/DEEP_DIVES/03_LINE_OPACITY_SUMMATION.md` Section 5 for analysis
+**Rationale**:
+- **Simplifies implementation** - No precision tracking across functions
+- **Easier validation** - Matches or exceeds Fortran REAL*8 precision everywhere
+- **Note on Fortran precision mix**: Original Fortran codes use both REAL*4 (Float32) and REAL*8 (Float64)
+  - Julia Float64 everywhere means higher precision than Fortran in some places (where Fortran used REAL*4)
+  - This is acceptable and safer than mixed precision
+- **Memory impact**: ~2× memory for arrays that were REAL*4, but acceptable on modern systems
+- **Performance impact**: Minimal on modern CPUs (Float64 well-optimized)
 
-- **Binary I/O: Mixed precision by design**
-  - Fort.12 uses Integer*4 wavelength encoding + Integer*2 line data
-  - Coefficients stored as Float32, wavelengths as Float64 (via RATIOLG)
-  - Migration must preserve exact format for validation
-  - See `docs/archaeology/DEEP_DIVES/04_BINARY_IO.md` Section 3 for analysis
+**Validation implications**:
+- **Cannot expect exact bit-for-bit equality** with Fortran for REAL*4 data
+- **Use approximate equality** with appropriate tolerance:
+  - Recommended: `rtol=1e-6` for most comparisons
+  - For REAL*8 comparisons: `rtol=1e-12` may be achievable
+  - Physics validation: `rtol=1e-3` to `1e-4` (0.1-0.01% accuracy)
+- Julia results should match or exceed Fortran accuracy (never worse)
 
-- **RT integration (JOSH): Mixed precision internal**
-  - Pretabulated weights (COEFJ/COEFH) stored as Float32
-  - Source function and intensity as Float64
-  - See `docs/archaeology/DEEP_DIVES/05_RT_INTEGRATION.md` Section 4 for analysis
+**Implementation**:
+- All opacity calculations → Float64
+- All population calculations → Float64
+- All line data → Float64
+- All radiative transfer → Float64
+- Binary I/O: Read Fortran's mixed REAL*4/REAL*8, convert to Float64 internally
 
-**Recommendation**: Use Float64 for all physics calculations (populations, opacities, radiative transfer). Match Fortran's Float32 only where explicitly required (binary I/O formats, pretabulated coefficients). Consider Float32 for final large output arrays if memory becomes limiting.
+**Previous analysis preserved** (from Deep Dives 01-05):
+- **Populations**: Float64 REQUIRED confirmed (40+ order of magnitude range, see Deep Dive 02)
+- **Voigt profiles**: Float32 was acceptable, but Float64 safer (see Deep Dive 01)
+- **Line opacity**: Float32 was adequate, Float64 eliminates risk (see Deep Dive 03)
+- **Binary I/O**: Must read Fortran formats correctly, convert to Float64 (see Deep Dive 04)
+- **RT integration**: Float64 for source functions validated (see Deep Dive 05)
+
+**Recommendation**: Use Float64 uniformly across Julia codebase. Accept that validation comparisons require tolerance-based equality (`≈` with appropriate `rtol`) rather than exact equality (`==`).
 
 ---
 
@@ -1987,29 +1993,76 @@ Rationale: End-to-end functionality proves concept
 
 **Julia migration questions**:
 
-#### Q7a: Line Database Format?
-- **Option A**: Keep Fortran binary format (for compatibility)
-- **Option B**: Convert to HDF5/JLD2 (faster Julia I/O)
-- **Option C**: Use Arrow or Parquet (standard formats)
-- **Option D**: SQL database (queryable, scalable)
+#### Q7a: Line Database Format? ✅ **RESOLVED** (2025-11-11 with Paula + Marcos Diaz)
+
+**Decision**: **Option B - HDF5 format**
+
+**Rationale**:
+- **Astronomy adoption**: HDF5 gaining widespread use in astronomy (ALMA, VLA, SKA pathfinders)
+- **Mature Julia support**: HDF5.jl well-maintained and feature-complete
+- **Hierarchical structure**: Perfect for metadata (line list provenance, wavelength ranges, etc.)
+- **Compression**: Reduces storage significantly (10GB → more manageable)
+- **Memory-mapped I/O**: Lazy loading for large files (don't need to load 10GB into RAM)
+- **Cross-platform**: Portable across operating systems (unlike Fortran UNFORMATTED)
+- **Queryable**: Can extract wavelength ranges without reading entire file
+- **Not using Arrow/Parquet**: These are not astronomy-standard formats
+
+**Implementation approach**:
+- Convert Kurucz line lists to HDF5 format (one-time preprocessing)
+- Use HDF5.jl for I/O operations
+- Support memory-mapped access for large files
+- Maintain backward compatibility by keeping Fortran binary readers (FortranFiles.jl) for validation
+
+**Benefits for users**:
+- No need to load entire 10GB line list into memory
+- Fast wavelength-range queries
+- Compressed storage saves disk space
+- Platform-independent (works on Linux, macOS, Windows)
+
+#### ⚠️ **CRITICAL: Vacuum ↔ Air Wavelength Conversion** (Flagged by Marcos Diaz)
+
+**Problem identified**: Line lists contain transitions between vacuum and air wavelengths at different wavelength ranges:
+
+**Wavelength conventions** (typical, but needs verification):
+- **UV (λ < ~2000 Å)**: Vacuum wavelengths
+- **Optical (λ > ~2000 Å)**: Air wavelengths
+- **IR (mid-K band?)**: Possibly back to vacuum (needs verification)
+
+**Critical documentation requirements**:
+1. **Document wavelength ranges**: Which ranges use vacuum vs air in Kurucz/Castelli line lists
+2. **Document conversion formula**: Multiple standards exist with subtle differences:
+   - Edlén (1953) - older standard
+   - Edlén (1966) - improved version
+   - Ciddor (1996) - current IAU standard for precision work
+   - **Must verify**: Which formula does Fortran code use?
+3. **Document conversion locations**: Where in pipeline do conversions happen?
+4. **Add warnings**: Clear documentation in AtlasLineFormats.jl about wavelength conventions
+
+**Why this matters**:
+- Wrong wavelength conversions → wrong line identifications
+- Different standards give wavelengths differing by ~0.1-0.5 Å (significant for line identification)
+- Subtle bugs that can go unnoticed (spectrum "looks right" but lines are misidentified)
+
+**Action items** (for migration phase):
+- Flag as **critical validation requirement** in MIGRATION_ASSESSMENT.md
+- Add to high-risk areas (wavelength conversion bugs are subtle)
+- Document conversion standards in physics validation section
+- Validate against known spectral line positions (e.g., solar atlas)
+- Add explicit tests for vacuum-air conversion accuracy
 
 #### Q7b: Line Database Scope?
 - **Option A**: Full Kurucz/Castelli line lists (~10 GB)
 - **Option B**: Wavelength-limited subsets (e.g., optical only)
 - **Option C**: On-demand download (like AstroPy)
 
+📋 **Decision deferred**: Can be decided during implementation based on user needs
+
 #### Q7c: Line Database Preprocessing?
 - **Option A**: Keep line selection in Stage 1 (like ATLAS12)
 - **Option B**: Pre-filter databases by wavelength/strength
 - **Option C**: Use spatial indexing (k-d tree) for fast lookup
 
-**Questions for Paula**:
-1. What wavelength ranges do you typically work with?
-2. Do you need all molecules? Or subset?
-3. Is download time a concern? Or can we assume local copies?
-4. Do you use custom line lists?
-
-📋 **Decision needed**: Line database format and scope?
+📋 **Decision deferred**: Can be decided during implementation based on performance testing
 
 **📖 Background**: See ARCHITECTURE_DETAILS.md Section IX for comprehensive line data infrastructure analysis (Kurucz 2016: 544M atomic lines, gfall.dat + gfall.predall formats, binary format requirements, memory-mapped architecture strategies)
 
@@ -2054,12 +2107,32 @@ end
 - Detect oscillations and adjust damping
 
 **Questions for Paula**:
-1. Are Fortran's convergence criteria scientifically adequate? **Paula here:** keep it for validation purposes
-2. Do you ever manually adjust CONVL/CONVT? Why? **Paula here:** Never did.
-3. Have you observed convergence problems (oscillations, premature stop)? **Paula here:** Yes. Not common, maybe affect 5% of the runs.
-4. Would adaptive tolerances be useful?  **Paula here:** Yes but only in the future, after validation.
+1. Are Fortran's convergence criteria scientifically adequate? **Paula:** keep it for validation purposes
+2. Do you ever manually adjust CONVL/CONVT? Why? **Paula:** Never did.
+3. Have you observed convergence problems (oscillations, premature stop)? **Paula:** Yes. Not common, maybe affect 5% of the runs.
+4. Would adaptive tolerances be useful? **Paula:** Yes but only in the future, after validation.
 
-📋 **Decision needed**: Convergence criteria design?
+✅ **Decision 5.8 RESOLVED** (2025-11-11 with Paula + Marcos Diaz): **Option A - Match Fortran exactly**
+
+**Rationale**:
+- **Validation requirement**: Cannot validate if convergence criteria differ from Fortran
+- **Start conservative**: Use Fortran's CONVL, CONVT, ITMAXL values exactly
+- **Future improvements**: Can re-discuss optimization/enhancements after validation complete
+
+**Implementation**:
+```julia
+struct ConvergenceCriteria
+    flux_tolerance::Float64    # CONVL from Fortran
+    temp_tolerance::Float64    # CONVT from Fortran
+    max_iterations::Int        # ITMAXL from Fortran
+end
+```
+
+**Post-validation opportunities** (for future work):
+- Adaptive criteria (Option C) - adjust tolerances dynamically
+- Oscillation detection and mitigation
+- Early-exit convergence (currently Fortran always runs ITMAXL iterations)
+- Enhanced diagnostics (convergence history, per-depth convergence)
 
 ---
 
@@ -2091,11 +2164,55 @@ end
 - `legacy=true` mode for Fortran compatibility
 
 **Questions for Paula**:
-1. Would you prefer Julia to catch unphysical inputs early? **Paula here:** yes, but flagging them without stopping (validation mode)
-2. Or match Fortran behavior even when it's wrong? **Paula here:** continue as fortran for validation purposes
-3. Are there known "bad inputs" that Fortran silently accepts? **Paula here:** not that i am aware off
+1. Would you prefer Julia to catch unphysical inputs early? **Paula:** yes, but flagging them without stopping (validation mode)
+2. Or match Fortran behavior even when it's wrong? **Paula:** continue as fortran for validation purposes
+3. Are there known "bad inputs" that Fortran silently accepts? **Paula:** not that i am aware off
 
-📋 **Decision needed**: Error handling strategy?
+✅ **Decision 5.9 RESOLVED** (2025-11-11 with Paula + Marcos Diaz): **Option A with validation mode**
+
+**Decision**: Dual-mode error handling
+
+**Approach**:
+- **Production mode** (default): Clean Julia-style error handling
+  - Fail fast with informative error messages
+  - Catch unphysical inputs before computation
+  - Prevent silent failures
+- **Validation mode**: Flag problems but continue execution
+  - Allows comparison with Fortran output even for problematic inputs
+  - Logs warnings but doesn't halt execution
+  - Enables answering: "What did Fortran do with this bad input?"
+
+**Rationale**:
+- **Validation requirement**: Must be able to reproduce Fortran behavior (including its failure modes)
+- **Production safety**: Protect users from silent failures and unphysical results
+- **Best of both worlds**: Strict by default, permissive when needed for validation
+
+**Implementation**:
+```julia
+function run_atlas12(config; validation_mode=false)
+    # Check for unphysical inputs
+    if !validation_mode && is_unphysical(config)
+        error("Unphysical input detected: $(describe_problem(config))")
+    elseif validation_mode && is_unphysical(config)
+        @warn "Validation mode: Proceeding with unphysical input" config
+        # Continue execution for Fortran comparison
+    end
+
+    # ... rest of calculation
+end
+```
+
+**Validation mode use cases**:
+- Comparing outputs when Fortran accepts questionable inputs
+- Testing edge cases and failure modes
+- Reproducing known Fortran bugs for verification
+- Debugging convergence issues
+
+**Production mode protections**:
+- Temperature/pressure bounds checking
+- Abundance sum validation (should sum to ~1.0)
+- Wavelength range sanity checks
+- Convergence failure detection with informative messages
 
 ---
 
@@ -2108,24 +2225,38 @@ Ranking decisions by urgency and impact:
 | 5.1 ODF vs OS | 🔴 High | Critical for architecture | No - affects entire design | ✅ RESOLVED (OS) |
 | 5.2 Two-stage design | 🟡 Medium | Moderate | Somewhat - can start with unified | ✅ RESOLVED (Unified) |
 | 5.3 SYNTHE unification | 🟡 Medium | Moderate | Yes - Stage 2 work | ✅ RESOLVED (Unified + stages) |
-| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics | ✅ RESOLVED (Mixed Float64/32) |
+| 5.4 Precision | 🔴 High | Critical for validation | No - affects all numerics | ✅ RESOLVED (Float64 everywhere) |
 | 5.5 Version merging | 🔴 High | Critical for baseline | No - needed before coding | ✅ RESOLVED (Castelli + Kurucz) |
 | 5.6 Migration priority | 🟡 Medium | Moderate | Yes - Paula decides | ✅ INFORMED (3 options in MIGRATION_ASSESSMENT.md) |
-| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple | 🔲 Deferred |
-| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially | 🔲 Deferred |
-| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually | 🔲 Deferred |
+| 5.7 Line databases | 🟡 Medium | Large | Somewhat - can start simple | ✅ RESOLVED (HDF5 format) |
+| 5.8 Convergence | 🟢 Low | Small | Yes - can match Fortran initially | ✅ RESOLVED (Match Fortran) |
+| 5.9 Error handling | 🟢 Low | Small | Yes - can add gradually | ✅ RESOLVED (Validation mode) |
 
-**Status Update (2025-11-09)**:
+**Status Update (2025-11-11)** - **ALL DECISIONS RESOLVED** 🎉:
 - ✅ **All high-urgency decisions resolved** (5.1, 5.4, 5.5)
-- ✅ **Medium-urgency architectural decisions resolved** (5.2, 5.3)
+- ✅ **Medium-urgency architectural decisions resolved** (5.2, 5.3, 5.7)
 - ✅ **Migration priority informed** (5.6) - Phase 4 provides 3 roadmap options for Paula's decision
-- 🔲 **Lower-priority decisions deferred** (5.7-5.9) - can be decided during implementation
+- ✅ **Lower-priority decisions resolved** (5.8, 5.9) - Paula + Marcos Diaz session on 2025-11-11
+
+**Key decisions from 2025-11-11 session** (Paula + Marcos Diaz):
+- **5.4 updated**: Uniform Float64 everywhere (simplified from mixed precision)
+- **5.7 resolved**: HDF5 format for line databases, with **critical flag** for vacuum-air wavelength conversion
+- **5.8 resolved**: Match Fortran convergence criteria exactly (for validation)
+- **5.9 resolved**: Dual-mode error handling (strict production, permissive validation)
+
+**Critical new risk identified**:
+- ⚠️ **Vacuum ↔ air wavelength conversion** (flagged by Marcos Diaz in Decision 5.7)
+  - Must document which wavelength ranges use vacuum vs air
+  - Must identify which conversion formula Fortran uses (Edlén 1953/1966 vs Ciddor 1996)
+  - Added to high-risk areas in MIGRATION_ASSESSMENT.md
 
 **Recommended next steps**:
 1. ✅ ~~Paula decides on high-urgency items~~ - **COMPLETE**
 2. ✅ ~~Document decisions in MISSION.md~~ - **COMPLETE**
 3. ✅ ~~Use decisions to guide Phase 3 (Physics Pipeline) and Phase 4 (Migration Assessment)~~ - **COMPLETE**
-4. **Paula reviews Phase 4 deliverables** and selects migration roadmap option (Foundation-First / Vertical Slice / Hybrid)
+4. ✅ ~~Resolve remaining deferred decisions~~ - **COMPLETE** (2025-11-11)
+5. **Paula reviews Phase 4 deliverables** and selects migration roadmap option (Foundation-First / Vertical Slice / Hybrid)
+6. **Document wavelength conversion standards** in validation strategy (critical for correctness)
 
 ---
 
