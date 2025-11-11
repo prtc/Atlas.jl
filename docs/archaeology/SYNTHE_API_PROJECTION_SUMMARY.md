@@ -84,7 +84,7 @@
 
 5. **Fort.X elimination is one-time cost**
    - Cost: $22-40 (5-7% of standalone total)
-   - Architectural investment (benefits all 11 programs)
+   - Architectural investment (benefits all 13 programs)
    - Replaces binary fort.X files with Julia structs
 
 ---
