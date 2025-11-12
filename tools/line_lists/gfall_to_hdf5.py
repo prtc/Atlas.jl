@@ -45,6 +45,8 @@ Usage:
         --compress    Use gzip compression (level 4, good balance speed/size)
         --verbose     Print progress every 10000 lines
         --validate    Run validation checks on output
+        --wl-min      Minimum wavelength in Angstroms (vacuum, optional filter)
+        --wl-max      Maximum wavelength in Angstroms (vacuum, optional filter)
 
 Dependencies:
     - h5py (pip install h5py)
@@ -205,7 +207,8 @@ def parse_gfall_line(line: str) -> dict:
 
 def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
                           compress: bool = False, verbose: bool = False,
-                          chunk_size: int = 10000) -> dict:
+                          chunk_size: int = 10000,
+                          wl_min: float = None, wl_max: float = None) -> dict:
     """
     Convert gfall format file to HDF5.
 
@@ -215,6 +218,8 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
         compress: Use gzip compression (level 4)
         verbose: Print progress
         chunk_size: Number of lines to read before writing (memory vs speed)
+        wl_min: Minimum wavelength in Angstroms (vacuum, optional filter)
+        wl_max: Maximum wavelength in Angstroms (vacuum, optional filter)
 
     Returns:
         Dictionary with conversion statistics
@@ -222,6 +227,7 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
     stats = {
         'lines_read': 0,
         'lines_written': 0,
+        'lines_filtered': 0,
         'parse_errors': 0,
         'wavelength_min': float('inf'),
         'wavelength_max': float('-inf'),
@@ -231,6 +237,9 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
     # Read all lines first (more efficient for HDF5 writing)
     if verbose:
         print(f"Reading {input_path}...", file=sys.stderr)
+        if wl_min is not None or wl_max is not None:
+            wl_range = f"{wl_min or 'none'}-{wl_max or 'none'} Å"
+            print(f"  Wavelength filter: {wl_range}", file=sys.stderr)
 
     parsed_lines = []
     errors = []
@@ -241,12 +250,21 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
 
             try:
                 parsed = parse_gfall_line(line)
+
+                # Apply wavelength filter if specified
+                wl = parsed['wavelength']
+                if wl_min is not None and abs(wl) < wl_min:
+                    stats['lines_filtered'] += 1
+                    continue
+                if wl_max is not None and abs(wl) > wl_max:
+                    stats['lines_filtered'] += 1
+                    continue
+
                 parsed_lines.append(parsed)
 
                 # Update statistics
-                wl = parsed['wavelength']
-                stats['wavelength_min'] = min(stats['wavelength_min'], wl)
-                stats['wavelength_max'] = max(stats['wavelength_max'], wl)
+                stats['wavelength_min'] = min(stats['wavelength_min'], abs(wl))
+                stats['wavelength_max'] = max(stats['wavelength_max'], abs(wl))
                 stats['elements_found'].add(parsed['element_code'])
 
                 if verbose and line_num % 10000 == 0:
@@ -347,7 +365,7 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
         meta_group.attrs['source_format'] = 'Kurucz gfall'
         meta_group.attrs['source_file'] = str(input_path.name)
         meta_group.attrs['conversion_time'] = datetime.now().isoformat()
-        meta_group.attrs['converter'] = 'gfall_to_hdf5.py v1.0'
+        meta_group.attrs['converter'] = 'gfall_to_hdf5.py v1.1'
         meta_group.attrs['lines_total'] = n_lines
         meta_group.attrs['wavelength_min'] = float(stats['wavelength_min'])
         meta_group.attrs['wavelength_max'] = float(stats['wavelength_max'])
@@ -355,6 +373,15 @@ def convert_gfall_to_hdf5(input_path: Path, output_path: Path,
         meta_group.attrs['compressed'] = compress
         meta_group.attrs['wavelength_convention'] = 'Kurucz: air if > 200nm, vacuum if <= 200nm'
         meta_group.attrs['air_vacuum_threshold_nm'] = 200.0
+
+        # Wavelength filtering metadata
+        meta_group.attrs['wavelength_filtered'] = (wl_min is not None or wl_max is not None)
+        if wl_min is not None:
+            meta_group.attrs['wavelength_filter_min_angstrom'] = float(wl_min)
+        if wl_max is not None:
+            meta_group.attrs['wavelength_filter_max_angstrom'] = float(wl_max)
+        if stats['lines_filtered'] > 0:
+            meta_group.attrs['lines_filtered_out'] = stats['lines_filtered']
 
         # Store element codes found
         meta_group.create_dataset('element_codes',
@@ -450,6 +477,12 @@ Examples:
     # With validation
     python gfall_to_hdf5.py gfall.dat gfall.h5 --validate
 
+    # Convert optical range only (3000-10000 Angstroms)
+    python gfall_to_hdf5.py gfall.dat gfall_optical.h5 --wl-min 3000 --wl-max 10000
+
+    # Convert UV range only
+    python gfall_to_hdf5.py gfall.dat gfall_uv.h5 --wl-min 1000 --wl-max 3000
+
 Output HDF5 structure:
     /lines/wavelength       - Float64, wavelength (Å, air if >200nm, vac if <=200nm)
     /lines/is_air           - Bool, True if air wavelength (>200nm threshold)
@@ -471,6 +504,10 @@ Output HDF5 structure:
                        help='Print progress information')
     parser.add_argument('--validate', action='store_true',
                        help='Validate HDF5 file after creation')
+    parser.add_argument('--wl-min', type=float, default=None,
+                       help='Minimum wavelength in Angstroms (vacuum, optional filter)')
+    parser.add_argument('--wl-max', type=float, default=None,
+                       help='Maximum wavelength in Angstroms (vacuum, optional filter)')
 
     args = parser.parse_args()
 
@@ -491,7 +528,9 @@ Output HDF5 structure:
             args.input,
             args.output,
             compress=args.compress,
-            verbose=args.verbose
+            verbose=args.verbose,
+            wl_min=args.wl_min,
+            wl_max=args.wl_max
         )
 
         # Report
@@ -499,6 +538,8 @@ Output HDF5 structure:
         print(f"  Input:  {args.input}", file=sys.stderr)
         print(f"  Output: {args.output}", file=sys.stderr)
         print(f"  Lines:  {stats['lines_written']} written, {stats['parse_errors']} errors", file=sys.stderr)
+        if stats['lines_filtered'] > 0:
+            print(f"  Filtered: {stats['lines_filtered']} lines outside wavelength range", file=sys.stderr)
         print(f"  Range:  {stats['wavelength_min']:.2f} - {stats['wavelength_max']:.2f} Å", file=sys.stderr)
         print(f"  Elements: {len(stats['elements_found'])}", file=sys.stderr)
 

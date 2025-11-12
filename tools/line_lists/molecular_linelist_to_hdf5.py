@@ -164,7 +164,8 @@ def parse_molecular_line(line: str) -> dict:
 
 
 def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
-                              compress: bool = False, verbose: bool = False) -> dict:
+                              compress: bool = False, verbose: bool = False,
+                              wl_min: float = None, wl_max: float = None) -> dict:
     """
     Convert molecular line list file to HDF5.
 
@@ -173,6 +174,8 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
         output_path: Path to output HDF5 file
         compress: Use gzip compression (level 4)
         verbose: Print progress
+        wl_min: Minimum wavelength in Angstroms (vacuum, optional filter)
+        wl_max: Maximum wavelength in Angstroms (vacuum, optional filter)
 
     Returns:
         Dictionary with conversion statistics
@@ -180,6 +183,7 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
     stats = {
         'lines_read': 0,
         'lines_written': 0,
+        'lines_filtered': 0,
         'parse_errors': 0,
         'wavelength_min': float('inf'),
         'wavelength_max': float('-inf'),
@@ -190,6 +194,9 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
     # Read all lines first
     if verbose:
         print(f"Reading {input_path}...", file=sys.stderr)
+        if wl_min is not None or wl_max is not None:
+            wl_range = f"{wl_min or 'none'}-{wl_max or 'none'} Å"
+            print(f"  Wavelength filter: {wl_range}", file=sys.stderr)
 
     parsed_lines = []
     errors = []
@@ -200,10 +207,19 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
 
             try:
                 parsed = parse_molecular_line(line)
+
+                # Apply wavelength filter if specified
+                wl = abs(parsed['wavelength'])  # May be negative in some formats
+                if wl_min is not None and wl < wl_min:
+                    stats['lines_filtered'] += 1
+                    continue
+                if wl_max is not None and wl > wl_max:
+                    stats['lines_filtered'] += 1
+                    continue
+
                 parsed_lines.append(parsed)
 
                 # Update statistics
-                wl = abs(parsed['wavelength'])  # May be negative in some formats
                 stats['wavelength_min'] = min(stats['wavelength_min'], wl)
                 stats['wavelength_max'] = max(stats['wavelength_max'], wl)
                 stats['molecules_found'].add(parsed['molecule_code'])
@@ -301,7 +317,7 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
         meta_group.attrs['source_format'] = 'Kurucz molecular'
         meta_group.attrs['source_file'] = str(input_path.name)
         meta_group.attrs['conversion_time'] = datetime.now().isoformat()
-        meta_group.attrs['converter'] = 'molecular_to_hdf5.py v1.0'
+        meta_group.attrs['converter'] = 'molecular_linelist_to_hdf5.py v1.1'
         meta_group.attrs['lines_total'] = n_lines
         meta_group.attrs['wavelength_min'] = float(stats['wavelength_min'])
         meta_group.attrs['wavelength_max'] = float(stats['wavelength_max'])
@@ -309,6 +325,15 @@ def convert_molecular_to_hdf5(input_path: Path, output_path: Path,
         meta_group.attrs['predominant_molecule'] = predominant_name
         meta_group.attrs['predominant_code'] = int(predominant_molecule)
         meta_group.attrs['compressed'] = compress
+
+        # Wavelength filtering metadata
+        meta_group.attrs['wavelength_filtered'] = (wl_min is not None or wl_max is not None)
+        if wl_min is not None:
+            meta_group.attrs['wavelength_filter_min_angstrom'] = float(wl_min)
+        if wl_max is not None:
+            meta_group.attrs['wavelength_filter_max_angstrom'] = float(wl_max)
+        if stats['lines_filtered'] > 0:
+            meta_group.attrs['lines_filtered_out'] = stats['lines_filtered']
 
         # Store molecule codes and names found
         mol_codes = sorted(stats['molecules_found'])
@@ -399,13 +424,16 @@ def main():
         epilog="""
 Examples:
     # Basic conversion
-    python molecular_to_hdf5.py chbx.asc chbx.h5
+    python molecular_linelist_to_hdf5.py chbx.asc chbx.h5
 
     # With compression and verbose output
-    python molecular_to_hdf5.py chbx.asc chbx.h5 --compress --verbose
+    python molecular_linelist_to_hdf5.py chbx.asc chbx.h5 --compress --verbose
 
     # With validation
-    python molecular_to_hdf5.py chbx.asc chbx.h5 --validate
+    python molecular_linelist_to_hdf5.py chbx.asc chbx.h5 --validate
+
+    # Convert optical range only (3000-10000 Angstroms)
+    python molecular_linelist_to_hdf5.py chbx.asc chbx_optical.h5 --wl-min 3000 --wl-max 10000
 
 Supported molecules (by code):
     106: CH     607: CN     608: CO
@@ -432,6 +460,10 @@ Output HDF5 structure:
                        help='Print progress information')
     parser.add_argument('--validate', action='store_true',
                        help='Validate HDF5 file after creation')
+    parser.add_argument('--wl-min', type=float, default=None,
+                       help='Minimum wavelength in Angstroms (vacuum, optional filter)')
+    parser.add_argument('--wl-max', type=float, default=None,
+                       help='Maximum wavelength in Angstroms (vacuum, optional filter)')
 
     args = parser.parse_args()
 
@@ -452,7 +484,9 @@ Output HDF5 structure:
             args.input,
             args.output,
             compress=args.compress,
-            verbose=args.verbose
+            verbose=args.verbose,
+            wl_min=args.wl_min,
+            wl_max=args.wl_max
         )
 
         # Report
@@ -460,6 +494,8 @@ Output HDF5 structure:
         print(f"  Input:  {args.input}", file=sys.stderr)
         print(f"  Output: {args.output}", file=sys.stderr)
         print(f"  Lines:  {stats['lines_written']} written, {stats['parse_errors']} errors", file=sys.stderr)
+        if stats['lines_filtered'] > 0:
+            print(f"  Filtered: {stats['lines_filtered']} lines outside wavelength range", file=sys.stderr)
         print(f"  Range:  {stats['wavelength_min']:.2f} - {stats['wavelength_max']:.2f} Å", file=sys.stderr)
         print(f"  Molecules: {len(stats['molecules_found'])}", file=sys.stderr)
 
