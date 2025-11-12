@@ -189,7 +189,80 @@ python3 molecular_linelist_to_hdf5.py --help
 
 ---
 
-### 3. line_query.py - HDF5 Line List Query Tool
+### 3. molecular_partfuncs_to_hdf5.py - Molecular Partition Functions
+
+Converts Kurucz molecules.dat (molecular equilibrium constants and partition functions) to HDF5.
+
+**Input format**: Kurucz molecules.dat (free-form ASCII)
+- Example: `upstream/kurucz/input_data/molecules.dat` (191 lines, 87 molecules)
+- Format spec: Used by `xnfpelsyn.for` (fort.2 input)
+- Documentation: `docs/archaeology/DEEP_DIVES/10_SYNTHE_XNFPELSYN.md` (Section 5)
+
+**Data**: Equilibrium constants for molecular formation and dissociation
+- Formula: K(T) = exp(D0/(k×T) + a0 + a1×T + a2×T² + a3×T³ + a4×T⁴)
+- Where: D0 = dissociation energy (eV), k = 8.617333×10⁻⁵ eV/K, T in Kelvin
+
+**Output format**: HDF5 with datasets:
+```
+/molecules/
+  molecule_code        Float64  Molecule identifier (101.00=H2, 606.00=C2, 608.00=CO)
+  molecule_code_int    Int32    Integer part (101=H2, 606=C2, 608=CO)
+  ionization           Int16    Ionization state (0=neutral, 1=+1)
+  name                 String   Molecule name ("H2", "C2", "CO", "CH+", etc.)
+  D0_eV                Float32  Dissociation energy (eV)
+  a0                   Float32  Polynomial coefficient a0
+  a1                   Float32  Polynomial coefficient a1 (K⁻¹)
+  a2                   Float32  Polynomial coefficient a2 (K⁻²)
+  a3                   Float32  Polynomial coefficient a3 (K⁻³)
+  a4                   Float32  Polynomial coefficient a4 (K⁻⁴)
+
+/metadata/
+  format_version            "1.0"
+  source_format             "Kurucz molecules.dat"
+  source_file               Original filename
+  conversion_time           ISO8601 timestamp
+  molecules_total           Number of molecules
+  formula                   K(T) formula string
+  k_Boltzmann_eV_per_K      8.617333×10⁻⁵
+  T_examples_K              Example temperature array
+  note                      Usage context
+```
+
+**Supported molecules** (87 total):
+- **Diatomic**: H2, HD, CH, NH, OH, HF, CN, CO, NO, O2, N2, C2, TiO, SiO, FeH, MgH, etc.
+- **Triatomic**: H2O, HCN, HCO, HNO, CO2, SO2, N2O, NO2, etc.
+- **Polyatomic**: CH3, NH3, CH4, SiH4, C2H2, etc.
+- **Ionized**: CH⁺, OH⁺, CN⁺, etc.
+
+**Usage**:
+```bash
+# Basic conversion
+python3 molecular_partfuncs_to_hdf5.py molecules.dat molecules.h5
+
+# With compression and verbose output
+python3 molecular_partfuncs_to_hdf5.py molecules.dat molecules.h5 --compress --verbose
+
+# Help
+python3 molecular_partfuncs_to_hdf5.py --help
+```
+
+**Performance**:
+- `molecules.dat` (87 molecules): 38.53 KB HDF5, <1 second
+- Includes 80 unique base molecules + ionized variants
+- Polynomial evaluation: O(1) for any temperature
+
+**Dependencies**: Same as other converters (h5py, numpy)
+
+**Tested with**:
+- Python 3.11.14
+- molecules.dat (87 molecules, 0 errors)
+- Examples: H2, CH, OH, CO, TiO, SiO, H2O, CO2, CH4
+
+**Status**: ✅ **COMPLETE** (v1.0, 2025-11-11)
+
+---
+
+### 4. line_query.py - HDF5 Line List Query Tool
 
 Interactive command-line tool to query atomic and molecular line lists in HDF5 format.
 
@@ -234,7 +307,7 @@ python3 line_query.py gf_tiny.h5 --stats
 
 ---
 
-### 4. HDF5_SCHEMA_GUIDE.md - Visual Schema Documentation
+### 5. HDF5_SCHEMA_GUIDE.md - Visual Schema Documentation
 
 Comprehensive visual guide to HDF5 line list schemas with diagrams, examples, and cross-language usage.
 
@@ -259,7 +332,7 @@ Comprehensive visual guide to HDF5 line list schemas with diagrams, examples, an
 
 ---
 
-### 5. continua_to_hdf5.py - Continuum Opacity Wavelength Edges
+### 6. continua_to_hdf5.py - Continuum Opacity Wavelength Edges
 
 Converts Kurucz continua.dat format to HDF5.
 
@@ -332,7 +405,7 @@ python3 continua_to_hdf5.py --help
 
 ## Planned Tools (TODO)
 
-### 6. fort12_inspector.py - Binary Fort.12 Inspector
+### 7. fort12_inspector.py - Binary Fort.12 Inspector
 
 Read and analyze SYNTHE fort.12 binary line databases:
 - Parse Fortran unformatted records
@@ -459,7 +532,7 @@ Atlas.jl/
 │       ├── HDF5_SCHEMA_GUIDE.md            # Visual schema documentation ✅
 │       ├── gfall_to_hdf5.py                # Atomic line converter ✅
 │       ├── molecular_linelist_to_hdf5.py   # Molecular line list converter ✅
-│       ├── molecular_partfuncs_to_hdf5.py  # Molecular partition functions (TODO)
+│       ├── molecular_partfuncs_to_hdf5.py  # Molecular partition functions ✅
 │       ├── line_query.py                   # HDF5 query tool ✅
 │       ├── continua_to_hdf5.py             # Continuum opacity edges ✅
 │       └── fort12_inspector.py             # Binary inspector (TODO)
@@ -508,6 +581,8 @@ Atlas.jl/
 - ✅ Tested with gf_tiny.dat (1,197 lines, 0 errors, 0.10 MB)
 - ✅ `molecular_linelist_to_hdf5.py` - Molecular line list converter (574 lines)
 - ✅ Tested with chbx.asc (4,270 CH lines, 0 errors, 0.09 MB)
+- ✅ `molecular_partfuncs_to_hdf5.py` - Molecular partition functions converter (395 lines)
+- ✅ Tested with molecules.dat (87 molecules, 0 errors, 38.53 KB)
 - ✅ `line_query.py` - HDF5 query tool (463 lines)
 - ✅ Tested with gf_tiny.h5 and chbx.h5 (info, query, stats, export)
 - ✅ `HDF5_SCHEMA_GUIDE.md` - Visual schema documentation (600+ lines)
