@@ -24,20 +24,22 @@ function parse_gfall_line(line_str::String)
         return nothing
     end
 
-    # Ensure line is long enough
-    if length(line_str) < 58
-        return nothing
-    end
-
     try
-        # Parse fixed-width fields
-        wavelength = parse(Float64, line_str[1:11])
-        loggf = parse(Float64, line_str[12:18])
-        element_ion = parse(Float64, line_str[19:24])
-        e_lower = parse(Float64, line_str[25:36])
-        j_lower = parse(Float64, line_str[37:41])
-        e_upper = parse(Float64, line_str[42:53])
-        j_upper = parse(Float64, line_str[54:58])
+        # Parse space-delimited fields (Kurucz gfall format)
+        # Note: Actual Kurucz files are space-delimited, not strictly fixed-width
+        parts = split(strip(line_str))
+
+        if length(parts) < 7
+            return nothing
+        end
+
+        wavelength = parse(Float64, parts[1])
+        loggf = parse(Float64, parts[2])
+        element_ion = parse(Float64, parts[3])
+        e_lower = parse(Float64, parts[4])
+        j_lower = parse(Float64, parts[5])
+        e_upper = parse(Float64, parts[6])
+        j_upper = parse(Float64, parts[7])
 
         # Extract element and ionization stage
         iz = floor(Int, element_ion)
