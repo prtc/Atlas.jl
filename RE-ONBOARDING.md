@@ -524,7 +524,7 @@ Paula mentioned we're **ahead of schedule with credits to spare**. Potential use
 
 **Project Tools** (created during Phase 5):
 - **tools/line_lists/gfall_to_hdf5.py** - Convert Kurucz atomic lines to HDF5
-- **tools/line_lists/molecular_to_hdf5.py** - Convert molecular lines to HDF5
+- **tools/line_lists/molecular_linelist_to_hdf5.py** - Convert ASCII molecular line lists to HDF5 (CH, OH, NH, CO, etc.)
 - **tools/line_lists/continua_to_hdf5.py** - Convert continuum opacity edges to HDF5
 - **tools/line_lists/line_query.py** - Query HDF5 line lists (wavelength range, element filter)
 - See `tools/line_lists/README.md` for usage and documentation

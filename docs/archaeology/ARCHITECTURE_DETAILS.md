@@ -771,10 +771,11 @@ CH, MgH, NH, OH, SiH, H2, C2, CN, CO, SiO
 
 ✅ **PARTIALLY COMPLETE** (2025-11-11): HDF5 conversion utilities now available in `tools/line_lists/`:
 - `gfall_to_hdf5.py` - Kurucz atomic line converter (tested, working)
-- `molecular_to_hdf5.py` - Molecular line converter (CH, OH, NH, CO, etc.)
+- `molecular_linelist_to_hdf5.py` - ASCII molecular line converter (CH, OH, NH, CO, etc.)
 - `continua_to_hdf5.py` - Continuum opacity edges
 - `line_query.py` - Query tool for HDF5 files
 - See `tools/line_lists/README.md` and `HDF5_SCHEMA_GUIDE.md` for documentation
+- Note: TiO/H2O need binary format tools; molecular partition functions tool planned
 
 ⚠️ **REMAINING**: Define Julia-native line list types and readers for HDF5 format
 

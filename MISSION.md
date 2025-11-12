@@ -575,10 +575,11 @@ Five standalone Python tools to convert legacy Kurucz formats to HDF5:
    - Tracks vacuum/air wavelength convention (200nm threshold)
    - Tested: gf_tiny.dat (1,197 lines → 0.10 MB, 0 errors)
 
-2. **molecular_to_hdf5.py** (574 lines) - Molecular line converter
-   - Converts molecular formats (CH, OH, NH, CO, TiO, etc.) to HDF5
+2. **molecular_linelist_to_hdf5.py** (574 lines) - Molecular line list converter
+   - Converts ASCII molecular formats (CH, OH, NH, CO, etc.) to HDF5
    - Supports 20+ molecules with isotope tracking
    - Tested: chbx.asc (4,270 CH lines → 0.09 MB, 0 errors)
+   - Note: TiO and H2O use binary formats, need separate tools
 
 3. **line_query.py** (463 lines) - HDF5 query tool
    - Interactive queries by wavelength, element, molecule

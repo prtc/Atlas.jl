@@ -517,7 +517,7 @@ Details are in the code but not well-commented. Need to cross-reference with syn
 - Partition functions temperature-dependent
 - Isotope fractions handled differently
 
-**✅ TOOL AVAILABLE** (2025-11-11): See `tools/line_lists/molecular_to_hdf5.py` - Python converter for ASCII molecular line formats (CH, OH, NH, CN, CO, MgH, SiH, etc.) to HDF5. Implements isotope abundance corrections. Tested with chbx.asc (4,270 CH lines, 0 errors). Also see `tools/line_lists/line_query.py` for querying converted files.
+**✅ TOOL AVAILABLE** (2025-11-11): See `tools/line_lists/molecular_linelist_to_hdf5.py` - Python converter for ASCII molecular line formats (CH, OH, NH, CN, CO, MgH, SiH, etc.) to HDF5. Implements isotope abundance corrections. Tested with chbx.asc (4,270 CH lines, 0 errors). Also see `tools/line_lists/line_query.py` for querying converted files. Note: TiO and H2O use binary formats and need separate tools.
 
 ### Rschwenk: TiO Line Reader
 
