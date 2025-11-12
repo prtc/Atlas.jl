@@ -15,9 +15,14 @@ The SYNTHE suite treats **atoms** and **molecules** fundamentally differently wh
 
 - **Molecules**: Use **hardcoded lookup tables** embedded directly in each line reader program. Each molecule reader contains explicit isotope abundance corrections for dozens of isotopologue combinations.
 
-**Key Finding**: This architectural difference reflects the complexity of molecular isotope physics. While atomic isotope shifts are relatively simple and can be handled generically, molecular isotope effects involve vibrational shifts, partition functions, and relative abundances that require species-specific treatment.
+**Key Finding**: The Fortran code **hardcodes solar isotope abundances** (X1, X2 values) directly in the source code. While this architectural difference reflects the complexity of molecular isotope physics, the hardcoded abundances limit scientific flexibility.
 
-**Migration Impact**: This difference must be preserved in Julia. Atomic line handling can use a generic mapping function, but molecular isotope corrections should remain as explicit lookup tables (converted to structured data files or dictionaries).
+**Migration Impact**: The Julia implementation should **separate structure from abundances**:
+1. **Static structure tables**: ISO code → molecule identity mapping (immutable)
+2. **Configurable abundances**: User-provided isotope ratios via input files (per-run customization)
+3. **Solar defaults**: Well-documented reference abundances (Asplund 2009 or similar)
+
+This enables modeling different stellar populations (Pop I/II/III), evolved stars (AGB with CNO processing), chemical evolution, and isotopic anomalies without recompiling.
 
 ---
 
@@ -775,143 +780,258 @@ WRITE(12)NBUFF,CONGF,NELION,ELO,GAMRF,GAMSF,GAMWF,alpha
 
 ## Migration Strategy
 
+### Design Principle: Separate Structure from Abundances
+
+**Critical Insight**: The Fortran code hardcodes **both** the structure mapping (ISO code → molecule identity) **and** the abundance corrections (X1, X2 values) in the source code. For scientific flexibility, these must be separated.
+
+**What should be static** (immutable structure):
+- ISO code → molecule identity mapping
+- ISO code → (element, mass) pairs
+- NELION codes for each species
+
+**What should be configurable** (per-run abundances):
+- Isotope abundance fractions for each element
+- Fudge factors for empirical corrections
+- Reference source (solar, AGB, Pop III, etc.)
+
 ### Julia Architecture
 
-**Recommended Approach**:
+**1. Isotope Structure Tables (Static)**
+
+These define the **physical structure** but not abundances:
+
+**`isotope_structure.toml`**:
+```toml
+[[molecular_isotopologue]]
+iso_code = 1
+molecule = "H2"
+nelion = 240
+element1 = "H"
+mass1 = 1
+element2 = "H"
+mass2 = 1
+description = "Protium dimer (H-H)"
+
+[[molecular_isotopologue]]
+iso_code = 2
+molecule = "HD"
+nelion = 240
+element1 = "H"
+mass1 = 1
+element2 = "H"
+mass2 = 2
+description = "Hydrogen deuteride"
+
+[[molecular_isotopologue]]
+iso_code = 12
+molecule = "CN"
+nelion = 270
+element1 = "C"
+mass1 = 12
+element2 = "N"
+mass2 = 14
+description = "12C-14N (main isotopologue)"
+
+[[molecular_isotopologue]]
+iso_code = 17
+molecule = "CO"
+nelion = 276
+element1 = "C"
+mass1 = 12
+element2 = "O"
+mass2 = 16
+description = "12C-16O"
+
+# ... 60 entries total
+```
+
+**2. Isotope Abundance Configurations (User-Configurable)**
+
+Users can provide their own abundance files:
+
+**`isotope_abundances_solar.toml`** (default):
+```toml
+[metadata]
+name = "Solar (Asplund 2009)"
+reference = "Asplund et al. 2009, ARA&A 47:481"
+description = "Solar photospheric abundances"
+
+[element.H]
+masses = [1, 2]
+fractions = [0.99998, 0.00002]  # Protosolar D/H ≈ 2×10⁻⁵
+notes = "Protosolar D/H from Geiss & Gloeckler 1998"
+
+[element.C]
+masses = [12, 13]
+fractions = [0.9889, 0.0111]  # ¹²C/¹³C ≈ 89
+notes = "Terrestrial/meteoritic standard"
+
+[element.N]
+masses = [14, 15]
+fractions = [0.9963, 0.0037]  # ¹⁴N/¹⁵N ≈ 272
+notes = "Terrestrial atmospheric"
+
+[element.O]
+masses = [16, 17, 18]
+fractions = [0.9976, 0.0004, 0.0020]
+notes = "Solar wind measurements"
+
+[element.Mg]
+masses = [24, 25, 26]
+fractions = [0.7899, 0.1000, 0.1101]
+notes = "Meteoritic CAI"
+
+[element.Ti]
+masses = [46, 47, 48, 49, 50]
+fractions = [0.0825, 0.0744, 0.7372, 0.0541, 0.0518]
+notes = "Meteoritic"
+
+[fudge_factors]
+# Optional empirical corrections: (element1, mass1, element2, mass2) => fudge
+# Currently all zero, but infrastructure exists for future calibrations
+```
+
+**`isotope_abundances_agb.toml`** (example alternate):
+```toml
+[metadata]
+name = "AGB CNO-processed"
+reference = "Theoretical prediction for TP-AGB star"
+description = "Post-CNO cycling, third dredge-up"
+
+[element.C]
+masses = [12, 13]
+fractions = [0.70, 0.30]  # ¹²C/¹³C ≈ 2.3 (CNO-enhanced)
+notes = "Hot-bottom burning reduces 12C/13C ratio"
+
+[element.N]
+masses = [14, 15]
+fractions = [0.999, 0.001]  # ¹⁴N enhanced
+notes = "CNO cycle converts C to N"
+
+[element.O]
+masses = [16, 17, 18]
+fractions = [0.995, 0.004, 0.001]  # ¹⁷O enhanced
+notes = "CNO cycle enhances 17O"
+
+# Other elements inherit solar values if not specified
+```
+
+**3. Julia API**
 
 ```julia
-# 1. Abstract interface
+# Configuration structure
+struct IsotopeConfig
+    element_fractions::Dict{String, Dict{Int, Float64}}  # Element → mass → fraction
+    fudge_factors::Dict{NTuple{4,Int}, Float64}  # (elem1, mass1, elem2, mass2) → fudge
+    metadata::Dict{String, String}  # name, reference, description
+end
+
+# Load from file or use defaults
+config_solar = IsotopeConfig("isotope_abundances_solar.toml")
+config_agb = IsotopeConfig("isotope_abundances_agb.toml")
+
+# Or modify programmatically
+config_custom = deepcopy(config_solar)
+config_custom.element_fractions["C"][13] = 0.05  # Increase ¹³C
+renormalize!(config_custom, "C")  # Ensure fractions sum to 1.0
+
+# Use in synthesis
+spectrum = synthesize_spectrum(
+    model,
+    lines,
+    isotope_config = config_custom,
+    wavelength_range = (5000.0, 6000.0)
+)
+```
+
+**4. Line Readers with Config Support**
+
+```julia
 abstract type LineReader end
 
 struct LineRecord
     λ_vac::Float64
     log_gf::Float64
     species::Int        # NELION
-    iso1::Int           # Isotope mass 1
-    iso2::Int           # Isotope mass 2
-    x1::Float64         # Log abundance correction 1
-    x2::Float64         # Log abundance correction 2
+    element1::String    # "C", "H", etc.
+    mass1::Int          # 12, 1, etc.
+    element2::String
+    mass2::Int
     # ... other fields
 end
 
-# 2. Atomic line reader (library-based)
-struct AtomicLineReader <: LineReader
-    nelion_map::Dict{Tuple{Int,Int}, Int}  # (element, ion) => NELION
-end
-
-function read_atomic_line(reader::AtomicLineReader, line::String)
-    # Parse gfall format
-    code = parse_element_code(line)
-    nelion = reader.nelion_map[code]
-    # ISO1, ISO2, X1, X2 from additional data if present
-    return LineRecord(...)
-end
-
-# 3. Molecular line reader (table-based)
 struct MolecularLineReader <: LineReader
-    isotope_table::Dict{Int, IsotopeData}  # ISO => (nelion, iso1, iso2, x1, x2)
+    structure_table::Dict{Int, IsotopeStructure}  # ISO => structure
+    isotope_config::IsotopeConfig  # Abundance configuration
 end
 
-struct IsotopeData
+struct IsotopeStructure
     nelion::Int
-    iso1::Int
-    iso2::Int
-    x1::Float64
-    x2::Float64
-    fudge::Float64
+    element1::String
+    mass1::Int
+    element2::String
+    mass2::Int
     description::String
 end
 
 function read_molecular_line(reader::MolecularLineReader, line::String)
-    # Parse format
+    # Parse line to get ISO code
     iso = parse_iso_code(line)
-    isotope = reader.isotope_table[iso]
-    return LineRecord(..., isotope.nelion, isotope.iso1, isotope.iso2,
-                      isotope.x1, isotope.x2)
+
+    # Look up structure (static)
+    structure = reader.structure_table[iso]
+
+    # Compute abundance corrections (dynamic, from config)
+    x1, x2 = compute_isotope_corrections(
+        structure.element1, structure.mass1,
+        structure.element2, structure.mass2,
+        reader.isotope_config
+    )
+
+    # Apply to gf
+    gf_corrected = 10^(log_gf + x1 + x2 + fudge)
+
+    return LineRecord(..., structure.element1, structure.mass1,
+                      structure.element2, structure.mass2)
 end
 
-# 4. Binary readers (TiO, H2O)
-struct TiOLineReader <: LineReader
-    filename::String
-    level_db::TiOLevelDatabase
-    isotopes::Vector{TiOIsotope}  # 5 isotopes
-end
+function compute_isotope_corrections(elem1::String, mass1::Int,
+                                     elem2::String, mass2::Int,
+                                     config::IsotopeConfig)
+    # Get fractions from user config
+    f1 = config.element_fractions[elem1][mass1]
+    f2 = config.element_fractions[elem2][mass2]
 
-struct H2OLineReader <: LineReader
-    filename::String
-    isotopes::Vector{H2OIsotope}  # 4 isotopes
+    # Get solar reference (built-in)
+    f1_solar = SOLAR_REFERENCE[elem1][mass1]
+    f2_solar = SOLAR_REFERENCE[elem2][mass2]
+
+    # Compute log corrections
+    x1 = log10(f1 / f1_solar)
+    x2 = log10(f2 / f2_solar)
+
+    # Apply fudge factor if present
+    fudge_key = (atomic_number(elem1), mass1, atomic_number(elem2), mass2)
+    fudge = get(config.fudge_factors, fudge_key, 0.0)
+
+    return x1, x2, fudge
 end
 ```
 
-### Data Files
+**5. Built-in Solar Reference**
 
-**Convert hardcoded tables to TOML/JSON**:
+```julia
+# Embedded in code as the reference standard
+const SOLAR_REFERENCE = Dict(
+    "H" => Dict(1 => 0.99998, 2 => 0.00002),
+    "C" => Dict(12 => 0.9889, 13 => 0.0111),
+    "N" => Dict(14 => 0.9963, 15 => 0.0037),
+    "O" => Dict(16 => 0.9976, 17 => 0.0004, 18 => 0.0020),
+    # ... etc
+)
 
-**`isotopes_molecular.toml`**:
-```toml
-[[isotope]]
-iso = 1
-molecule = "H2"
-nelion = 240
-iso1 = 1
-iso2 = 1
-x1 = 0.000
-x2 = -5.000
-fudge = 0.0
-description = "Protium dimer (H-H)"
-
-[[isotope]]
-iso = 12
-molecule = "CN"
-nelion = 270
-iso1 = 12
-iso2 = 14
-x1 = -0.005
-x2 = -0.002
-fudge = 0.0
-description = "12C-14N (main isotopologue)"
-
-# ... 60 entries
-```
-
-**`isotopes_tio.toml`**:
-```toml
-[[isotope]]
-index = 1
-ti_mass = 46
-abundance = 0.0793
-log_correction = -1.101
-description = "46Ti-16O"
-
-[[isotope]]
-index = 2
-ti_mass = 47
-abundance = 0.0728
-log_correction = -1.138
-description = "47Ti-16O"
-
-# ... 5 entries
-```
-
-**`isotopes_h2o.toml`**:
-```toml
-[[isotope]]
-index = 1
-formula = "H2-16O"
-h1 = 2
-h2 = 0
-o_mass = 16
-abundance = 0.9976
-log_correction = -0.001
-
-[[isotope]]
-index = 4
-formula = "HDO"
-h1 = 1
-h2 = 1
-o_mass = 16
-abundance = 0.00001
-log_correction = -5.000
+# Asplund et al. 2009, ARA&A 47:481
+# With isotope ratios from meteoritic/solar wind data
 ```
 
 ### NELION3 Replacement
@@ -951,16 +1071,78 @@ end
 
 **Validation Tests**:
 
-1. **Abundance Corrections**:
+1. **Isotope Config Loading**:
 ```julia
-@testset "Molecular Isotope Abundances" begin
-    # 12C-16O: X1=-0.005, X2=-0.001
-    gf_corrected = 10.0^(-2.5 + (-0.005) + (-0.001))
-    @test isapprox(gf_corrected, 0.003116, rtol=1e-5)
+@testset "Isotope Configuration" begin
+    # Load solar reference
+    config = IsotopeConfig("isotope_abundances_solar.toml")
+
+    @test config.element_fractions["C"][12] ≈ 0.9889
+    @test config.element_fractions["C"][13] ≈ 0.0111
+    @test config.metadata["name"] == "Solar (Asplund 2009)"
+
+    # Check normalization
+    c_total = sum(values(config.element_fractions["C"]))
+    @test isapprox(c_total, 1.0, rtol=1e-10)
 end
 ```
 
-2. **NELION Mapping**:
+2. **Abundance Corrections (Solar)**:
+```julia
+@testset "Solar Isotope Corrections" begin
+    config = IsotopeConfig("isotope_abundances_solar.toml")
+
+    # 12C-16O with solar abundances
+    x1, x2, fudge = compute_isotope_corrections("C", 12, "O", 16, config)
+
+    # Should be close to zero (solar reference)
+    @test isapprox(x1, -0.005, atol=0.01)  # 12C slightly subsolar
+    @test isapprox(x2, -0.001, atol=0.01)  # 16O slightly subsolar
+
+    # Apply to gf
+    gf_corrected = 10.0^(-2.5 + x1 + x2 + fudge)
+    @test isapprox(gf_corrected, 0.003116, rtol=1e-3)
+end
+```
+
+3. **Abundance Corrections (Custom)**:
+```julia
+@testset "Custom Isotope Ratios" begin
+    config = IsotopeConfig("isotope_abundances_agb.toml")
+
+    # AGB star: 12C/13C ≈ 2.3 (CNO-enhanced)
+    x1, x2, fudge = compute_isotope_corrections("C", 13, "N", 14, config)
+
+    # 13C should be significantly enhanced relative to solar
+    @test x1 > 0.3  # 13C enriched by ~0.5 dex
+
+    # Verify the effect on line strength
+    gf_base = 10.0^(-3.0)
+    gf_corrected = 10.0^(-3.0 + x1 + x2 + fudge)
+    @test gf_corrected > gf_base * 2  # At least 2× stronger
+end
+```
+
+4. **Programmatic Modification**:
+```julia
+@testset "Runtime Abundance Changes" begin
+    config = deepcopy(IsotopeConfig("isotope_abundances_solar.toml"))
+
+    # Modify 13C fraction
+    config.element_fractions["C"][13] = 0.05
+    renormalize!(config, "C")
+
+    # Check new fractions sum to 1
+    c_total = sum(values(config.element_fractions["C"]))
+    @test isapprox(c_total, 1.0, rtol=1e-10)
+
+    # Verify 13C increase
+    @test config.element_fractions["C"][13] ≈ 0.05
+    @test config.element_fractions["C"][12] ≈ 0.95
+end
+```
+
+5. **NELION Mapping**:
 ```julia
 @testset "NELION3 Mapping" begin
     @test nelion3(26.00) == 67   # Fe I
@@ -969,29 +1151,60 @@ end
 end
 ```
 
-3. **Binary Decoding**:
+6. **Structure Table Loading**:
 ```julia
-@testset "TiO Isotope Decoding" begin
-    ielion = 8952  # 48Ti-16O (most abundant)
-    iso = abs(ielion) - 8949
-    @test iso == 3
-    @test TIO_ISOTOPES[iso].abundance ≈ 0.7394
+@testset "Isotope Structure Table" begin
+    structure = load_isotope_structure("isotope_structure.toml")
+
+    # Check ISO=17 (12C-16O)
+    @test structure[17].nelion == 276
+    @test structure[17].element1 == "C"
+    @test structure[17].mass1 == 12
+    @test structure[17].element2 == "O"
+    @test structure[17].mass2 == 16
+    @test structure[17].molecule == "CO"
 end
 ```
 
-4. **Fort.12 Compatibility**:
+7. **Fort.12 Compatibility (Solar)**:
 ```julia
-@testset "Fort.12 Output" begin
+@testset "Fort.12 Solar Compatibility" begin
+    # Use solar config (matches Fortran defaults)
+    config = IsotopeConfig("isotope_abundances_solar.toml")
+
     # Generate fort.12 with Julia
     julia_fort12 = generate_fort12(lines, config)
 
     # Compare with Fortran-generated fort.12
-    fortran_fort12 = read_fortran_fort12("reference.fort12")
+    fortran_fort12 = read_fortran_fort12("reference_solar.fort12")
 
     @test length(julia_fort12) == length(fortran_fort12)
     for (j, f) in zip(julia_fort12, fortran_fort12)
         @test j.nbuff == f.nbuff
         @test isapprox(j.congf, f.congf, rtol=1e-6)
+    end
+end
+```
+
+8. **Fort.12 Divergence (Non-Solar)**:
+```julia
+@testset "Fort.12 AGB Divergence" begin
+    # Use AGB config (different from Fortran)
+    config_agb = IsotopeConfig("isotope_abundances_agb.toml")
+
+    # Generate fort.12 with Julia (AGB)
+    julia_agb = generate_fort12(lines, config_agb)
+
+    # Compare with solar Fortran
+    fortran_solar = read_fortran_fort12("reference_solar.fort12")
+
+    # Should be different for 13C lines
+    cn_13c_lines = filter(l -> l.element1 == "C" && l.mass1 == 13, julia_agb)
+
+    # Verify 13C lines are stronger in AGB
+    for line in cn_13c_lines
+        fortran_line = find_matching_line(fortran_solar, line)
+        @test line.congf > fortran_line.congf * 1.5  # At least 50% stronger
     end
 end
 ```
@@ -1057,42 +1270,59 @@ end
 
 ### For Developers
 
-1. **Architectural Asymmetry**: Atoms use library functions, molecules use lookup tables. This is **by design**, not a bug. Preserve this in Julia.
+1. **Separate Structure from Abundances**: The Fortran code hardcodes **both** structure and abundances. In Julia, keep structure tables static but make abundances user-configurable via input files. This is essential for scientific flexibility.
 
-2. **Hardcoded = Validated**: The molecular isotope tables in `rmolecasc.for` represent decades of calibration. Don't "refactor" them away—convert to structured data but keep the values exact.
+2. **Hardcoded Structure = Validated**: The ISO code mappings (ISO=17 → ¹²C¹⁶O) represent decades of careful database construction. Keep these mappings exact in static structure files.
 
-3. **Binary Formats are Optimized**: TiO and H₂O use compact binary formats for a reason (50M+ lines). Don't force everything to ASCII.
+3. **Configurable Abundances = Science**: Isotope ratios vary between stellar populations, evolved stars, and chemical evolution scenarios. Users must be able to customize these without recompiling.
 
-4. **Sign-Bit Encoding is Clever**: H₂O's use of sign bits to encode 4 isotopes is a beautiful hack. Document it clearly in Julia, even if you use a different approach.
+4. **Binary Formats are Optimized**: TiO and H₂O use compact binary formats for a reason (50M+ lines). Don't force everything to ASCII.
 
-5. **FUDGE Factors are Zero Now**: But the infrastructure exists for future empirical corrections. Keep it.
+5. **Sign-Bit Encoding is Clever**: H₂O's use of sign bits to encode 4 isotopes is a beautiful hack. Document it clearly in Julia, even if you use a different approach.
+
+6. **FUDGE Factors are Zero Now**: But the infrastructure exists for future empirical corrections. Keep it in the configurable abundance files.
 
 ### For Astrophysicists
 
-1. **Isotope Abundances are Solar**: The X1, X2 corrections assume solar composition. Non-solar stars need adjusted tables.
+1. **Isotope Abundances are NOW Configurable**: The Julia implementation allows you to specify isotope ratios for different stellar scenarios (Pop I/II/III, AGB, primordial, etc.) via input files.
 
-2. **Molecular Isotopes Matter**: In cool stars (M dwarfs), TiO bands dominate. Isotope effects are ~10% of line strength.
+2. **Solar Reference Embedded**: Default abundances match Fortran behavior (solar), but you can override for:
+   - AGB stars with CNO processing (¹²C/¹³C ~ 2-10)
+   - Pop III stars with primordial D/H
+   - Chemically peculiar stars
+   - Sensitivity studies
 
-3. **Rare Isotopes Are Included**: Even ¹⁷O (0.04% abundance) is tracked. This enables studying isotopic anomalies.
+3. **Molecular Isotopes Matter**: In cool stars (M dwarfs), TiO bands dominate. Isotope effects are ~10% of line strength. Now you can model non-solar isotope ratios.
 
-4. **Partition Functions Are Implicit**: The abundance corrections include temperature-dependent partition functions appropriate for stellar photospheres (not lab conditions).
+4. **Rare Isotopes Are Included**: Even ¹⁷O (0.04% abundance) is tracked. This enables studying isotopic anomalies with customizable ratios.
 
-5. **D/H Ratio is Fixed**: HDO abundance assumes D/H ~ 1×10⁻⁴. Protosolar nebula has D/H ~ 2×10⁻⁵. May need adjustment for primordial stars.
+5. **Partition Functions Are Implicit**: The abundance corrections include temperature-dependent partition functions appropriate for stellar photospheres (not lab conditions). These remain in the structure but scale with your isotope ratios.
+
+6. **Research Flexibility**: You can now:
+   - Model time evolution of isotope ratios in stellar populations
+   - Study impact of varying D/H from Big Bang to present
+   - Explore effects of different mixing scenarios in evolved stars
+   - Test sensitivity of spectral features to isotope ratios
 
 ### For Migration
 
-1. **Extract Tables First**: Convert all hardcoded isotope tables to TOML/JSON before writing Julia code.
+1. **Two-File Strategy**:
+   - `isotope_structure.toml` - Static ISO code mappings (rarely changes)
+   - `isotope_abundances_*.toml` - User-configurable fractions (many variants)
 
-2. **Validate Against Fortran**: Use byte-for-byte fort.12 comparison to ensure isotope corrections are applied correctly.
+2. **Validate Against Fortran (Solar)**: Use byte-for-byte fort.12 comparison with solar abundances to ensure isotope corrections are applied correctly.
 
-3. **Test Edge Cases**:
+3. **Test Non-Solar Scenarios**: Verify that AGB, Pop III, and custom abundance files produce expected changes in line strengths.
+
+4. **Test Edge Cases**:
    - Lines with ISO=99 (unknown isotope)
    - Negative energies (predicted lines)
    - Sign-bit encoding boundary conditions
+   - Elements not specified in config (should inherit solar)
 
-4. **Preserve Precision**: Isotope corrections are small (~0.01 dex). Use Float64 for accumulation, Float32 for storage.
+5. **Preserve Precision**: Isotope corrections are small (~0.01 dex). Use Float64 for accumulation, Float32 for storage.
 
-5. **Document Abundances**: Every isotope table should cite its source (Anders & Grevesse, NIST, meteorites, etc.).
+6. **Document Abundances**: Every isotope table should cite its source (Asplund 2009, meteorites, NIST, theoretical predictions, etc.) in the metadata section.
 
 ---
 
@@ -1100,10 +1330,15 @@ end
 
 **Next Steps**:
 1. Extract NELION3 from ATLAS7V library or implement standalone version
-2. Convert molecular isotope tables to TOML data files
-3. Implement Julia LineReader interface with isotope support
-4. Validate against Fortran-generated fort.12 files
-5. Document isotope abundance sources and update if needed
+2. Create two TOML files:
+   - `isotope_structure.toml` - Static ISO code → molecule mappings
+   - `isotope_abundances_solar.toml` - Default solar isotope fractions
+3. Implement `IsotopeConfig` loading and validation
+4. Implement Julia LineReader interface with configurable isotope support
+5. Create example alternate configs (AGB, Pop III, primordial)
+6. Validate against Fortran-generated fort.12 files (solar config)
+7. Test non-solar configs produce expected divergence from Fortran
+8. Document all abundance sources with proper citations
 
 ---
 
