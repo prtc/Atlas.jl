@@ -105,9 +105,11 @@ pip3 install h5py numpy
 
 ---
 
-### 2. molecular_to_hdf5.py - Molecular Line Lists
+### 2. molecular_linelist_to_hdf5.py - Molecular Line Lists
 
-Converts Kurucz molecular line formats (CH, OH, NH, CO, TiO, etc.) to HDF5.
+Converts Kurucz molecular line formats (CH, OH, NH, CO, etc.) to HDF5.
+
+**Note**: TiO and H2O use binary formats (rschwenk.for, rh2ofast.for) and require separate tools.
 
 **Input format**: Kurucz molecular line format (68-74 chars/line)
 - Example: `upstream/kurucz/input_data/chbx.asc` (CH lines, 4,270 lines)
@@ -164,13 +166,13 @@ Converts Kurucz molecular line formats (CH, OH, NH, CO, TiO, etc.) to HDF5.
 **Usage**:
 ```bash
 # Basic conversion
-python3 molecular_to_hdf5.py input.asc output.h5
+python3 molecular_linelist_to_hdf5.py input.asc output.h5
 
 # With compression and validation
-python3 molecular_to_hdf5.py chbx.asc chbx.h5 --compress --validate --verbose
+python3 molecular_linelist_to_hdf5.py chbx.asc chbx.h5 --compress --validate --verbose
 
 # Help
-python3 molecular_to_hdf5.py --help
+python3 molecular_linelist_to_hdf5.py --help
 ```
 
 **Performance**:
@@ -453,13 +455,14 @@ end
 Atlas.jl/
 ├── tools/
 │   └── line_lists/
-│       ├── README.md                    # This file
-│       ├── HDF5_SCHEMA_GUIDE.md         # Visual schema documentation ✅
-│       ├── gfall_to_hdf5.py             # Atomic line converter ✅
-│       ├── molecular_to_hdf5.py         # Molecular line converter ✅
-│       ├── line_query.py                # HDF5 query tool ✅
-│       ├── continua_to_hdf5.py          # Continuum opacity edges ✅
-│       └── fort12_inspector.py          # Binary inspector (TODO)
+│       ├── README.md                       # This file
+│       ├── HDF5_SCHEMA_GUIDE.md            # Visual schema documentation ✅
+│       ├── gfall_to_hdf5.py                # Atomic line converter ✅
+│       ├── molecular_linelist_to_hdf5.py   # Molecular line list converter ✅
+│       ├── molecular_partfuncs_to_hdf5.py  # Molecular partition functions (TODO)
+│       ├── line_query.py                   # HDF5 query tool ✅
+│       ├── continua_to_hdf5.py             # Continuum opacity edges ✅
+│       └── fort12_inspector.py             # Binary inspector (TODO)
 │
 ├── upstream/castelli/input_data/
 │   ├── gf_tiny.dat                      # Test atomic line list (1,197 lines)
@@ -503,7 +506,7 @@ Atlas.jl/
 **v1.0** (2025-11-11):
 - ✅ `gfall_to_hdf5.py` - Atomic line converter (557 lines)
 - ✅ Tested with gf_tiny.dat (1,197 lines, 0 errors, 0.10 MB)
-- ✅ `molecular_to_hdf5.py` - Molecular line converter (574 lines)
+- ✅ `molecular_linelist_to_hdf5.py` - Molecular line list converter (574 lines)
 - ✅ Tested with chbx.asc (4,270 CH lines, 0 errors, 0.09 MB)
 - ✅ `line_query.py` - HDF5 query tool (463 lines)
 - ✅ Tested with gf_tiny.h5 and chbx.h5 (info, query, stats, export)
