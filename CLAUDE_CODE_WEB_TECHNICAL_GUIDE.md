@@ -687,6 +687,24 @@ The Claude Code Web sandbox provides a rich set of programming languages and com
 
 #### ✅ **Fully Functional Languages**
 
+**Julia 1.10.10 LTS**
+- Pre-installed at `/opt/julia-1.10.10/` (not in PATH by default)
+- **To use**: `export PATH="/opt/julia-1.10.10/bin:$PATH"`
+- Full Julia package manager (Pkg) available
+- **Use cases**:
+  - Primary implementation language for Atlas.jl project
+  - Algorithm development and testing
+  - Fortran interop via ccall
+  - Scientific computing and numerical analysis
+  - High-performance computing tasks
+- **Example**:
+  ```julia
+  # Verify Julia works
+  julia -e 'println("Hello from Julia ", VERSION)'
+  # Output: Hello from Julia 1.10.10
+  ```
+- **Package installation**: Pkg.add() works for Julia packages
+
 **Python 3.11.14**
 - Standard library works perfectly (math, struct, array, ctypes, etc.)
 - **pip install WORKS** - can install packages from PyPI (h5py, numpy confirmed working)
@@ -816,13 +834,6 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
 
 ### 13.3 Languages NOT Available
 
-#### Julia ❌
-- **Not installed** in sandbox
-- Download attempts **blocked** by sandbox (403 Forbidden from julialang.org)
-- Binary downloads fail (only get 9 bytes instead of ~100MB)
-- **Workaround**: Test Julia code on local machine (Paula's environment)
-- **Note**: This is specific to Julia downloads; pip (Python) works fine
-
 #### R/Rscript ❌
 - **Not found** in sandbox
 - Not in apt repositories for easy installation
@@ -866,13 +877,14 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
    - Test COMMON block layouts
 
 **What this means for development**:
-- ✅ Algorithm logic can be prototyped in Python
+- ✅ Julia 1.10.10 LTS available (add to PATH with `export PATH="/opt/julia-1.10.10/bin:$PATH"`)
+- ✅ Algorithm logic can be prototyped in Python or Julia
 - ✅ Python packages installable via pip (h5py, numpy, pandas, etc.)
 - ✅ Fortran test programs can be compiled (simple code)
 - ❌ Cannot compile full atlas7v.so in sandbox (legacy F77 EQUIVALENCE issues)
-- ❌ Cannot run Julia tests in sandbox (julialang.org downloads blocked)
+- ✅ Julia tests CAN run in sandbox (Julia 1.10.10 pre-installed)
 - ✅ Standalone Python tools work perfectly (see tools/line_lists/)
-- ✅ Testing complex Fortran/Julia happens on Paula's local machine
+- ✅ Full Julia development possible in sandbox environment
 
 ### 13.5 Documentation
 
@@ -881,7 +893,10 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
 - Reference for future Claude sessions
 - Informs Phase 5 completion strategy
 
-**Key takeaway**: The sandbox provides many languages for prototyping and verification, but legacy Fortran compilation and Julia testing must happen outside the sandbox.
+**Updates**:
+- 2025-11-12: Corrected Julia availability - Julia 1.10.10 LTS is pre-installed at `/opt/julia-1.10.10/`, just not in PATH by default. Previous sessions incorrectly reported Julia as unavailable due to PATH issue.
+
+**Key takeaway**: The sandbox provides many languages for prototyping and verification, including Julia 1.10.10 LTS. Legacy Fortran compilation (atlas7v.so) must happen outside the sandbox due to modern gfortran strict type checking.
 
 ---
 
