@@ -881,7 +881,14 @@ gfortran -shared -fPIC -O2 testlib.f -o testlib.so
 - Reference for future Claude sessions
 - Informs Phase 5 completion strategy
 
+<<<<<<< HEAD
 **Key takeaway**: The sandbox provides many languages for prototyping and verification, but legacy Fortran compilation and Julia testing must happen outside the sandbox.
+=======
+**Updates**:
+- 2025-11-12: Corrected Julia availability - Julia 1.10.10 LTS is pre-installed at `/opt/julia-1.10.10/`, just not in PATH by default. Previous sessions incorrectly reported Julia as unavailable due to PATH issue.
+
+**Key takeaway**: The sandbox provides many languages for prototyping and verification, including Julia 1.10.10 LTS. Legacy Fortran compilation (atlas7v.so) must happen outside the sandbox due to modern gfortran strict type checking.
+>>>>>>> origin/claude/confirm-apt-access-011CV4AJoJXhz4eEzf6nviJx
 
 ---
 
