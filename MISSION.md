@@ -2,9 +2,9 @@
 *Legacy Code Documentation for Julia Migration*
 
 ## Mission Status
-**Current Phase**: Phase 5 - Minimal Working SYNTHE Pipeline 🔄 IN PROGRESS
-**Last Updated**: 2025-11-11 (Tasks 0-4 complete, atlas7v ccall interface implemented)
-**Days Remaining**: 7
+**Current Phase**: Phase 6 Complete, Phase 5 Extended Work In Progress
+**Last Updated**: 2025-11-13 (Phase 6 ATLAS9+ODF docs complete, Phase 5 Julia implementation ongoing)
+**Days Remaining**: 5 (credits expire November 18, 11:59 PM PT)
 
 ---
 
@@ -628,6 +628,84 @@ Five standalone Python tools to convert legacy Kurucz formats to HDF5:
 - Paula to run Fortran SYNTHE for reference spectrum
 - Continue with Task 5 (xnfpelsyn) once atlas7v library and testing infrastructure ready
 - **OR** Continue building standalone Python tools (molecular partition functions, binary fort.X readers, etc.)
+
+---
+
+### Phase 6: ATLAS9 + ODF Pipeline Documentation ✅ COMPLETE
+**Target**: Days 17-18 | **Status**: ✅ Complete (2025-11-12)
+**Budget**: ~$35-55 estimated (breadth-first approach)
+
+**Goal**: Document ATLAS9 and ODF (Opacity Distribution Function) generation pipeline to complete the ATLAS suite archaeology.
+
+**Approach**: Differential documentation (ATLAS9 vs ATLAS12) + breadth-first ODF pipeline survey
+
+**Success Criteria**: Comprehensive documentation with dragons flagged, no deep code diving
+
+#### Tasks Completed ✅:
+
+**Task 6A: ODF Pipeline Overview** (✅ 2025-11-12)
+- Created ODF_PIPELINE_OVERVIEW.md (1,250 lines)
+- Documented 4-step ODF generation: xnfdf → dfsynthe → dfsortp → separatedf
+- Conceptual foundation: ODFs as statistical line opacity representation
+- Each program: purpose, I/O, algorithms (breadth-first)
+- Line list repacking utilities (6 tools documented)
+- Computational cost and parallelization strategies
+- Physics comparison: ODF vs direct line opacity
+- Migration considerations: 75% code reuse from ATLAS12
+- Flagged 10 complex sections for potential Deep Dives
+- 10 open questions for Paula
+- Estimated credit usage: ~$8-12
+
+**Task 6B: ATLAS9 vs ATLAS12 Comparison** (✅ 2025-11-12)
+- Created ATLAS9_VS_ATLAS12_COMPARISON.md (1,850 lines)
+- Differential approach: documented only differences
+- Shared components: ~75% code overlap (~15,000 lines)
+- Core difference: ODF interpolation (ATLAS9) vs direct line summation (ATLAS12)
+- Performance analysis: ATLAS9 10-100× faster, 1-3% accuracy vs ATLAS12 highest accuracy
+- Side-by-side main program flow comparison
+- Migration strategy: 3-6 weeks if ATLAS12 done first
+- Validation strategy: differential testing
+- Decision tree for migration priorities
+- Flagged 4 complex sections for potential Deep Dives
+- 8 open questions for Paula
+- Estimated credit usage: ~$10-15
+
+**Deliverables**:
+1. **ODF_PIPELINE_OVERVIEW.md** - Complete ODF generation pipeline documentation
+2. **ATLAS9_VS_ATLAS12_COMPARISON.md** - Differential architecture analysis
+
+**Code Statistics**:
+- 3,100 lines of documentation (2 major documents)
+- 14 complex sections flagged (🐉 dragons)
+- 18 questions for Paula (for future investigation if needed)
+
+**Key Technical Achievements**:
+- Differential documentation saved ~75% effort (leveraged existing ATLAS12 docs)
+- Breadth-first approach avoided analysis paralysis
+- Complete ODF pipeline workflow documented without deep-diving into complex algorithms
+- Clear migration path: ATLAS12 → ATLAS9 with code reuse quantified
+
+**Methodology Insights**:
+- Applied "here be dragons" methodology successfully
+- Documented time perception limitations in METHODOLOGY_NOTES.md Phase 6 Addendum
+- Demonstrated that external nudges are essential for timeboxing (not optional)
+- Confirmed breadth-first + differential approaches work for complex legacy code
+
+**Credit Usage**: ~$18-27 actual (within $35-55 budget)
+
+**Remaining Budget**: ~$55-64 of $82 total Phase 6 allocation
+
+**Key Findings**:
+- ATLAS9 and ATLAS12 share ~75% of code (populations, continuum opacity, radiative transfer, etc.)
+- ODF pre-computation enables 10-100× speed improvement vs direct line opacity
+- Migration effort: 3-6 weeks for ATLAS9 if ATLAS12 done first (vs 10-16 weeks from scratch)
+- When to use: ATLAS9 for model grids (fast, 1-3% accuracy), ATLAS12 for precision work (< 1% accuracy)
+
+**Next Steps** (if ATLAS9 migration becomes priority):
+- Answer flagged questions (18 items)
+- Deep Dive on DFCALC algorithm (how ODFs are computed)
+- Deep Dive on ODF interpolation in ATLAS9 (find actual implementation)
+- xnfdf.for architecture survey (complement ODF overview with implementation details)
 
 ---
 
