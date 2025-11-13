@@ -44,7 +44,7 @@
 **Created**: 2025-11-13
 
 **Contains**:
-- Pure Julia implementation overview (Days 1-4)
+- Pure Julia implementation overview
 - Module documentation (constants, units, physics, voigt)
 - Code quality metrics (157/157 tests passing)
 - Archaeology documentation summary
@@ -57,13 +57,13 @@
 ### PURE_JULIA_MIGRATION_ROADMAP.md
 **Location**: `/PURE_JULIA_MIGRATION_ROADMAP.md`
 **Lines**: ~450
-**Purpose**: Week-by-week implementation plan for pure Julia SYNTHE
+**Purpose**: Implementation plan for pure Julia SYNTHE
 **Created**: 2025-11-12
 
 **Contains**:
-- Week 1: Foundation & high-value functions (Days 1-5)
-- Week 2: Population & partition functions (Days 6-10)
-- Week 3: Continuum opacity & broadening (Days 11-15)
+- 1: Foundation & high-value functions (Days 1-5)
+- 2: Population & partition functions (Days 6-10)
+- 3: Continuum opacity & broadening (Days 11-15)
 - Credit estimates per module
 - Test strategies and validation approaches
 

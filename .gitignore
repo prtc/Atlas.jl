@@ -35,3 +35,6 @@ CLAUDE.md
 
 # Julia binary distributions (too large for git)
 tools/julia/julia-split-*
+
+# Generated output files (demos, benchmarks)
+output/
