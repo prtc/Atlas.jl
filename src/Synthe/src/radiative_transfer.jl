@@ -423,3 +423,184 @@ function compute_emergent_spectrum(wavelengths::Vector{Float64}, heights::Vector
 
     return I_emergent
 end
+end
+
+"""
+    compute_limb_darkening(wavelengths::Vector{Float64}, μ_values::Vector{Float64},
+                          temperatures::Vector{Float64}, τ::Vector{Float64}) -> Matrix{Float64}
+
+Compute limb darkening: intensity as function of viewing angle.
+
+For each (λ, μ) pair, compute emergent intensity using Eddington-Barbier relation:
+    I(0, μ) ≈ B(T at τ≈μ)
+
+# Arguments
+- `wavelengths::Vector{Float64}`: Wavelength grid (Å)
+- `μ_values::Vector{Float64}`: Cosine of viewing angles (μ = cos θ), 0 < μ ≤ 1
+- `temperatures::Vector{Float64}`: Temperature at each depth (K)
+- `τ::Vector{Float64}`: Optical depth scale (dimensionless)
+
+# Returns
+- `I::Matrix{Float64}`: Intensity[wavelength, μ] (erg/s/cm²/Å/sr)
+  Size: (n_wavelength, n_μ)
+
+# Physics
+- μ = 1: Disk center (normal emergence)
+- μ → 0: Limb (grazing emergence)
+- Limb darkening: I decreases from center to limb
+- Eddington-Barbier: I(μ) ≈ B(T at τ=μ)
+
+# Example
+```julia
+# Compute limb darkening at 5000 Å
+μ_grid = [1.0, 0.9, 0.7, 0.5, 0.3, 0.1]
+I = compute_limb_darkening([5000.0], μ_grid, temperatures, τ)
+
+# Plot: I vs μ (limb darkening curve)
+plot(μ_grid, I[1, :], xlabel="μ = cos θ", ylabel="I_λ")
+```
+"""
+function compute_limb_darkening(wavelengths::Vector{Float64}, μ_values::Vector{Float64},
+                               temperatures::Vector{Float64}, τ::Vector{Float64})::Matrix{Float64}
+    n_wavelength = length(wavelengths)
+    n_μ = length(μ_values)
+
+    I = zeros(n_wavelength, n_μ)
+
+    for (i, λ) in enumerate(wavelengths)
+        # Source function at each depth
+        S = [source_function_lte(λ, T) for T in temperatures]
+
+        for (j, μ) in enumerate(μ_values)
+            # Eddington-Barbier approximation: I(0, μ) ≈ S(τ = μ)
+            # Find depth where τ ≈ μ
+            idx = argmin(abs.(τ .- μ))
+
+            # Emergent intensity from this depth
+            I[i, j] = S[idx]
+        end
+    end
+
+    return I
+end
+
+"""
+    limb_darkening_coefficient(I_center::Float64, I_limb::Float64, μ_limb::Float64=0.1) -> Float64
+
+Compute limb darkening coefficient u from intensities.
+
+Linear limb darkening law:
+    I(μ) / I(1) = 1 - u(1 - μ)
+
+# Arguments
+- `I_center::Float64`: Intensity at disk center (μ = 1)
+- `I_limb::Float64`: Intensity at limb (e.g., μ = 0.1)
+- `μ_limb::Float64`: Limb angle (default 0.1)
+
+# Returns
+- `u::Float64`: Limb darkening coefficient (dimensionless)
+
+# Example
+```julia
+u = limb_darkening_coefficient(I[1, 1], I[1, end], 0.1)
+println("Limb darkening coefficient u = ", u)
+```
+"""
+function limb_darkening_coefficient(I_center::Float64, I_limb::Float64, μ_limb::Float64=0.1)::Float64
+    # I(μ) / I(1) = 1 - u(1 - μ)
+    # u = (1 - I(μ)/I(1)) / (1 - μ)
+
+    ratio = I_limb / I_center
+    u = (1.0 - ratio) / (1.0 - μ_limb)
+
+    return u
+end
+
+"""
+    synthesize_spectrum_full(wavelengths::Vector{Float64}, atm, pops::Vector{PopulationResult},
+                            lines::Vector{SpectralLine}, line_cutoff::Float64=10.0) -> Vector{Float64}
+
+Full spectrum synthesis with depth-dependent optical depth including lines.
+
+This is the complete synthesis function that:
+1. For each wavelength, computes optical depth through atmosphere (continuum + lines)
+2. Solves radiative transfer equation
+3. Returns emergent spectrum
+
+# Arguments
+- `wavelengths::Vector{Float64}`: Wavelength grid (Å)
+- `atm`: Atmosphere model (from read_atlas9_model)
+- `pops::Vector{PopulationResult}`: Populations at each depth
+- `lines::Vector{SpectralLine}`: Spectral lines
+- `line_cutoff::Float64`: Line opacity cutoff distance (Å)
+
+# Returns
+- `I_spectrum::Vector{Float64}`: Emergent intensity spectrum (erg/s/cm²/Å/sr)
+
+# Example
+```julia
+# Full synthesis
+atm = read_atlas9_model("models/sun.dat")
+pops = [compute_populations(T, P, atm.abundances) for (T,P) in zip(atm.temperature, atm.pressure)]
+lines = read_gfall_lines("gfall.dat", 5000.0, 5100.0)
+
+wavelengths = collect(5000.0:0.1:5100.0)
+I = synthesize_spectrum_full(wavelengths, atm, pops, lines)
+```
+"""
+function synthesize_spectrum_full(wavelengths::Vector{Float64}, atm, 
+                                 pops::Vector{PopulationResult},
+                                 lines::Vector{SpectralLine}, 
+                                 line_cutoff::Float64=10.0)::Vector{Float64}
+    n_wavelength = length(wavelengths)
+    I_spectrum = zeros(n_wavelength)
+
+    # Create geometric height array (if not in atm)
+    # For ATLAS models, we use τ_ross as proxy for depth structure
+    # Real implementation would convert τ_ross → z using hydrostatic equilibrium
+
+    n_depth = atm.n_depths
+
+    # For each wavelength
+    for (i, λ) in enumerate(wavelengths)
+        # Compute optical depth at this wavelength INCLUDING LINES
+        τ = zeros(n_depth)
+        τ[1] = 0.0
+
+        # Integrate optical depth
+        for j in 2:n_depth
+            # Temperature and pressure at both points
+            T_j = atm.temperature[j]
+            T_jm1 = atm.temperature[j-1]
+
+            P_e_j = atm.electron_density[j] * 1.380649e-16 * T_j
+            P_e_jm1 = atm.electron_density[j-1] * 1.380649e-16 * T_jm1
+
+            # Total opacity (continuum + lines) at both points
+            κ_j = total_opacity_with_lines(λ, T_j, P_e_j, pops[j], lines, line_cutoff)
+            κ_jm1 = total_opacity_with_lines(λ, T_jm1, P_e_jm1, pops[j-1], lines, line_cutoff)
+
+            # Optical depth step (use τ_ross spacing as proxy for dz)
+            # Δτ_λ ≈ κ_λ × (Δτ_ross / κ_ross) 
+            # Simplified: assume Δτ_λ proportional to κ_λ and Δτ_ross
+            Δτ_ross = atm.tau_ross[j] - atm.tau_ross[j-1]
+
+            # Simple approximation: dτ_λ = (κ_λ / κ_ref) × dτ_ross
+            # where κ_ref is reference opacity
+            # For solar: κ_ref ≈ 10^-10 cm⁻¹ at 5000Å
+            κ_ref = 1.0e-10
+
+            κ_avg = 0.5 * (κ_j + κ_jm1)
+            dτ = (κ_avg / κ_ref) * Δτ_ross
+
+            τ[j] = τ[j-1] + abs(dτ)
+        end
+
+        # Solve RTE
+        u, I_em = solve_radiative_transfer_feautrier(λ, atm.temperature, τ)
+
+        I_spectrum[i] = I_em
+    end
+
+    return I_spectrum
+end

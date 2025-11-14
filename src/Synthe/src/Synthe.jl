@@ -145,6 +145,9 @@ export
     compute_optical_depth,
     solve_radiative_transfer_feautrier,
     compute_emergent_spectrum,
+    compute_limb_darkening,
+    limb_darkening_coefficient,
+    synthesize_spectrum_full,
 
     # Atmosphere reader (Task 5.1)
     read_atlas9_model,
