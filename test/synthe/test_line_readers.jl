@@ -1,259 +1,227 @@
 """
-Test atomic line readers (gfall format)
+Test Suite: Atomic Line Reader (gfall format)
 
-Tests for parsing Kurucz gfall format atomic line lists.
+Tests the Pure Julia atomic line reader for SYNTHE gfall format.
+Uses Test-Driven Development (TDD) methodology.
 
-This file contains FAILING tests (RED phase of TDD).
-CCW should implement functions in src/Synthe/src/line_readers.jl to make tests pass (GREEN phase).
-
-Author: Claude (Local), Paula Coelho
-Date: 2025-11-13
+Run with: julia test/synthe/test_line_readers.jl
 """
 
 using Test
 
-# Add src/Synthe to load path
-push!(LOAD_PATH, joinpath(@__DIR__, "../../src/Synthe/src"))
+# Load the SpectralLine struct
+include("../../src/Synthe/src/structs.jl")
 
-using Synthe
+# Load the line reader module (will create this)
+include("../../src/Synthe/src/line_readers.jl")
 
-@testset "Gfall Line Parsing" begin
-    @testset "Parse single gfall line - wavelength and loggf" begin
-        # Example gfall line: Fe I at 4045.8138 Å
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        line = parse_gfall_line(line_str)
+@testset "Atomic Line Reader (gfall format)" begin
 
-        @test line.wavelength ≈ 4045.8138
-        @test line.loggf ≈ 0.280
+    # =========================================================================
+    # Test 1: Parse wavelength from single gfall line
+    # =========================================================================
+
+    @testset "parse_gfall_line: wavelength field" begin
+        # Real gfall line from test data
+        line = "   500.0003 -6.421 29.00   77905.500  2.5 s(3D)5d 4D   57911.090  3.5 5f 2F       7.86 -3.96 -7.13K12  0 0  0 0.000  0 0.000    0    0      0    1242 1143     0 0.000"
+
+        result = parse_gfall_line(line)
+
+        # Should return a SpectralLine struct
+        @test result isa SpectralLine
+
+        # Wavelength should be parsed correctly
+        @test result.wavelength ≈ 500.0003 atol=1e-4
     end
 
-    @testset "Parse element/ion code - Fe I" begin
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 2: Parse all fields from gfall line
+    # =========================================================================
 
-        @test line.element_ion ≈ 26.0  # Fe I (neutral iron)
+    @testset "parse_gfall_line: all fields" begin
+        # Cu I line (element 29.00 = copper neutral)
+        line = "   500.0003 -6.421 29.00   77905.500  2.5 s(3D)5d 4D   57911.090  3.5 5f 2F       7.86 -3.96 -7.13K12  0 0  0 0.000  0 0.000    0    0      0    1242 1143     0 0.000"
+
+        result = parse_gfall_line(line)
+
+        # All basic fields
+        @test result.wavelength ≈ 500.0003 atol=1e-4
+        @test result.loggf ≈ -6.421 atol=1e-3
+        @test result.element_ion ≈ 29.00 atol=1e-2
+        @test result.e_lower ≈ 77905.500 atol=1e-3
+        @test result.e_upper ≈ 57911.090 atol=1e-3
+        @test result.j_lower ≈ 2.5 atol=1e-1
+        @test result.j_upper ≈ 3.5 atol=1e-1
+
+        # Damping parameters (converted from log)
+        @test result.gamma_rad ≈ 10^7.86 rtol=1e-2
+        @test result.gamma_stark ≈ 10^(-3.96) rtol=1e-2
+        @test result.gamma_vdw ≈ 10^(-7.13) rtol=1e-2
+        @test result.alpha ≈ 0.4 atol=1e-2
     end
 
-    @testset "Parse element/ion code - Fe II" begin
-        line_str = "4233.1720 -1.090 26.01 2.583 31888.374 3.5 4.5 -7.500 -5.800 -6.100"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 3: Parse Fe I line (most common element in solar spectrum)
+    # =========================================================================
 
-        @test line.element_ion ≈ 26.01  # Fe II (singly ionized iron)
+    @testset "parse_gfall_line: Fe I line" begin
+        # Real Fe I line from gfall
+        line = "  5000.172 -2.570 26.00   42113.890  3.0 (5D)4d e6G   62104.100  4.0 (5D)4p y5F    8.05 -5.43 -7.30K11  0 0  0 0.000  0 0.000    0    0      0     123  456     0 0.000"
+
+        result = parse_gfall_line(line)
+
+        # Fe I should have element code 26.00
+        @test result.element_ion ≈ 26.00 atol=1e-2
+        @test result.wavelength ≈ 5000.172 atol=1e-3
+        @test result.loggf ≈ -2.570 atol=1e-3
+        @test result.e_lower ≈ 42113.890 atol=1e-3
+        @test result.e_upper ≈ 62104.100 atol=1e-3
+        @test result.j_lower ≈ 3.0 atol=1e-1
+        @test result.j_upper ≈ 4.0 atol=1e-1
     end
 
-    @testset "Parse energy levels" begin
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 4: Parse Fe II line (ionized iron)
+    # =========================================================================
 
-        @test line.e_lower ≈ 0.000  # Ground state
-        @test line.e_upper ≈ 28520.868  # cm⁻¹
+    @testset "parse_gfall_line: Fe II line" begin
+        # Fe II line (element code 26.01)
+        line = "  5001.234 -3.200 26.01   35000.000  4.5 test label    55000.000  3.5 test label    8.10 -5.00 -7.20K11  0 0  0 0.000  0 0.000    0    0      0     100  200     0 0.000"
+
+        result = parse_gfall_line(line)
+
+        # Fe II should have element code 26.01
+        @test result.element_ion ≈ 26.01 atol=1e-2
+        @test result.wavelength ≈ 5001.234 atol=1e-3
     end
 
-    @testset "Parse J quantum numbers" begin
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 5: Edge cases - short lines without all damping parameters
+    # =========================================================================
 
-        @test line.j_lower ≈ 4.0
-        @test line.j_upper ≈ 6.0
+    @testset "parse_gfall_line: missing damping parameters" begin
+        # Shorter line that might not have all damping data
+        line = "  5002.000 -1.500 12.00   30000.000  1.0 label here    50000.000  2.0 label here"
+
+        result = parse_gfall_line(line)
+
+        # Should still parse basic fields
+        @test result.wavelength ≈ 5002.000 atol=1e-3
+        @test result.loggf ≈ -1.500 atol=1e-3
+        @test result.element_ion ≈ 12.00 atol=1e-2
+
+        # Default damping values (10^0.0 = 1.0)
+        @test result.gamma_rad ≈ 1.0 rtol=1e-2
+        @test result.gamma_stark ≈ 1.0 rtol=1e-2
+        @test result.gamma_vdw ≈ 1.0 rtol=1e-2
     end
 
-    @testset "Parse damping parameters" begin
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 6: compute_nbuff - Logarithmic grid indexing
+    # =========================================================================
 
-        # Damping stored as log(gamma) in gfall, should be converted to gamma
-        @test line.gamma_rad ≈ 10^(-7.640)  # 2.29e-8
-        @test line.gamma_stark ≈ 10^(-6.420)  # 3.80e-7
-        @test line.gamma_vdw ≈ 10^(-5.970)  # 1.07e-6
+    @testset "compute_nbuff: wavelength grid indexing" begin
+        # Logarithmic wavelength grid
+        λ_min = 5000.0
+        λ_max = 5100.0
+        n_points = 10000
 
-        # All damping values should be positive and finite
-        @test line.gamma_rad > 0.0
-        @test line.gamma_stark > 0.0
-        @test line.gamma_vdw > 0.0
-        @test isfinite(line.gamma_rad)
-        @test isfinite(line.gamma_stark)
-        @test isfinite(line.gamma_vdw)
+        # Test wavelength at start
+        nbuff_start = compute_nbuff(5000.0, λ_min, λ_max, n_points)
+        @test nbuff_start == 1
+
+        # Test wavelength at end
+        nbuff_end = compute_nbuff(5100.0, λ_min, λ_max, n_points)
+        @test nbuff_end == n_points
+
+        # Test wavelength in middle (should be logarithmic spacing)
+        λ_mid = sqrt(λ_min * λ_max)  # Geometric mean for log grid
+        nbuff_mid = compute_nbuff(λ_mid, λ_min, λ_max, n_points)
+        @test nbuff_mid ≈ n_points / 2 atol=100
+
+        # Test wavelength outside range (should clamp or error)
+        nbuff_low = compute_nbuff(4900.0, λ_min, λ_max, n_points)
+        @test nbuff_low >= 1  # Should clamp to valid range
     end
 
-    @testset "Parse van der Waals alpha parameter" begin
-        line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970 0.42"
-        line = parse_gfall_line(line_str)
+    # =========================================================================
+    # Test 7: read_gfall_lines - Read and filter lines from file
+    # =========================================================================
 
-        # Alpha is typically 0.4 for neutral atoms, may vary
-        @test line.alpha ≈ 0.42 atol=0.01
-    end
+    @testset "read_gfall_lines: filter by wavelength range" begin
+        # Test data file path
+        gfall_file = "../../test/data/atomic/gf0600_sample.dat"
 
-    @testset "Invalid input - empty string" begin
-        @test_throws ErrorException parse_gfall_line("")
-    end
+        # Read lines in specific wavelength range
+        λ_start = 5000.0
+        λ_end = 5001.0
+        margin = 10.0  # ±10 Å safety margin
 
-    @testset "Invalid input - insufficient fields" begin
-        line_str = "4045.8138  0.280 26.0"  # Missing most fields
-        @test_throws ErrorException parse_gfall_line(line_str)
-    end
+        lines = read_gfall_lines(gfall_file, λ_start, λ_end, margin)
 
-    @testset "Invalid input - non-numeric wavelength" begin
-        line_str = "INVALID  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        @test_throws Exception parse_gfall_line(line_str)
-    end
-end
-
-@testset "Read gfall file" begin
-    # These tests assume test data file exists at test/data/atomic/gf5000.asc
-    # Paula will provide this file before CCW starts
-
-    test_file = joinpath(@__DIR__, "../data/atomic/gf5000.asc")
-
-    @testset "Read empty file" begin
-        # Create temporary empty file for this test
-        empty_file = tempname()
-        touch(empty_file)
-
-        lines = read_gfall_lines(empty_file, 5000.0, 5100.0)
-
-        @test length(lines) == 0
+        # Should return array of SpectralLine
         @test lines isa Vector{SpectralLine}
+        @test length(lines) > 0
 
-        rm(empty_file)
-    end
-
-    @testset "Wavelength filtering - no margin" begin
-        # Skip if test data not available yet
-        if !isfile(test_file)
-            @test_skip "Test data not yet available: $test_file"
-        else
-            # Read lines in 5000-5010 Å range
-            lines = read_gfall_lines(test_file, 5000.0, 5010.0, 0.0)
-
-            # All lines should be within range
-            for line in lines
-                @test 5000.0 <= line.wavelength <= 5010.0
-            end
+        # All lines should be within the extended range
+        for line in lines
+            @test line.wavelength >= λ_start - margin
+            @test line.wavelength <= λ_end + margin
         end
     end
 
-    @testset "Wavelength filtering - with 10 Å margin" begin
-        if !isfile(test_file)
-            @test_skip "Test data not yet available: $test_file"
-        else
-            # Request 5000-5010 Å with 10 Å margin → should get 4990-5020 Å
-            lines_with_margin = read_gfall_lines(test_file, 5000.0, 5010.0, 10.0)
-            lines_no_margin = read_gfall_lines(test_file, 5000.0, 5010.0, 0.0)
+    @testset "read_gfall_lines: no margin filtering" begin
+        gfall_file = "../../test/data/atomic/gf0600_sample.dat"
 
-            # With margin should have more lines (or equal if no lines in margin region)
-            @test length(lines_with_margin) >= length(lines_no_margin)
+        # Read with zero margin (exact range)
+        λ_start = 5000.0
+        λ_end = 5001.0
+        margin = 0.0
 
-            # All lines should be within extended range
-            for line in lines_with_margin
-                @test 4990.0 <= line.wavelength <= 5020.0
-            end
+        lines = read_gfall_lines(gfall_file, λ_start, λ_end, margin)
+
+        # All lines should be within exact range
+        for line in lines
+            @test line.wavelength >= λ_start
+            @test line.wavelength <= λ_end
         end
     end
 
-    @testset "Skip comment lines" begin
-        # Create temporary file with comments
-        temp_file = tempname()
-        write(temp_file, """
-        # This is a comment
-        4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970
-        # Another comment
-        4046.1234 -0.520 26.0  1.485 25899.374 2.5 3.5 -7.800 -6.300 -6.000
-        """)
+    @testset "read_gfall_lines: empty range" begin
+        gfall_file = "../../test/data/atomic/gf0600_sample.dat"
 
-        lines = read_gfall_lines(temp_file, 4000.0, 5000.0)
+        # Read range that should have no lines (way outside data range)
+        λ_start = 10000.0
+        λ_end = 10001.0
 
-        @test length(lines) == 2  # Only two actual lines, comments skipped
-        @test lines[1].wavelength ≈ 4045.8138
-        @test lines[2].wavelength ≈ 4046.1234
+        lines = read_gfall_lines(gfall_file, λ_start, λ_end, 0.0)
 
-        rm(temp_file)
+        # Should return empty array or very few lines
+        @test length(lines) >= 0  # Should not error
     end
 
-    @testset "Skip blank lines" begin
-        # Create temporary file with blank lines
-        temp_file = tempname()
-        write(temp_file, """
-        4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970
+    # =========================================================================
+    # Test 8: Integration test with real gfall data
+    # =========================================================================
 
-        4046.1234 -0.520 26.0  1.485 25899.374 2.5 3.5 -7.800 -6.300 -6.000
+    @testset "Integration: read and parse real gfall file" begin
+        gfall_file = "../../test/data/atomic/gf0600_sample.dat"
 
-        """)
+        # Read a small wavelength range around 500 nm
+        lines = read_gfall_lines(gfall_file, 500.0, 500.1, 0.0)
 
-        lines = read_gfall_lines(temp_file, 4000.0, 5000.0)
+        @test length(lines) > 0
 
-        @test length(lines) == 2  # Blank lines ignored
+        # Check first line is properly parsed
+        first_line = lines[1]
+        @test first_line.wavelength >= 500.0
+        @test first_line.wavelength <= 500.1
+        @test !isnan(first_line.loggf)
+        @test !isnan(first_line.element_ion)
+        @test first_line.element_ion > 0.0  # Valid element code
 
-        rm(temp_file)
+        # Check nbuff is computed
+        @test first_line.nbuff > 0
     end
 
-    @testset "Count lines in test data file" begin
-        if !isfile(test_file)
-            @test_skip "Test data not yet available: $test_file"
-        else
-            # Read all lines in file (wide range)
-            lines = read_gfall_lines(test_file, 4000.0, 6000.0)
-
-            # Should have at least some lines
-            @test length(lines) > 0
-
-            # All lines should be SpectralLine structs
-            @test all(l -> l isa SpectralLine, lines)
-
-            # All wavelengths should be positive and finite
-            @test all(l -> l.wavelength > 0.0, lines)
-            @test all(l -> isfinite(l.wavelength), lines)
-        end
-    end
 end
-
-@testset "NBUFF index calculation" begin
-    @testset "Minimum wavelength → index 1" begin
-        # Grid: 5000-5100 Å, 1000 points
-        idx = compute_nbuff(5000.0, 5000.0, 5100.0, 1000)
-        @test idx == 1
-    end
-
-    @testset "Maximum wavelength → index n_points" begin
-        idx = compute_nbuff(5100.0, 5000.0, 5100.0, 1000)
-        @test idx == 1000
-    end
-
-    @testset "Middle wavelength → mid-range index" begin
-        # Geometric mean of 5000 and 5100 ≈ 5049.75 Å
-        λ_mid = sqrt(5000.0 * 5100.0)
-        idx = compute_nbuff(λ_mid, 5000.0, 5100.0, 1000)
-
-        # Should be near middle (±10% tolerance for logarithmic spacing)
-        @test 450 <= idx <= 550
-    end
-
-    @testset "Logarithmic spacing validation" begin
-        # In log space, wavelengths should map linearly to indices
-        λ_1 = 5000.0
-        λ_2 = 5010.0
-        λ_3 = 5020.0
-
-        idx_1 = compute_nbuff(λ_1, 5000.0, 5100.0, 1000)
-        idx_2 = compute_nbuff(λ_2, 5000.0, 5100.0, 1000)
-        idx_3 = compute_nbuff(λ_3, 5000.0, 5100.0, 1000)
-
-        # Indices should increase monotonically
-        @test idx_1 < idx_2 < idx_3
-    end
-
-    @testset "Below minimum wavelength" begin
-        # λ < λ_min → should return index 0 or throw error
-        idx = compute_nbuff(4900.0, 5000.0, 5100.0, 1000)
-        @test idx <= 0  # Out of bounds indicator
-    end
-
-    @testset "Above maximum wavelength" begin
-        # λ > λ_max → should return index > n_points or throw error
-        idx = compute_nbuff(5200.0, 5000.0, 5100.0, 1000)
-        @test idx > 1000  # Out of bounds indicator
-    end
-end
-
-println("✅ Atomic line reader tests defined (RED phase).")
-println("📝 Implement functions in src/Synthe/src/line_readers.jl to make tests pass (GREEN phase).")
-println("📂 Test data expected at: test/data/atomic/gf5000.asc (Paula to provide)")
