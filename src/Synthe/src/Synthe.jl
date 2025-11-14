@@ -43,6 +43,9 @@ include("line_readers_molecular.jl")
 # Continuum opacity (Task 2.3 - Step 2)
 include("continuum_opacity.jl")
 
+# Population solver (Task 3.1 - Step 3)
+include("populations.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -112,6 +115,12 @@ export
     hydrogen_bf,
     electron_scattering,
     gaunt_factor,
+
+    # Population solver (Step 3 Task 3.1)
+    partition_function,
+    saha_ionization_ratio,
+    compute_populations,
+    PopulationResult,
 
     # Pipeline
     synthe_pipeline,
