@@ -49,6 +49,9 @@ include("populations.jl")
 # Opacity integration (Task 3.2 - Step 3)
 include("opacity_integration.jl")
 
+# Radiative transfer (Task 4 - Step 4)
+include("radiative_transfer.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -129,6 +132,13 @@ export
     continuum_opacity_total,
     total_opacity,
     line_opacity_at_wavelength,
+
+    # Radiative transfer (Step 4)
+    solve_tridiagonal,
+    source_function_lte,
+    compute_optical_depth,
+    solve_radiative_transfer_feautrier,
+    compute_emergent_spectrum,
 
     # Pipeline
     synthe_pipeline,
