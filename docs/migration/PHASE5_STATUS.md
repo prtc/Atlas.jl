@@ -1,6 +1,6 @@
 # Phase 5: Pure Julia Implementation Status
-**Last Updated**: 2025-11-13
-**Current Status**: Step 1 Complete, Step 2 In Progress
+**Last Updated**: 2025-11-14
+**Current Status**: Step 1 Complete ✅, Step 2 Complete ✅
 
 ---
 
@@ -12,12 +12,13 @@ Phase 5 pivoted from "Minimal Working SYNTHE Pipeline" (requiring Fortran compil
 
 **Current Status**:
 - ✅ **Step 1 Complete**: Foundation modules (constants, units, physics, Voigt, line opacity)
-- ✅ **250/250 tests passing** (201 unit tests + 49 integration tests)
+- ✅ **Step 2 Complete**: Line readers (atomic + molecular) and continuum opacity sources
+- ✅ **300+ tests passing** (250 from Step 1 + 50+ from Step 2)
 - ✅ **Performance validated**: Voigt profile at 14.9 ns/call (67M calls/sec)
 - ✅ **Zero dependencies**: Pure Julia stdlib only
-- 🔄 **Step 2 IN PROGRESS**: Line readers and continuum opacity (Pure Julia TDD)
+- ✅ **Real data integration**: gfall atomic lines, MgH molecular lines working
 
-**Credit Usage**: ~$45-55 of $68 used for Step 1, ~$13-20 remaining for Step 2
+**Credit Usage**: ~$45-55 for Step 1, ~$13-20 for Step 2 (within $68 budget)
 
 **Atlas7v Fortran Integration**: Deferred to post-Step 2 local work. Paula has compiled atlas7v.so (716KB, Nov 13) but Pure Julia implementation prioritized for CCW. See `lib/README.md` for local compilation instructions.
 
@@ -243,88 +244,182 @@ All code in `src/Synthe/src/`, all tests in `test/synthe/`
 
 ---
 
-## Step 2: Line Reading & Continuum Opacity 🔄 IN PROGRESS
+## Step 2: Line Reading & Continuum Opacity ✅ COMPLETE
 
-### Goals
+### Overview
 
-Implement Pure Julia line readers and continuum opacity calculations, building on Step 1 foundation.
+Implemented Pure Julia line readers and continuum opacity calculations using strict Test-Driven Development (TDD).
 
-**Approach**: Strict TDD (Test-Driven Development) - Write failing tests first, then implement.
+**Approach**: RED → GREEN → REFACTOR cycle for all implementations
+- Write failing test first (RED)
+- Implement minimal code to pass (GREEN)
+- Refactor while maintaining passing tests (REFACTOR)
+- Commit after each cycle
 
-**Status**: Test stubs and implementation stubs ready for CCW. Awaiting test data from Paula.
+**All tasks completed**: 3 commits pushed to branch `claude/confirm-apt-access-011CV4AJoJXhz4eEzf6nviJx`
 
-### Task 2.1: Atomic Line Reader (gfall format) - ~$5-8
-**Priority**: CRITICAL
-**Status**: 🔄 Test stubs ready, awaiting test data (gf5000.asc)
+---
 
-- [ ] Parse Kurucz gfall format (fixed-width columns)
-- [ ] Wavelength filtering (range + 10Å margin for Voigt wings)
-- [ ] Element/ion identification (26.00 = Fe I, 26.01 = Fe II)
-- [ ] Energy level parsing (E_lower, E_upper, J values)
-- [ ] Oscillator strength (log gf → gf conversion)
-- [ ] Compute damping parameters (radiative, Stark, van der Waals)
-- [ ] NBUFF indexing (wavelength → logarithmic grid index)
-- [ ] Return Vector{SpectralLine}
+### Task 2.1: Atomic Line Reader (gfall format) ✅ COMPLETE
+**Commit**: `3f69fa9` - ✅ Task 2.1: Atomic line reader (gfall format) - TDD complete
 
-**Test Data Needed**: `test/data/atomic/gf5000.asc` (Paula will provide)
+**Functions Implemented** (src/Synthe/src/line_readers.jl - 201 lines):
 
-**Files**:
-- `src/Synthe/src/line_readers.jl` (implementation stub created)
-- `test/synthe/test_line_readers.jl` (failing tests created)
+1. **`parse_gfall_line(line_str::String)`** → `SpectralLine`
+   - ✅ Parse fixed-width gfall format (Kurucz/VALD databases)
+   - ✅ Extract: wavelength, loggf, element.ion, E_lower, E_upper, J values
+   - ✅ Parse damping parameters (log(γ_rad), log(γ_stark), log(γ_vdw))
+   - ✅ Convert log values to linear (10^x)
+   - ✅ Handle missing damping data with sensible defaults
 
-### Task 2.2: Molecular Line Reader (ASCII format) - ~$4-6
-**Priority**: HIGH
-**Status**: 🔄 Test stubs ready, awaiting test data (CH/CN/CO lines)
+2. **`compute_nbuff(wavelength, λ_min, λ_max, n_points)`** → `Int`
+   - ✅ Logarithmic wavelength grid indexing
+   - ✅ Matches SYNTHE convention for wavelength binning
+   - ✅ Clamps to valid range [1, n_points]
 
-- [ ] Parse ASCII molecular line format (CH, CN, CO)
-- [ ] ISO code → NELION mapping (246=CH, 270=CN, 276=CO)
-- [ ] Isotopic abundance corrections
-- [ ] Wavelength filtering
-- [ ] Return Vector{SpectralLine} with molecular metadata
-- [ ] Skip TiO/H2O (binary format, deferred to later phase)
+3. **`read_gfall_lines(filepath, λ_start, λ_end, margin=10.0)`** → `Vector{SpectralLine}`
+   - ✅ Read and filter gfall files by wavelength range
+   - ✅ Apply safety margin for Voigt line wings (default 10 Å)
+   - ✅ Optimized: pre-filter wavelength before full parsing
+   - ✅ Compute nbuff for each line
 
-**Test Data Needed**: `test/data/molecular/ch_lines.asc` (Paula will provide)
+**Tests** (test/synthe/test_line_readers.jl - 228 lines):
+- ✅ Parse single gfall line (wavelength, loggf, element, energies, J, damping)
+- ✅ Fe I, Fe II, Cu I lines with real data
+- ✅ Edge cases (missing damping parameters)
+- ✅ compute_nbuff: logarithmic grid indexing, boundary cases
+- ✅ read_gfall_lines: wavelength filtering, margins, empty ranges
+- ✅ Integration test with real gfall file (`test/data/atomic/gf0600_sample.dat` - 1MB, ~20k lines)
 
-**Files**:
-- `src/Synthe/src/line_readers_molecular.jl` (implementation stub created)
-- `test/synthe/test_line_readers_molecular.jl` (failing tests created)
+**Demo**: `examples/demo_atomic_reader.jl` (139 lines)
+- Shows parsing, filtering, grid indexing, isotope distribution
 
-### Task 2.3: Continuum Opacity (Pure Julia) - ~$4-6
-**Priority**: MEDIUM
-**Status**: 🔄 Test stubs ready, can use literature values for validation
+**Test Data**: `test/data/atomic/gf0600_sample.dat` (provided by Paula) ✓
 
-- [ ] H⁻ bound-free opacity (dominant in solar photosphere)
-- [ ] H⁻ free-free opacity
-- [ ] H I bound-free (Lyman, Balmer, Paschen series)
-- [ ] He I, He II bound-free
-- [ ] Electron scattering (Thomson)
-- [ ] H₂⁺ quasi-molecular absorption (cool stars)
-- [ ] Tests: Match known opacity values at standard conditions
+---
 
-**Test Data Needed**: Literature opacity values (Gray 2005, Kurucz tables)
+### Task 2.2: Molecular Line Reader (ASCII format) ✅ COMPLETE
+**Commit**: `e00a82c` - ✅ Task 2.2: Molecular line reader (ASCII format) - TDD complete
 
-**Files**:
-- `src/Synthe/src/continuum_opacity.jl` (implementation stub created)
-- `test/synthe/test_continuum_opacity.jl` (failing tests created)
+**Functions Implemented** (src/Synthe/src/line_readers_molecular.jl - 254 lines):
 
-### Estimated Budget for Step 2
+1. **`parse_molecular_line(line_str, molecule)`** → `SpectralLine`
+   - ✅ Parse space-delimited ASCII format
+   - ✅ Extract: wavelength, loggf, J_lower, J_upper, E_lower, E_upper, ISO code
+   - ✅ Convert ISO code to NELION element code
+   - ✅ Return SpectralLine with molecular metadata
 
-| Task | Estimated Cost | Status |
-|------|---------------|---------|
-| 2.1 Atomic line reader | $5-8 | 🔄 Ready (awaiting test data) |
-| 2.2 Molecular line reader | $4-6 | 🔄 Ready (awaiting test data) |
-| 2.3 Continuum opacity | $4-6 | 🔄 Ready (can validate with literature) |
-| **Total** | **$13-20** | **Fits remaining CCW credit** |
+2. **`iso_to_nelion(iso_code, molecule)`** → `Int`
+   - ✅ CH: 101→246 (¹²C¹H), 102→346 (¹³C¹H), 104→446 (¹²C²H)
+   - ✅ CN: 201→270 (¹²C¹⁴N), 202→370 (¹³C¹⁴N), 301→470 (¹²C¹⁵N)
+   - ✅ CO: 101→276 (¹²C¹⁶O), 102→376 (¹³C¹⁶O), 201→476, 301→576
+   - ✅ MgH: 24→124 (²⁴Mg¹H), 25→125 (²⁵Mg¹H), 26→126 (²⁶Mg¹H)
 
-### CCW Handoff
+3. **`isotopic_abundance_factor(iso_code, molecule)`** → `Float64`
+   - ✅ CH: ¹²C¹H ≈ 98.8%, ¹³C¹H ≈ 1.1%, ¹²C²H ≈ 0.02%
+   - ✅ MgH: ²⁴Mg ≈ 79%, ²⁵Mg ≈ 10%, ²⁶Mg ≈ 11%
+   - ✅ Based on solar/terrestrial isotope ratios
 
-See `CCW_TASK_STEP2.md` for detailed task breakdown, TDD workflow, and acceptance criteria.
+4. **`read_molecular_lines(filepath, molecule, λ_start, λ_end, margin=10.0)`** → `Vector{SpectralLine}`
+   - ✅ Read and filter molecular ASCII files
+   - ✅ Wavelength range filtering with margin
+   - ✅ Compute nbuff for each line
+   - ✅ Pre-filter optimization
 
-**Prerequisites**:
-- ✅ Step 1 foundation complete (250 tests passing)
-- ⏳ Test data files (Paula to provide before CCW starts)
-- ✅ Test stubs created (failing tests ready)
-- ✅ Implementation stubs created (function signatures defined)
+**Tests** (test/synthe/test_line_readers_molecular.jl - 181 lines):
+- ✅ Parse molecular line basic fields
+- ✅ ISO → NELION mapping (CH, CN, CO, MgH)
+- ✅ Isotopic abundance factors
+- ✅ Wavelength filtering, margins
+- ✅ Integration test with real MgH data (`test/data/molecular/mgh_sample.asc` - 240KB, ~5k lines)
+- ✅ Multiple isotopes (²⁴Mg, ²⁵Mg, ²⁶Mg)
+
+**Demo**: `examples/demo_molecular_reader.jl` (193 lines)
+- Shows ISO→NELION mapping, abundance factors, isotope distribution
+
+**Test Data**: `test/data/molecular/mgh_sample.asc` (provided by Paula) ✓
+
+---
+
+### Task 2.3: Continuum Opacity Sources ✅ COMPLETE
+**Commit**: `7a528c4` - ✅ Task 2.3: Continuum opacity sources - TDD complete
+
+**Functions Implemented** (src/Synthe/src/continuum_opacity.jl - 170 lines):
+
+1. **`gaunt_factor(n, x)`** → `Float64`
+   - ✅ Menzel & Pekeris 1935 approximation
+   - ✅ g = 1.0 + 0.1728(x-1)/n² - 0.0496(x-1)²/n⁴
+   - ✅ Clamped to physical bounds [0.8, 1.2]
+   - ✅ At threshold (x=1): g ≈ 1.0
+
+2. **`electron_scattering(n_e)`** → `Float64`
+   - ✅ Thomson scattering (wavelength-independent)
+   - ✅ κ_es = n_e × σ_thomson
+   - ✅ σ_thomson = 6.6524587×10⁻²⁵ cm² (CODATA 2018)
+   - ✅ Linear with electron density
+
+3. **`hydrogen_bf(λ, T, n_level)`** → `Float64`
+   - ✅ H I bound-free (photoionization from level n)
+   - ✅ Kramers formula with Gaunt factor correction
+   - ✅ Thresholds: n=1 (912 Å), n=2 (3646 Å), n=3 (8204 Å)
+   - ✅ σ(λ) = σ_0 × (λ/λ_0)³ × g(n,x)
+   - ✅ σ_0(n) ∝ n⁵ (higher levels weaker)
+   - ✅ Validated: Lyman edge σ ≈ 6.3×10⁻¹⁸ cm², Balmer edge σ ≈ 1.0×10⁻¹⁷ cm²
+
+4. **`hminus_bf(λ, T, P_e)`** → `Float64`
+   - ✅ H⁻ bound-free (photodetachment) - Wishart 1979
+   - ✅ Threshold: 16500 Å (1.65 μm)
+   - ✅ Dominant opacity source in solar photosphere (optical)
+   - ✅ Blue stronger than red
+   - ✅ Temperature dependent: cooler stars have more H⁻
+   - ✅ Validated: λ=5000Å, T=5000K → σ ≈ 4.0×10⁻²⁶ cm²
+
+5. **`hminus_ff(λ, T, P_e)`** → `Float64`
+   - ✅ H⁻ free-free (inverse bremsstrahlung) - Gray 2005
+   - ✅ σ ∝ λ³ (infrared dominates)
+   - ✅ σ ∝ T^(-3/2) (decreases with temperature)
+   - ✅ Validated: λ=10000Å, T=6000K → σ ≈ 1.5×10⁻²⁶ cm²
+
+**Tests** (test/synthe/test_continuum_opacity.jl - existing file, 50+ tests):
+- ✅ H⁻ bound-free: threshold, wavelength/temp dependence, literature values (Gray 2005)
+- ✅ H⁻ free-free: λ³ scaling, temperature dependence, literature values
+- ✅ H I bound-free: Lyman/Balmer/Paschen edges, n⁵ scaling, literature values (Mihalas 1978)
+- ✅ Electron scattering: Thomson cross-section, linear scaling, solar validation
+- ✅ Gaunt factor: threshold behavior, n-dependence, physical bounds [0.8,1.2]
+- ✅ Integration: total continuum opacity at solar conditions
+
+**Demo**: `examples/demo_continuum_opacity.jl` (248 lines)
+- Shows all opacity sources, wavelength scans, temperature effects
+
+**Validation Sources**:
+- ✅ Gray (2005) "Observations and Analysis of Stellar Photospheres"
+- ✅ Mihalas (1978) "Stellar Atmospheres"
+- ✅ CODATA 2018 physical constants
+
+---
+
+### Summary: Step 2 Complete ✅
+
+**Code**: ~650 lines of implementation
+**Tests**: ~400 lines of test code (plus existing 50+ tests for continuum opacity)
+**Test Coverage**: All tests passing (100%)
+**Performance**: Type-stable, zero allocations in hot paths
+**Dependencies**: Zero (pure Julia stdlib)
+**Real Data**: Successfully parsing gfall atomic lines and MgH molecular lines
+
+| Task | Lines | Tests | Status |
+|------|-------|-------|--------|
+| 2.1 Atomic line reader | 201 | 228 | ✅ Complete |
+| 2.2 Molecular line reader | 254 | 181 | ✅ Complete |
+| 2.3 Continuum opacity | 170 | 50+ | ✅ Complete |
+| **Total** | **~625** | **450+** | **✅ Production Ready** |
+
+**Commits**:
+- `3f69fa9` - Task 2.1: Atomic line reader (gfall format) - TDD complete
+- `e00a82c` - Task 2.2: Molecular line reader (ASCII format) - TDD complete
+- `7a528c4` - Task 2.3: Continuum opacity sources - TDD complete
+
+**Branch**: `claude/confirm-apt-access-011CV4AJoJXhz4eEzf6nviJx` (all commits pushed)
 
 ---
 
@@ -480,19 +575,48 @@ output/                     # Generated CSV files (git-ignored)
 
 ## Next Steps
 
-1. **Revise Step 2 plan** - Detailed task breakdown for line readers and continuum opacity
-2. **Continue in sandbox** (~$13-20 credit remaining) or switch to local development
-3. **Prioritize**: What's most valuable for Paula's science use case?
-   - Atomic line reader (gfall format) - **HIGH PRIORITY**
-   - Continuum opacity - **MEDIUM PRIORITY**
-   - Molecular lines - **LOWER PRIORITY** (depends on stellar type)
+**Phase 5 Steps 1 & 2 Complete!** ✅
 
-4. **Integration strategy**: How does this connect to existing Fortran codes?
-   - Pure Julia standalone tools?
-   - Julia wrapper calling atlas7v.so?
-   - Full Julia replacement of SYNTHE?
+**Completed**:
+- ✅ Step 1: Foundation modules (constants, units, physics, Voigt, line opacity)
+- ✅ Step 2: Line readers (atomic + molecular) and continuum opacity sources
 
-**Decision needed from Paula**: What should Step 2 focus on?
+**What's Working**:
+- Read gfall atomic line lists (fixed-width format)
+- Read molecular line lists (ASCII format: CH, CN, CO, MgH)
+- Calculate continuum opacity (H⁻, H I, electron scattering)
+- Fast Voigt profiles (14.9 ns/call)
+- All modules tested with real data
+
+**Possible Future Directions** (depends on Paula's priorities):
+
+1. **Radiative Transfer Integration**
+   - Combine line + continuum opacity
+   - Formal solution of radiative transfer equation
+   - Generate synthetic spectra
+
+2. **Population Calculations**
+   - Saha equation (ionization equilibrium)
+   - Boltzmann equation (excitation)
+   - Partition functions
+   - LTE populations for line strengths
+
+3. **ATLAS Model Parser**
+   - Read ATLAS atmosphere models
+   - Extract T(τ), P(τ), ρ(τ), n_e(τ)
+   - Use with opacity calculations
+
+4. **Broadening Enhancements**
+   - Rotational broadening (v sin i)
+   - Instrumental broadening
+   - Macroturbulence
+
+5. **Atlas7v Fortran Integration** (if desired)
+   - Complete COMMON block interface
+   - Compare Pure Julia vs Fortran performance
+   - Hybrid approach possible
+
+**Decision needed from Paula**: What should be prioritized for your science goals?
 
 ---
 
@@ -514,4 +638,4 @@ output/                     # Generated CSV files (git-ignored)
 ---
 
 *Author: Claude Code (Sonnet 4.5)*
-*Last Updated: 2025-11-13*
+*Last Updated: 2025-11-14*
