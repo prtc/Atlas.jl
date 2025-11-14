@@ -59,19 +59,29 @@ function read_atlas9_model(filepath::String)
 
     n_depths = length(tau_ross)
 
-    # Create AtmosphereModel struct
-    # Note: We don't have all fields from original struct definition
-    # Creating a simplified version for now
+    # Compute mass density from ideal gas law
+    # P = (ρ/μ) * (k_B * T / m_H)
+    # where μ = mean molecular weight ≈ 1.3 for solar composition
+    # ρ = P * μ * m_H / (k_B * T)
 
-    return (
-        n_depths = n_depths,
-        teff = teff,
-        logg = logg,
-        tau_ross = tau_ross,
-        temperature = temperature,
-        pressure = pressure,
-        electron_density = electron_density,
-        abundances = abundances
+    const k_B = 1.380649e-16  # erg/K (Boltzmann constant)
+    const m_H = 1.673557e-24  # g (proton mass)
+    const μ_solar = 1.3       # Mean molecular weight (solar composition)
+
+    density = similar(pressure)
+    for i in 1:n_depths
+        density[i] = pressure[i] * μ_solar * m_H / (k_B * temperature[i])
+    end
+
+    # Create AtmosphereModel struct (matching exact struct definition in structs.jl)
+    return AtmosphereModel(
+        n_depths,
+        tau_ross,
+        temperature,
+        pressure,
+        electron_density,
+        density,
+        abundances
     )
 end
 
@@ -172,7 +182,7 @@ function parse_atlas9_structure(lines::Vector{String})
 
         # Skip empty lines or lines starting with non-numeric characters
         stripped = strip(line)
-        if isempty(stripped) || !isdigit(stripped[1]) && stripped[1] != '-'
+        if isempty(stripped) || !(isdigit(stripped[1]) || stripped[1] == '-')
             continue
         end
 
