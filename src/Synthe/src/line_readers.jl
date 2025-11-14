@@ -1,272 +1,200 @@
 """
-Line readers for SYNTHE pipeline
+Atomic Line Reader for SYNTHE gfall Format
 
-**Tasks 3-4**: Implement rgfalllinesnew and rmolecasc
+Reads gfall-format atomic line data from Kurucz/VALD databases.
 
-Based on Deep Dive 12: SYNTHE Line Reading Pipeline
+Functions:
+- `parse_gfall_line(line_str)` - Parse single gfall line to SpectralLine
+- `read_gfall_lines(filepath, λ_start, λ_end, margin)` - Read and filter lines
+- `compute_nbuff(wavelength, λ_min, λ_max, n_points)` - Wavelength grid indexing
 """
 
 """
-    parse_gfall_line(line_str::String)
+    parse_gfall_line(line_str::String) -> SpectralLine
 
-Parse a single gfall format line
+Parse a single gfall-format line into a SpectralLine struct.
 
-**Format** (from Deep Dive 12):
+# Gfall Format (fixed-width columns):
+- Columns 1-11:   Wavelength (Å)
+- Columns 12-18:  loggf
+- Columns 19-24:  Element.ion code (e.g., 26.00 = Fe I)
+- Columns 25-36:  E_lower (cm⁻¹)
+- Columns 37-43:  J_lower
+- Columns 44-58:  Label_lower (not used)
+- Columns 59-70:  E_upper (cm⁻¹)
+- Columns 71-77:  J_upper
+- Columns 78-92:  Label_upper (not used)
+- Columns 93-97:  log(gamma_rad)
+- Columns 98-103: log(gamma_stark)
+- Columns 104-109: log(gamma_vdw)
+
+# Example
+```julia
+line = "   500.0003 -6.421 29.00   77905.500  2.5 s(3D)5d 4D   57911.090  3.5 5f 2F       7.86 -3.96 -7.13K12"
+sl = parse_gfall_line(line)
 ```
-F11.4  F7.3  F6.2  F12.3  F5.1  F12.3  F5.1  A1  A10  A10
-```
-
-**Returns**: `SpectralLine` or `nothing` if parsing fails
 """
-function parse_gfall_line(line_str::String)
-    # Skip empty or comment lines
-    if isempty(strip(line_str)) || startswith(line_str, "#")
-        return nothing
-    end
+function parse_gfall_line(line_str::String)::SpectralLine
+    # Parse fixed-width columns
+    wavelength = parse(Float64, line_str[1:11])
+    loggf = parse(Float64, line_str[12:18])
+    element_ion = parse(Float64, line_str[19:24])
+    e_lower = parse(Float64, line_str[25:36])
+    j_lower = parse(Float64, line_str[37:43])
+    # Skip labels (44-58, 78-92)
+    e_upper = parse(Float64, line_str[59:70])
+    j_upper = parse(Float64, line_str[71:77])
+    
+    # Parse damping parameters (log values)
+    # Some lines may not have all damping parameters, use defaults
+    log_gamma_rad = length(line_str) >= 97 ? parse(Float64, line_str[93:97]) : 0.0
+    log_gamma_stark = length(line_str) >= 103 ? parse(Float64, line_str[98:103]) : 0.0
+    log_gamma_vdw = length(line_str) >= 109 ? parse(Float64, line_str[104:109]) : 0.0
+    
+    # Convert from log to linear
+    gamma_rad = 10.0^log_gamma_rad
+    gamma_stark = 10.0^log_gamma_stark
+    gamma_vdw = 10.0^log_gamma_vdw
+    
+    # Default alpha for vdW (typical value)
+    alpha = 0.4
+    
+    # nbuff will be computed later by compute_nbuff
+    nbuff = 0  # Placeholder
+    
+    return SpectralLine(
+        nbuff,
+        wavelength,
+        loggf,
+        element_ion,
+        e_lower,
+        e_upper,
+        j_lower,
+        j_upper,
+        gamma_rad,
+        gamma_stark,
+        gamma_vdw,
+        alpha
+    )
+end
 
-    try
-        # Parse space-delimited fields (Kurucz gfall format)
-        # Note: Actual Kurucz files are space-delimited, not strictly fixed-width
-        parts = split(strip(line_str))
+"""
+    compute_nbuff(wavelength, λ_min, λ_max, n_points) -> Int
 
-        if length(parts) < 7
-            return nothing
-        end
+Compute wavelength grid index for logarithmic wavelength grid.
 
-        wavelength = parse(Float64, parts[1])
-        loggf = parse(Float64, parts[2])
-        element_ion = parse(Float64, parts[3])
-        e_lower = parse(Float64, parts[4])
-        j_lower = parse(Float64, parts[5])
-        e_upper = parse(Float64, parts[6])
-        j_upper = parse(Float64, parts[7])
+SYNTHE uses a logarithmic wavelength grid where:
+- Spacing is uniform in log(λ)
+- Index 1 corresponds to λ_min
+- Index n_points corresponds to λ_max
 
-        # Extract element and ionization stage
-        iz = floor(Int, element_ion)
-        ion_stage = round(Int, (element_ion - iz) * 100)
+# Arguments
+- `wavelength::Float64`: Line wavelength (Å)
+- `λ_min::Float64`: Minimum wavelength of grid (Å)
+- `λ_max::Float64`: Maximum wavelength of grid (Å)
+- `n_points::Int`: Number of grid points
 
-        # Compute damping parameters
-        # Radiative damping: Unsöld approximation (approximate)
-        gamma_rad = compute_radiative_damping(wavelength, e_lower, e_upper, loggf)
+# Returns
+- `nbuff::Int`: Grid index (clamped to [1, n_points])
 
-        # Collisional damping: Default values (order of magnitude estimates)
-        # Stark (electron collisions)
-        gamma_stark = 1.0e-5  # Default for neutrals
-
-        # van der Waals (H collisions)
-        gamma_vdw = 1.0e-7    # Default
-        alpha = 0.4           # Typical exponent
-
-        # Note: NBUFF will be set later if params provided
-        nbuff = 0
-
-        return SpectralLine(
-            nbuff,
-            wavelength,
-            loggf,
-            element_ion,
-            e_lower,
-            e_upper,
-            j_lower,
-            j_upper,
-            gamma_rad,
-            gamma_stark,
-            gamma_vdw,
-            alpha
-        )
-    catch e
-        # Failed to parse - skip this line
-        return nothing
+# Example
+```julia
+# For a grid from 5000-5100 Å with 10000 points
+nbuff = compute_nbuff(5050.0, 5000.0, 5100.0, 10000)
+```
+"""
+function compute_nbuff(wavelength::Float64, λ_min::Float64, λ_max::Float64, n_points::Int)::Int
+    # Logarithmic spacing: index = (log(λ) - log(λ_min)) / (log(λ_max) - log(λ_min)) * (n_points - 1) + 1
+    if wavelength <= λ_min
+        return 1
+    elseif wavelength >= λ_max
+        return n_points
+    else
+        log_ratio = (log(wavelength) - log(λ_min)) / (log(λ_max) - log(λ_min))
+        nbuff = round(Int, log_ratio * (n_points - 1) + 1)
+        # Clamp to valid range
+        return clamp(nbuff, 1, n_points)
     end
 end
 
 """
-    compute_radiative_damping(wavelength::Float64, e_lower::Float64, e_upper::Float64, loggf::Float64)
+    read_gfall_lines(filepath, λ_start, λ_end, margin=10.0) -> Vector{SpectralLine}
 
-Compute radiative damping width using Unsöld approximation
+Read and filter atomic lines from gfall-format file.
 
-**Formula** (approximate):
+Reads all lines from file and filters to wavelength range [λ_start - margin, λ_end + margin].
+The margin ensures lines with wings extending into the synthesis range are included.
+
+# Arguments
+- `filepath::String`: Path to gfall file
+- `λ_start::Float64`: Start wavelength (Å)
+- `λ_end::Float64`: End wavelength (Å)
+- `margin::Float64`: Safety margin for line wings (default 10.0 Å)
+
+# Returns
+- `lines::Vector{SpectralLine}`: Filtered lines within wavelength range
+
+# Example
+```julia
+# Read Fe I lines around 5000 Å with 10 Å margin
+lines = read_gfall_lines("gfall.dat", 4990.0, 5010.0, 10.0)
 ```
-Γ_rad ≈ (2π e² / (m_e c)) × (ν² / c) × gf
-```
-
-**Returns**: Radiative damping in Hz
 """
-function compute_radiative_damping(wavelength::Float64, e_lower::Float64, e_upper::Float64, loggf::Float64)
-    # Constants (CGS)
-    c = 2.99792458e10      # cm/s
-    e = 4.80320425e-10     # esu
-    m_e = 9.10938356e-28   # g
-
-    # Frequency
-    nu = c / (wavelength * 1.0e-8)  # Hz (wavelength in Å → cm)
-
-    # gf value
-    gf = 10.0^loggf
-
-    # Classical damping constant
-    gamma_classical = (8 * π^2 * e^2) / (3 * m_e * c^3)  # s⁻¹ Hz⁻²
-
-    # Radiative damping
-    gamma_rad = gamma_classical * nu^2 * gf  # Hz
-
-    return gamma_rad
-end
-
-"""
-    read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64, params::Union{Fort93Params,Nothing}=nothing)
-
-Read atomic lines from Kurucz gfall format
-
-**Task 3**: Implement rgfalllinesnew atomic line reader
-
-**Format** (from Deep Dive 12):
-```
-F11.4  F7.3  F6.2  F12.3  F5.1  F12.3  F5.1  A1  A10  A10
-```
-
-**Fields**:
-- Column 1-11: Wavelength (Å)
-- Column 12-18: log(gf)
-- Column 19-24: Element.ion code (26.00 = Fe I, 26.01 = Fe II)
-- Column 25-36: Lower level energy (cm⁻¹)
-- Column 37-41: Lower level J
-- Column 42-53: Upper level energy (cm⁻¹)
-- Column 54-58: Upper level J
-- Column 59: Identification flag
-- Column 60-69: Lower level term
-- Column 70-79: Upper level term
-
-**Example line**:
-```
- 2600.1720 -2.570 26.0  18500.123  3.5  57002.456  2.5 'a 5D      ' 'z 5P*     '
-```
-
-**Algorithm**:
-1. Open gfall file
-2. Read each line with fixed-width format
-3. Filter by wavelength range [wave_start - 10, wave_end + 10]
-4. Convert to SpectralLine struct
-5. If params provided, compute NBUFF index
-6. Return vector of lines
-
-**Returns**: `Vector{SpectralLine}`
-"""
-function read_gfalllines(filename::String, wave_start::Float64, wave_end::Float64, params::Union{Fort93Params,Nothing}=nothing)
+function read_gfall_lines(filepath::String, λ_start::Float64, λ_end::Float64, margin::Float64=10.0)::Vector{SpectralLine}
     lines = SpectralLine[]
 
-    # Wavelength filtering margin (for Voigt wings)
-    margin = 10.0  # Å
+    # Extended wavelength range with margin
+    λ_min = λ_start - margin
+    λ_max = λ_end + margin
 
-    open(filename, "r") do file
+    # Compute grid parameters for nbuff
+    # Use a standard high-resolution grid (this matches SYNTHE convention)
+    n_points = 100000
+
+    open(filepath, "r") do file
         for line_str in eachline(file)
-            # Parse line
-            line = parse_gfall_line(line_str)
-
-            if isnothing(line)
-                continue  # Skip invalid lines
+            # Skip empty lines
+            if length(line_str) < 11
+                continue
             end
 
-            # Wavelength filtering
-            if line.wavelength < wave_start - margin || line.wavelength > wave_end + margin
-                continue  # Outside wavelength range
-            end
+            # Quick wavelength check before full parsing
+            # (optimization: only parse lines in range)
+            try
+                wavelength_str = strip(line_str[1:11])
+                wavelength = parse(Float64, wavelength_str)
 
-            # Compute NBUFF if params provided
-            if !isnothing(params)
-                nbuff = wavelength_to_nbuff(line.wavelength, params)
-                line = SpectralLine(
-                    nbuff,
-                    line.wavelength,
-                    line.loggf,
-                    line.element_ion,
-                    line.e_lower,
-                    line.e_upper,
-                    line.j_lower,
-                    line.j_upper,
-                    line.gamma_rad,
-                    line.gamma_stark,
-                    line.gamma_vdw,
-                    line.alpha
-                )
-            end
+                # Only parse lines within wavelength range
+                if wavelength >= λ_min && wavelength <= λ_max
+                    spectral_line = parse_gfall_line(line_str)
 
-            push!(lines, line)
+                    # Compute nbuff for this line
+                    nbuff = compute_nbuff(wavelength, λ_start, λ_end, n_points)
+
+                    # Create new SpectralLine with computed nbuff
+                    spectral_line_with_nbuff = SpectralLine(
+                        nbuff,
+                        spectral_line.wavelength,
+                        spectral_line.loggf,
+                        spectral_line.element_ion,
+                        spectral_line.e_lower,
+                        spectral_line.e_upper,
+                        spectral_line.j_lower,
+                        spectral_line.j_upper,
+                        spectral_line.gamma_rad,
+                        spectral_line.gamma_stark,
+                        spectral_line.gamma_vdw,
+                        spectral_line.alpha
+                    )
+
+                    push!(lines, spectral_line_with_nbuff)
+                end
+            catch e
+                # Skip malformed lines
+                continue
+            end
         end
     end
 
     return lines
-end
-
-"""
-    read_molecular_lines(filename::String, molecule::String, wave_start::Float64, wave_end::Float64)
-
-Read molecular lines from ASCII format
-
-**Task 4**: Implement rmolecasc molecular line reader
-
-**Supported molecules** (from Deep Dive 12):
-- CH (NELION=246)
-- CN (NELION=270)
-- CO (NELION=276)
-- NH (NELION=252)
-- OH (NELION=258)
-- MgH (NELION=300)
-- SiH (NELION=312)
-- CaH (NELION=342)
-- FeH (NELION=432)
-
-**Skipped for Phase 5** (cool stars only):
-- TiO (rschwenk.for - binary format)
-- H2O (rh2ofast.for - binary format)
-
-**Format**: Varies by molecule, but typically ASCII with columns:
-```
-wavelength  log(gf)  E_lower  E_upper  ISO  [additional fields]
-```
-
-**Algorithm**:
-1. Open molecular file
-2. Read ASCII format (space-delimited or fixed-width)
-3. Map ISO code to NELION (species code)
-4. Apply isotopic abundance corrections
-5. Filter by wavelength
-6. Convert to SpectralLine struct
-
-**Isotopic abundance corrections** (from Deep Dive 12):
-```julia
-# Example for ¹²C¹⁶O (ISO=17):
-X1 = -0.005    # log₁₀([¹²C/C_solar])
-X2 = 0.0       # log₁₀([¹⁶O/O_solar]) - most abundant
-FUDGE = 0.0    # Empirical correction
-
-gf_corrected = exp((loggf + X1 + X2 + FUDGE) * ln(10))
-```
-
-**Returns**: `Vector{SpectralLine}`
-
-**Status**: NOT IMPLEMENTED (Task 4)
-"""
-function read_molecular_lines(filename::String, molecule::String, wave_start::Float64, wave_end::Float64)
-    error("Task 4 not yet implemented: rmolecasc molecular line reader")
-end
-
-"""
-    combine_line_lists(atomic_lines::Vector{SpectralLine}, molecular_lines::Vector{SpectralLine})
-
-Combine atomic and molecular line lists
-
-**Algorithm**:
-1. Concatenate atomic + molecular lines
-2. Sort by wavelength (for efficient opacity loop)
-3. Return combined list
-
-**Note**: Fortran fort.12 format appends without sorting. We sort here for performance.
-
-**Returns**: `Vector{SpectralLine}` (sorted by wavelength)
-
-**Status**: NOT IMPLEMENTED (Tasks 3-4)
-"""
-function combine_line_lists(atomic_lines::Vector{SpectralLine}, molecular_lines::Vector{SpectralLine})
-    error("Tasks 3-4 not yet implemented: line readers")
 end

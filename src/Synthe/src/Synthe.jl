@@ -43,6 +43,21 @@ include("line_readers_molecular.jl")
 # Continuum opacity (Task 2.3 - Step 2)
 include("continuum_opacity.jl")
 
+# Population solver (Task 3.1 - Step 3)
+include("populations.jl")
+
+# Opacity integration (Task 3.2 - Step 3)
+include("opacity_integration.jl")
+
+# Radiative transfer (Task 4 - Step 4)
+include("radiative_transfer.jl")
+
+# Atmosphere model reader (Task 5.1)
+include("atmosphere_reader.jl")
+
+# Line opacity integration (Task 5.2)
+include("line_opacity_integration.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -112,6 +127,38 @@ export
     hydrogen_bf,
     electron_scattering,
     gaunt_factor,
+
+    # Population solver (Step 3 Task 3.1)
+    partition_function,
+    saha_ionization_ratio,
+    compute_populations,
+    PopulationResult,
+
+    # Opacity integration (Step 3 Task 3.2)
+    continuum_opacity_total,
+    total_opacity,
+    line_opacity_at_wavelength,
+
+    # Radiative transfer (Step 4)
+    solve_tridiagonal,
+    source_function_lte,
+    compute_optical_depth,
+    solve_radiative_transfer_feautrier,
+    compute_emergent_spectrum,
+    compute_limb_darkening,
+    limb_darkening_coefficient,
+    synthesize_spectrum_full,
+
+    # Atmosphere reader (Task 5.1)
+    read_atlas9_model,
+    parse_atlas9_header,
+    parse_atlas9_structure,
+
+    # Line opacity integration (Task 5.2)
+    boltzmann_level_population,
+    line_absorption_coefficient,
+    accumulate_line_opacity,
+    total_opacity_with_lines,
 
     # Pipeline
     synthe_pipeline,
