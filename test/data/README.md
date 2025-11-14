@@ -11,6 +11,12 @@ test/data/
 └── models/          # ATLAS atmosphere models
 ```
 
+## Currently available files
+
+- atomic/gf0600_sample.dat - Sample atomic line list (not full gfall)
+- molecular/mgh_sample.asc - Sample molecular line list (not full)
+- models/ap00t5777g44377k1odfnew.dat - Solar atmosphere model abundances from Grevesse & Sauval, 1998, Space Sci. Rev., 85, 161
+
 ## Required Files (Paula to provide)
 
 ### High Priority (CRITICAL for CCW Step 2)
