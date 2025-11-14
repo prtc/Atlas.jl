@@ -41,3 +41,6 @@ output/
 
 # Compiled Fortran libraries (platform-specific binaries)
 lib/
+
+# Local funding documentation
+docs/funding/
