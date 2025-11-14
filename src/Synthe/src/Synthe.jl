@@ -52,6 +52,12 @@ include("opacity_integration.jl")
 # Radiative transfer (Task 4 - Step 4)
 include("radiative_transfer.jl")
 
+# Atmosphere model reader (Task 5.1)
+include("atmosphere_reader.jl")
+
+# Line opacity integration (Task 5.2)
+include("line_opacity_integration.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -139,6 +145,17 @@ export
     compute_optical_depth,
     solve_radiative_transfer_feautrier,
     compute_emergent_spectrum,
+
+    # Atmosphere reader (Task 5.1)
+    read_atlas9_model,
+    parse_atlas9_header,
+    parse_atlas9_structure,
+
+    # Line opacity integration (Task 5.2)
+    boltzmann_level_population,
+    line_absorption_coefficient,
+    accumulate_line_opacity,
+    total_opacity_with_lines,
 
     # Pipeline
     synthe_pipeline,
