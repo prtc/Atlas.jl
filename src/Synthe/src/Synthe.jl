@@ -46,6 +46,9 @@ include("continuum_opacity.jl")
 # Population solver (Task 3.1 - Step 3)
 include("populations.jl")
 
+# Opacity integration (Task 3.2 - Step 3)
+include("opacity_integration.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -121,6 +124,11 @@ export
     saha_ionization_ratio,
     compute_populations,
     PopulationResult,
+
+    # Opacity integration (Step 3 Task 3.2)
+    continuum_opacity_total,
+    total_opacity,
+    line_opacity_at_wavelength,
 
     # Pipeline
     synthe_pipeline,
