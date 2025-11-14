@@ -1,6 +1,6 @@
 # Phase 5: Pure Julia Implementation Status
 **Last Updated**: 2025-11-13
-**Current Status**: Foundation Complete (Step 1), Ready for Step 2
+**Current Status**: Step 1 Complete, Step 2 In Progress
 
 ---
 
@@ -15,9 +15,11 @@ Phase 5 pivoted from "Minimal Working SYNTHE Pipeline" (requiring Fortran compil
 - ✅ **250/250 tests passing** (201 unit tests + 49 integration tests)
 - ✅ **Performance validated**: Voigt profile at 14.9 ns/call (67M calls/sec)
 - ✅ **Zero dependencies**: Pure Julia stdlib only
-- 🔄 **Ready for Step 2**: Line reading and opacity sampling
+- 🔄 **Step 2 IN PROGRESS**: Line readers and continuum opacity (Pure Julia TDD)
 
 **Credit Usage**: ~$45-55 of $68 used for Step 1, ~$13-20 remaining for Step 2
+
+**Atlas7v Fortran Integration**: Deferred to post-Step 2 local work. Paula has compiled atlas7v.so (716KB, Nov 13) but Pure Julia implementation prioritized for CCW. See `lib/README.md` for local compilation instructions.
 
 ---
 
@@ -241,67 +243,118 @@ All code in `src/Synthe/src/`, all tests in `test/synthe/`
 
 ---
 
-## Step 2: Line Reading & Opacity Sampling 🔄 READY TO START
+## Step 2: Line Reading & Continuum Opacity 🔄 IN PROGRESS
 
 ### Goals
 
-Implement atomic and molecular line readers, connect to Step 1 foundation.
+Implement Pure Julia line readers and continuum opacity calculations, building on Step 1 foundation.
 
-### Tasks (TODO - needs revision)
+**Approach**: Strict TDD (Test-Driven Development) - Write failing tests first, then implement.
 
-#### 2.1 Atomic Line Reader (gfall format)
-- [ ] Parse Kurucz gfall format (fixed-width or space-delimited)
-- [ ] Wavelength filtering (range + margin for Voigt wings)
+**Status**: Test stubs and implementation stubs ready for CCW. Awaiting test data from Paula.
+
+### Task 2.1: Atomic Line Reader (gfall format) - ~$5-8
+**Priority**: CRITICAL
+**Status**: 🔄 Test stubs ready, awaiting test data (gf5000.asc)
+
+- [ ] Parse Kurucz gfall format (fixed-width columns)
+- [ ] Wavelength filtering (range + 10Å margin for Voigt wings)
 - [ ] Element/ion identification (26.00 = Fe I, 26.01 = Fe II)
 - [ ] Energy level parsing (E_lower, E_upper, J values)
-- [ ] Oscillator strength (log gf)
+- [ ] Oscillator strength (log gf → gf conversion)
 - [ ] Compute damping parameters (radiative, Stark, van der Waals)
-- [ ] NBUFF indexing (wavelength → grid index)
-- [ ] Tests: Parse known lines, validate against atlas7v expectations
+- [ ] NBUFF indexing (wavelength → logarithmic grid index)
+- [ ] Return Vector{SpectralLine}
+
+**Test Data Needed**: `test/data/atomic/gf5000.asc` (Paula will provide)
 
 **Files**:
-- `src/Synthe/src/line_readers.jl` (partial implementation exists)
-- `test/synthe/test_line_readers.jl`
+- `src/Synthe/src/line_readers.jl` (implementation stub created)
+- `test/synthe/test_line_readers.jl` (failing tests created)
 
-#### 2.2 Molecular Line Reader
-- [ ] ASCII format for diatomic molecules (CH, CN, CO, NH, OH, MgH, SiH, CaH, FeH)
+### Task 2.2: Molecular Line Reader (ASCII format) - ~$4-6
+**Priority**: HIGH
+**Status**: 🔄 Test stubs ready, awaiting test data (CH/CN/CO lines)
+
+- [ ] Parse ASCII molecular line format (CH, CN, CO)
+- [ ] ISO code → NELION mapping (246=CH, 270=CN, 276=CO)
 - [ ] Isotopic abundance corrections
-- [ ] NELION species codes (246=CH, 270=CN, 276=CO, etc.)
-- [ ] Skip TiO/H2O for now (binary format, cool stars only)
-- [ ] Tests: Parse molecular lines, isotope corrections
+- [ ] Wavelength filtering
+- [ ] Return Vector{SpectralLine} with molecular metadata
+- [ ] Skip TiO/H2O (binary format, deferred to later phase)
+
+**Test Data Needed**: `test/data/molecular/ch_lines.asc` (Paula will provide)
 
 **Files**:
-- `src/Synthe/src/line_readers_molecular.jl` (stub exists)
-- `test/synthe/test_line_readers_molecular.jl`
+- `src/Synthe/src/line_readers_molecular.jl` (implementation stub created)
+- `test/synthe/test_line_readers_molecular.jl` (failing tests created)
 
-#### 2.3 Continuum Opacity
-- [ ] H⁻ bound-free and free-free (dominant in solar-type stars)
+### Task 2.3: Continuum Opacity (Pure Julia) - ~$4-6
+**Priority**: MEDIUM
+**Status**: 🔄 Test stubs ready, can use literature values for validation
+
+- [ ] H⁻ bound-free opacity (dominant in solar photosphere)
+- [ ] H⁻ free-free opacity
 - [ ] H I bound-free (Lyman, Balmer, Paschen series)
 - [ ] He I, He II bound-free
 - [ ] Electron scattering (Thomson)
 - [ ] H₂⁺ quasi-molecular absorption (cool stars)
 - [ ] Tests: Match known opacity values at standard conditions
 
-**Files**:
-- `src/Synthe/src/continuum_opacity.jl`
-- `test/synthe/test_continuum_opacity.jl`
-
-#### 2.4 Partition Functions
-- [ ] Read partition function tables (atoms and ions)
-- [ ] Interpolation in temperature
-- [ ] Saha equation implementation (ionization balance)
-- [ ] Tests: Known species at standard temperatures
+**Test Data Needed**: Literature opacity values (Gray 2005, Kurucz tables)
 
 **Files**:
-- `src/Synthe/src/partition_functions.jl`
-- `test/synthe/test_partition_functions.jl`
+- `src/Synthe/src/continuum_opacity.jl` (implementation stub created)
+- `test/synthe/test_continuum_opacity.jl` (failing tests created)
 
-#### 2.5 Integration
-- [ ] Combine atomic + molecular line lists
-- [ ] Total opacity = line + continuum
-- [ ] Opacity sampling on wavelength grid
-- [ ] Full spectrum synthesis demo
-- [ ] Tests: End-to-end spectrum generation
+### Estimated Budget for Step 2
+
+| Task | Estimated Cost | Status |
+|------|---------------|---------|
+| 2.1 Atomic line reader | $5-8 | 🔄 Ready (awaiting test data) |
+| 2.2 Molecular line reader | $4-6 | 🔄 Ready (awaiting test data) |
+| 2.3 Continuum opacity | $4-6 | 🔄 Ready (can validate with literature) |
+| **Total** | **$13-20** | **Fits remaining CCW credit** |
+
+### CCW Handoff
+
+See `CCW_TASK_STEP2.md` for detailed task breakdown, TDD workflow, and acceptance criteria.
+
+**Prerequisites**:
+- ✅ Step 1 foundation complete (250 tests passing)
+- ⏳ Test data files (Paula to provide before CCW starts)
+- ✅ Test stubs created (failing tests ready)
+- ✅ Implementation stubs created (function signatures defined)
+
+---
+
+## Atlas7v Fortran Integration (Deferred)
+
+**Status**: ⏸ Deferred to post-Step 2 local work
+
+**Rationale**:
+- Pure Julia approach prioritized for CCW (clearer scope, fits budget)
+- atlas7v.so compiled by Paula (716KB, Nov 13, x86-64 Linux)
+- COMMON block data transfer requires Fortran wrapper layer (complex)
+- Can be pursued on local machine after Step 2 proves Pure Julia viability
+
+**Current State**:
+- ✅ atlas7v.so exists at `lib/atlas7v.so` (716KB ELF shared object)
+- ✅ Library exports pops_, kapp_, josh_ symbols
+- ⚠️ Ccall interface skeleton-only (18 TODOs, all tests @test_skip)
+- ❌ No COMMON block data transfer mechanism implemented
+- ❌ No ATLAS model file parser
+
+**See**: `src/Synthe/src/atlas7v.jl` and `test/phase5_minimal_synthe/test_atlas7v.jl` for existing skeleton code.
+
+**Future Work** (local machine, post-Step 2):
+1. Write Fortran wrapper subroutines for COMMON block initialization
+2. Implement ATLAS model file parser
+3. Complete ccall setter/getter functions
+4. Unskip and debug tests
+5. Performance comparison: Pure Julia vs Fortran
+
+**Compilation Instructions**: See `lib/README.md`
 
 ---
 

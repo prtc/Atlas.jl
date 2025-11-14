@@ -38,3 +38,6 @@ tools/julia/julia-split-*
 
 # Generated output files (demos, benchmarks)
 output/
+
+# Compiled Fortran libraries (platform-specific binaries)
+lib/

@@ -57,6 +57,19 @@ end
     SyntheConfig
 
 Configuration for SYNTHE synthesis run
+
+# Keyword Constructor
+```julia
+SyntheConfig(;
+    wave_start = 5000.0,
+    wave_end = 5100.0,
+    resolving_power = 50000.0,
+    turbulent_velocity = 2.0,
+    vacuum_wavelengths = true,
+    nlte = false,
+    cutoff = 0.001
+)
+```
 """
 struct SyntheConfig
     wave_start::Float64          # Start wavelength (Å)
@@ -66,6 +79,20 @@ struct SyntheConfig
     vacuum_wavelengths::Bool     # true = vacuum, false = air
     nlte::Bool                   # true = NLTE, false = LTE
     cutoff::Float64              # Line cutoff threshold
+end
+
+# Keyword constructor with sensible defaults
+function SyntheConfig(;
+    wave_start::Float64 = 5000.0,
+    wave_end::Float64 = 5100.0,
+    resolving_power::Float64 = 50000.0,
+    turbulent_velocity::Float64 = 2.0,
+    vacuum_wavelengths::Bool = true,
+    nlte::Bool = false,
+    cutoff::Float64 = 0.001
+)
+    SyntheConfig(wave_start, wave_end, resolving_power, turbulent_velocity,
+                 vacuum_wavelengths, nlte, cutoff)
 end
 
 """

@@ -40,6 +40,9 @@ include("synbeg.jl")
 include("line_readers.jl")
 include("line_readers_molecular.jl")
 
+# Continuum opacity (Task 2.3 - Step 2)
+include("continuum_opacity.jl")
+
 # Atmosphere preparation (Task 5)
 include("atmosphere.jl")
 
@@ -91,14 +94,24 @@ export
     wavelength_grid,
     wavelength_to_nbuff,
 
-    # Line readers (Tasks 3-4)
+    # Line readers (Tasks 3-4, Step 2 Tasks 2.1-2.2)
     read_gfalllines,
     parse_gfall_line,
     read_molecular_lines,
     parse_molecular_line,
     iso_to_nelion,
     get_isotopic_abundance,
+    isotopic_abundance_factor,
     combine_line_lists,
+    compute_nbuff,
+    read_gfall_lines,
+
+    # Continuum opacity (Step 2 Task 2.3)
+    hminus_bf,
+    hminus_ff,
+    hydrogen_bf,
+    electron_scattering,
+    gaunt_factor,
 
     # Pipeline
     synthe_pipeline,
