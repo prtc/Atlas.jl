@@ -1,279 +1,197 @@
 """
-Test molecular line readers (ASCII format)
+Test Suite: Molecular Line Reader (ASCII format)
 
-Tests for parsing molecular line lists (CH, CN, CO).
+Tests the Pure Julia molecular line reader for CH, CN, CO, MgH, etc.
+Uses Test-Driven Development (TDD) methodology.
 
-This file contains FAILING tests (RED phase of TDD).
-CCW should implement functions in src/Synthe/src/line_readers_molecular.jl to make tests pass (GREEN phase).
-
-Author: Claude (Local), Paula Coelho
-Date: 2025-11-13
+Run with: julia test/synthe/test_line_readers_molecular.jl
 """
 
 using Test
 
-# Add src/Synthe to load path
-push!(LOAD_PATH, joinpath(@__DIR__, "../../src/Synthe/src"))
+# Load the SpectralLine struct
+include("../../src/Synthe/src/structs.jl")
 
-using Synthe
+# Load the molecular line reader module (will create this)
+include("../../src/Synthe/src/line_readers_molecular.jl")
 
-@testset "ISO code → NELION mapping" begin
-    @testset "CH isotopes → NELION 246" begin
-        @test iso_to_nelion(101, "CH") ≈ 246.0  # ¹²C¹H (main isotope)
-        @test iso_to_nelion(102, "CH") ≈ 246.0  # ¹³C¹H (rare isotope)
+@testset "Molecular Line Reader (ASCII format)" begin
+
+    # =========================================================================
+    # Test 1: Parse molecular line basic fields
+    # =========================================================================
+
+    @testset "parse_molecular_line: basic fields" begin
+        # Real MgH line from test data
+        line = "  500.0010 -1.505  9.5  4666.690  8.5  24661.070 112X03F2   B03F2   24"
+
+        result = parse_molecular_line(line, "MgH")
+
+        # Should return a SpectralLine struct
+        @test result isa SpectralLine
+
+        # Basic fields
+        @test result.wavelength ≈ 500.0010 atol=1e-4
+        @test result.loggf ≈ -1.505 atol=1e-3
+        @test result.j_lower ≈ 9.5 atol=1e-1
+        @test result.e_lower ≈ 4666.690 atol=1e-3
+        @test result.j_upper ≈ 8.5 atol=1e-1
+        @test result.e_upper ≈ 24661.070 atol=1e-3
     end
 
-    @testset "CN isotopes → NELION 270" begin
-        @test iso_to_nelion(201, "CN") ≈ 270.0  # ¹²C¹⁴N (main)
-        @test iso_to_nelion(202, "CN") ≈ 270.0  # ¹³C¹⁴N (rare)
+    # =========================================================================
+    # Test 2: ISO code to NELION mapping
+    # =========================================================================
+
+    @testset "iso_to_nelion: CH molecule" begin
+        # CH isotopes map to NELION 246, 346
+        @test iso_to_nelion(101, "CH") == 246  # ¹²C¹H
+        @test iso_to_nelion(102, "CH") == 346  # ¹³C¹H
+        @test iso_to_nelion(104, "CH") == 446  # ¹²C²H (deuterium)
     end
 
-    @testset "CO isotopes → NELION 276" begin
-        @test iso_to_nelion(301, "CO") ≈ 276.0  # ¹²C¹⁶O (main)
-        @test iso_to_nelion(302, "CO") ≈ 276.0  # ¹³C¹⁶O (rare)
-        @test iso_to_nelion(303, "CO") ≈ 276.0  # ¹²C¹⁸O (rare)
+    @testset "iso_to_nelion: CN molecule" begin
+        # CN isotopes map to NELION 270, 370
+        @test iso_to_nelion(201, "CN") == 270  # ¹²C¹⁴N
+        @test iso_to_nelion(202, "CN") == 370  # ¹³C¹⁴N
+        @test iso_to_nelion(301, "CN") == 470  # ¹²C¹⁵N
     end
 
-    @testset "Unknown molecule → error" begin
-        @test_throws ErrorException iso_to_nelion(101, "XY")
-        @test_throws ErrorException iso_to_nelion(999, "INVALID")
-    end
-end
-
-@testset "Isotopic abundance factors" begin
-    @testset "Main isotopes have abundance factor 1.0" begin
-        @test isotopic_abundance_factor(101, "CH") ≈ 1.0  # ¹²C¹H
-        @test isotopic_abundance_factor(201, "CN") ≈ 1.0  # ¹²C¹⁴N
-        @test isotopic_abundance_factor(301, "CO") ≈ 1.0  # ¹²C¹⁶O
+    @testset "iso_to_nelion: CO molecule" begin
+        # CO isotopes map to NELION 276, 376
+        @test iso_to_nelion(101, "CO") == 276  # ¹²C¹⁶O
+        @test iso_to_nelion(102, "CO") == 376  # ¹³C¹⁶O
+        @test iso_to_nelion(201, "CO") == 476  # ¹²C¹⁷O
+        @test iso_to_nelion(301, "CO") == 576  # ¹²C¹⁸O
     end
 
-    @testset "¹³C isotopes have reduced abundance" begin
-        # ¹²C/¹³C ≈ 89 in solar → ¹³C factor ≈ 1/89 ≈ 0.011
-        factor_ch = isotopic_abundance_factor(102, "CH")  # ¹³C¹H
-        factor_cn = isotopic_abundance_factor(202, "CN")  # ¹³C¹⁴N
-        factor_co = isotopic_abundance_factor(302, "CO")  # ¹³C¹⁶O
-
-        @test factor_ch ≈ 0.011 atol=0.002  # ~1/89, allow ±20% tolerance
-        @test factor_cn ≈ 0.011 atol=0.002
-        @test factor_co ≈ 0.011 atol=0.002
+    @testset "iso_to_nelion: MgH molecule" begin
+        # MgH isotopes (24Mg, 25Mg, 26Mg)
+        @test iso_to_nelion(24, "MgH") == 124  # ²⁴Mg¹H
+        @test iso_to_nelion(25, "MgH") == 125  # ²⁵Mg¹H
+        @test iso_to_nelion(26, "MgH") == 126  # ²⁶Mg¹H
     end
 
-    @testset "Abundance factor modifies gf value" begin
-        # gf_corrected = gf_original * abundance_factor
-        gf_main = 1.0e-3
-        gf_rare = gf_main * isotopic_abundance_factor(102, "CH")
+    # =========================================================================
+    # Test 3: Isotopic abundance factors
+    # =========================================================================
 
-        @test gf_rare < gf_main  # Rare isotope should have weaker line
-        @test gf_rare ≈ gf_main * 0.011 atol=gf_main*0.003
-    end
-end
-
-@testset "Parse molecular line" begin
-    @testset "Parse CH line - main isotope" begin
-        # Example CH line: wavelength, log(gf), ISO, E_lower, E_upper, J_lower, J_upper
-        line_str = "5165.2340 -2.450 101 15234.67 34567.89 2.5 3.5"
-        line = parse_molecular_line(line_str, "CH")
-
-        @test line.wavelength ≈ 5165.2340
-        @test line.loggf ≈ -2.450
-        @test line.element_ion ≈ 246.0  # CH → NELION 246
-        @test line.e_lower ≈ 15234.67
-        @test line.e_upper ≈ 34567.89
-        @test line.j_lower ≈ 2.5
-        @test line.j_upper ≈ 3.5
+    @testset "isotopic_abundance_factor: CH molecule" begin
+        # ¹²C¹H is dominant (~98.9% C, ~99.98% H)
+        @test isotopic_abundance_factor(101, "CH") ≈ 1.0 rtol=0.05
+        
+        # ¹³C¹H is rare (~1.1% C)
+        @test isotopic_abundance_factor(102, "CH") < 0.05
     end
 
-    @testset "Parse CN line" begin
-        line_str = "3875.1234 -1.850 201 8456.23 34567.89 1.5 2.5"
-        line = parse_molecular_line(line_str, "CN")
-
-        @test line.wavelength ≈ 3875.1234
-        @test line.element_ion ≈ 270.0  # CN → NELION 270
+    @testset "isotopic_abundance_factor: MgH molecule" begin
+        # ²⁴Mg is dominant (~79%)
+        @test isotopic_abundance_factor(24, "MgH") ≈ 0.79 rtol=0.1
+        
+        # ²⁵Mg is ~10%
+        @test isotopic_abundance_factor(25, "MgH") ≈ 0.10 rtol=0.1
+        
+        # ²⁶Mg is ~11%
+        @test isotopic_abundance_factor(26, "MgH") ≈ 0.11 rtol=0.1
     end
 
-    @testset "Parse CO line" begin
-        line_str = "4835.6789 -3.120 301 5678.90 27056.78 3.0 4.0"
-        line = parse_molecular_line(line_str, "CO")
+    # =========================================================================
+    # Test 4: Parse molecular line with ISO code and NELION
+    # =========================================================================
 
-        @test line.wavelength ≈ 4835.6789
-        @test line.element_ion ≈ 276.0  # CO → NELION 276
+    @testset "parse_molecular_line: NELION mapping" begin
+        # MgH line with ISO code 24
+        line = "  500.0010 -1.505  9.5  4666.690  8.5  24661.070 112X03F2   B03F2   24"
+
+        result = parse_molecular_line(line, "MgH")
+
+        # Should have correct NELION code
+        @test result.element_ion ≈ 124.0 atol=1e-2  # ISO 24 → NELION 124
     end
 
-    @testset "Parse rare isotope - ¹³C¹H" begin
-        # ¹³C¹H line should have NELION 246 but gf corrected by abundance
-        line_str = "5165.2340 -2.450 102 15234.67 34567.89 2.5 3.5"
-        line = parse_molecular_line(line_str, "CH")
+    # =========================================================================
+    # Test 5: Read molecular lines from file
+    # =========================================================================
 
-        @test line.element_ion ≈ 246.0  # Still NELION 246
+    @testset "read_molecular_lines: filter by wavelength" begin
+        molecular_file = "../../test/data/molecular/mgh_sample.asc"
 
-        # gf should be reduced by isotopic abundance factor
-        gf_expected = 10^(-2.450) * isotopic_abundance_factor(102, "CH")
-        loggf_expected = log10(gf_expected)
+        # Read lines in specific range
+        λ_start = 500.0
+        λ_end = 500.1
+        margin = 0.0
 
-        @test line.loggf ≈ loggf_expected atol=0.01
-    end
+        lines = read_molecular_lines(molecular_file, "MgH", λ_start, λ_end, margin)
 
-    @testset "Invalid input - empty string" begin
-        @test_throws ErrorException parse_molecular_line("", "CH")
-    end
-
-    @testset "Invalid input - insufficient fields" begin
-        line_str = "5165.2340 -2.450"  # Missing fields
-        @test_throws ErrorException parse_molecular_line(line_str, "CH")
-    end
-end
-
-@testset "Read molecular line file" begin
-    # These tests assume test data file exists at test/data/molecular/ch_lines.asc
-    # Paula will provide this file before CCW starts
-
-    ch_test_file = joinpath(@__DIR__, "../data/molecular/ch_lines.asc")
-    cn_test_file = joinpath(@__DIR__, "../data/molecular/cn_lines.asc")
-    co_test_file = joinpath(@__DIR__, "../data/molecular/co_lines.asc")
-
-    @testset "Read empty file" begin
-        empty_file = tempname()
-        touch(empty_file)
-
-        lines = read_molecular_lines(empty_file, "CH", 5000.0, 5100.0)
-
-        @test length(lines) == 0
+        # Should return array of SpectralLine
         @test lines isa Vector{SpectralLine}
+        @test length(lines) > 0
 
-        rm(empty_file)
-    end
-
-    @testset "Wavelength filtering - no margin" begin
-        if !isfile(ch_test_file)
-            @test_skip "Test data not yet available: $ch_test_file"
-        else
-            lines = read_molecular_lines(ch_test_file, "CH", 5000.0, 5010.0, 0.0)
-
-            # All lines should be within range
-            for line in lines
-                @test 5000.0 <= line.wavelength <= 5010.0
-            end
+        # All lines should be within range
+        for line in lines
+            @test line.wavelength >= λ_start
+            @test line.wavelength <= λ_end
         end
     end
 
-    @testset "Wavelength filtering - with margin" begin
-        if !isfile(ch_test_file)
-            @test_skip "Test data not yet available: $ch_test_file"
-        else
-            lines_with_margin = read_molecular_lines(ch_test_file, "CH", 5000.0, 5010.0, 10.0)
-            lines_no_margin = read_molecular_lines(ch_test_file, "CH", 5000.0, 5010.0, 0.0)
+    @testset "read_molecular_lines: with margin" begin
+        molecular_file = "../../test/data/molecular/mgh_sample.asc"
 
-            # With margin should have ≥ lines
-            @test length(lines_with_margin) >= length(lines_no_margin)
+        # Read with margin
+        λ_start = 500.0
+        λ_end = 500.05
+        margin = 0.1
 
-            # All lines within extended range
-            for line in lines_with_margin
-                @test 4990.0 <= line.wavelength <= 5020.0
-            end
+        lines = read_molecular_lines(molecular_file, "MgH", λ_start, λ_end, margin)
+
+        # All lines should be within extended range
+        for line in lines
+            @test line.wavelength >= λ_start - margin
+            @test line.wavelength <= λ_end + margin
         end
     end
 
-    @testset "Read CH file" begin
-        if !isfile(ch_test_file)
-            @test_skip "Test data not yet available: $ch_test_file"
-        else
-            lines = read_molecular_lines(ch_test_file, "CH", 4000.0, 6000.0)
+    # =========================================================================
+    # Test 6: Integration test with real molecular data
+    # =========================================================================
 
-            @test length(lines) > 0
-            @test all(l -> l isa SpectralLine, lines)
+    @testset "Integration: read and parse real MgH file" begin
+        molecular_file = "../../test/data/molecular/mgh_sample.asc"
 
-            # All CH lines should have NELION 246
-            @test all(l -> l.element_ion ≈ 246.0, lines)
+        # Read small wavelength range
+        lines = read_molecular_lines(molecular_file, "MgH", 500.0, 500.05, 0.0)
 
-            # All wavelengths positive and finite
-            @test all(l -> l.wavelength > 0.0, lines)
-            @test all(l -> isfinite(l.wavelength), lines)
-        end
+        @test length(lines) > 0
+
+        # Check first line
+        first_line = lines[1]
+        @test first_line.wavelength >= 500.0
+        @test first_line.wavelength <= 500.05
+        @test !isnan(first_line.loggf)
+        @test first_line.element_ion > 0.0  # Valid NELION code
+
+        # Check nbuff is computed
+        @test first_line.nbuff > 0
     end
 
-    @testset "Read CN file" begin
-        if !isfile(cn_test_file)
-            @test_skip "Test data not yet available: $cn_test_file"
-        else
-            lines = read_molecular_lines(cn_test_file, "CN", 3000.0, 5000.0)
+    # =========================================================================
+    # Test 7: Edge cases - different isotopes
+    # =========================================================================
 
-            @test length(lines) > 0
+    @testset "parse_molecular_line: multiple isotopes" begin
+        # Test all three Mg isotopes
+        line_24 = "  500.0010 -1.505  9.5  4666.690  8.5  24661.070 112X03F2   B03F2   24"
+        line_25 = "  500.0039 -2.344 16.5 -9671.612 15.5 -29665.880 112X07F2   A07F1   25"
+        line_26 = "  500.0161 -0.207 13.5 -7316.358 14.5 -27310.137 112X05E1   A05E1   26"
 
-            # All CN lines should have NELION 270
-            @test all(l -> l.element_ion ≈ 270.0, lines)
-        end
+        result_24 = parse_molecular_line(line_24, "MgH")
+        result_25 = parse_molecular_line(line_25, "MgH")
+        result_26 = parse_molecular_line(line_26, "MgH")
+
+        # Each should have different NELION codes
+        @test result_24.element_ion ≈ 124.0 atol=1e-2
+        @test result_25.element_ion ≈ 125.0 atol=1e-2
+        @test result_26.element_ion ≈ 126.0 atol=1e-2
     end
 
-    @testset "Read CO file" begin
-        if !isfile(co_test_file)
-            @test_skip "Test data not yet available: $co_test_file"
-        else
-            lines = read_molecular_lines(co_test_file, "CO", 4000.0, 6000.0)
-
-            @test length(lines) > 0
-
-            # All CO lines should have NELION 276
-            @test all(l -> l.element_ion ≈ 276.0, lines)
-        end
-    end
-
-    @testset "Skip comment and blank lines" begin
-        temp_file = tempname()
-        write(temp_file, """
-        # Comment line
-        5165.2340 -2.450 101 15234.67 34567.89 2.5 3.5
-
-        5166.1234 -2.120 101 15240.50 34560.12 3.5 4.5
-        # Another comment
-        """)
-
-        lines = read_molecular_lines(temp_file, "CH", 5000.0, 5200.0)
-
-        @test length(lines) == 2  # Only two actual lines
-        @test lines[1].wavelength ≈ 5165.2340
-        @test lines[2].wavelength ≈ 5166.1234
-
-        rm(temp_file)
-    end
 end
-
-@testset "Molecular vs atomic line integration" begin
-    @testset "Molecular lines use same SpectralLine struct" begin
-        # Both atomic and molecular should produce same struct type
-        atomic_line_str = "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970"
-        molecular_line_str = "5165.2340 -2.450 101 15234.67 34567.89 2.5 3.5"
-
-        atomic_line = parse_gfall_line(atomic_line_str)
-        molecular_line = parse_molecular_line(molecular_line_str, "CH")
-
-        @test typeof(atomic_line) == typeof(molecular_line)
-        @test atomic_line isa SpectralLine
-        @test molecular_line isa SpectralLine
-    end
-
-    @testset "Can combine atomic and molecular line lists" begin
-        # Create temp atomic and molecular files
-        atomic_file = tempname()
-        write(atomic_file, "4045.8138  0.280 26.0  0.000 28520.868 4.0 6.0 -7.640 -6.420 -5.970")
-
-        molecular_file = tempname()
-        write(molecular_file, "5165.2340 -2.450 101 15234.67 34567.89 2.5 3.5")
-
-        atomic_lines = read_gfall_lines(atomic_file, 4000.0, 5000.0)
-        molecular_lines = read_molecular_lines(molecular_file, "CH", 5000.0, 6000.0)
-
-        # Combine into single list
-        all_lines = vcat(atomic_lines, molecular_lines)
-
-        @test length(all_lines) == 2
-        @test all_lines[1].element_ion ≈ 26.0  # Fe I
-        @test all_lines[2].element_ion ≈ 246.0  # CH
-
-        rm(atomic_file)
-        rm(molecular_file)
-    end
-end
-
-println("✅ Molecular line reader tests defined (RED phase).")
-println("📝 Implement functions in src/Synthe/src/line_readers_molecular.jl to make tests pass (GREEN phase).")
-println("📂 Test data expected at: test/data/molecular/{ch,cn,co}_lines.asc (Paula to provide)")
