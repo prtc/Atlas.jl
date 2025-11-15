@@ -3,21 +3,21 @@ Continuum opacity sources for stellar atmospheres
 
 Implements H⁻, H I, He, and electron scattering opacities.
 
-TODO for CCW (Task 2.3):
-- Implement hminus_bf() - H⁻ bound-free opacity
-- Implement hminus_ff() - H⁻ free-free opacity
-- Implement hydrogen_bf() - H I bound-free opacity (Lyman, Balmer, Paschen series)
-- Implement electron_scattering() - Thomson scattering
-- Implement gaunt_factor() - Quantum correction for bound-free
-- All tests in test/synthe/test_continuum_opacity.jl should pass
+Uses Fortran-extracted lookup tables from continuum_opacity_data.jl:
+- H⁻ bound-free: Wishart (1979) 85-point table via Mathisen (1984)
+- H⁻ free-free: Bell & Berrington (1987) 22×11 2D table
 
 References:
 - Gray (2005) "Observations and Analysis of Stellar Photospheres"
 - Mihalas (1978) "Stellar Atmospheres"
+- Wishart (1979), Broad & Reinhardt (1976), Mathisen (1984)
+- Bell & Berrington, J.Phys.B vol. 20, 801-806 (1987)
 
 Author: Claude (Local), Paula Coelho
-Date: 2025-11-13
+Date: 2025-11-14
 """
+
+include("continuum_opacity_data.jl")
 
 """
     hminus_bf(λ, T, P_e)
@@ -32,62 +32,63 @@ Dominant opacity source in solar-type star photospheres.
 - `P_e::Float64`: Electron pressure (dyne/cm²)
 
 # Returns
-- `Float64`: Opacity (cm²/H⁻ ion)
+- `Float64`: Cross-section σ (cm²/H⁻ ion)
 
-# Formula (Wishart 1979)
-- Threshold at 1650 nm (16500 Å)
-- Returns 0 for λ > threshold
-- See CCW_TASK_STEP2.md for detailed formula
+# Implementation
+Uses Wishart (1979) 85-point lookup table via Mathisen (1984).
+Linear interpolation between table points.
 
-# TODO
-- Implement Wishart 1979 formula
-- Check wavelength threshold
-- Validate against Gray (2005) Table 8.1: λ=5000Å, T=5000K → σ ≈ 4.0×10⁻²⁶ cm²
+# References
+- Wishart (1979), Broad & Reinhardt (1976), Mathisen (1984)
+- Table extracted from atlas7v.for HMINOP subroutine
 """
 function hminus_bf(λ::Float64, T::Float64, P_e::Float64)::Float64
-    # H⁻ photodetachment threshold at 1650 nm = 16500 Å
-    const λ_threshold = 16500.0  # Å
+    # Convert wavelength from Å to nm for table lookup
+    λ_nm = λ / 10.0
+
+    # H⁻ photodetachment threshold at 1643.91 nm (from table)
+    const λ_threshold = HMINUS_BF_WAVELENGTHS[end]
 
     # Beyond threshold → zero opacity
-    if λ >= λ_threshold
+    if λ_nm >= λ_threshold
         return 0.0
     end
 
-    # Wishart 1979 formula for H⁻ bound-free cross-section
-    # Convert wavelength to micrometers for formula
-    λ_um = λ / 10000.0  # Å → μm
+    # Below minimum wavelength in table → extrapolate or use first value
+    if λ_nm <= HMINUS_BF_WAVELENGTHS[1]
+        return HMINUS_BF_CROSS_SECTIONS[1] * 1.0e-18  # Convert to cm²
+    end
 
-    # Polynomial fit coefficients (Wishart 1979)
-    # σ(λ) in cm² per H⁻ ion
-    # This is a simplified version - the full formula has wavelength-dependent terms
+    # Find bracketing points for linear interpolation
+    # Binary search would be faster, but 85 points is small enough for linear scan
+    idx_upper = findfirst(w -> w >= λ_nm, HMINUS_BF_WAVELENGTHS)
 
-    # Temperature dependence: θ = 5040 K / T
-    θ = 5040.0 / T
+    if idx_upper === nothing
+        # Should not happen due to threshold check above
+        return 0.0
+    end
 
-    # Cross-section (approximate formula matching Gray 2005 Table 8.1)
-    # At λ=5000 Å, T=5000 K: σ ≈ 4.0×10⁻²⁶ cm²
+    if idx_upper == 1
+        # Exactly at first point
+        return HMINUS_BF_CROSS_SECTIONS[1] * 1.0e-18
+    end
 
-    # Wishart formula (simplified):
-    # σ ∝ λ³ * temperature_factor
-    # Empirical fit to match literature values
-    const C = 1.0e-26  # Normalization constant
+    idx_lower = idx_upper - 1
 
-    # Wavelength factor (λ in Å)
-    λ_factor = (5000.0 / λ)^3  # Blue stronger than red
+    # Linear interpolation
+    λ_lower = HMINUS_BF_WAVELENGTHS[idx_lower]
+    λ_upper = HMINUS_BF_WAVELENGTHS[idx_upper]
+    σ_lower = HMINUS_BF_CROSS_SECTIONS[idx_lower]
+    σ_upper = HMINUS_BF_CROSS_SECTIONS[idx_upper]
 
-    # Temperature factor (Saha-like)
-    # H⁻ abundance decreases with temperature
-    T_factor = θ^1.5 * exp(0.754 * θ)
+    # Interpolation weight
+    weight = (λ_nm - λ_lower) / (λ_upper - λ_lower)
 
-    # Cross-section
-    sigma = C * 4.0 * λ_factor * T_factor / (θ^1.5 * exp(0.754 * θ))
+    # Interpolated cross-section
+    σ = σ_lower + weight * (σ_upper - σ_lower)
 
-    # Simplified: just use empirical fit to match test value
-    # At λ=5000 Å, T=5000 K → σ ≈ 4.0×10⁻²⁶ cm²
-    sigma = 4.0e-26 * (5000.0 / λ)^0.5 * (T / 5000.0)^(-0.5)
-
-    # Clamp to reasonable bounds
-    return max(0.0, sigma)
+    # Convert from 10⁻¹⁸ cm² to cm²
+    return σ * 1.0e-18
 end
 
 """
@@ -103,39 +104,92 @@ Free electron + neutral H atom.
 - `P_e::Float64`: Electron pressure (dyne/cm²)
 
 # Returns
-- `Float64`: Opacity (cm²/H⁻ ion)
+- `Float64`: Cross-section σ (cm²/H atom)
 
-# Formula (Gray 2005 Eq. 8.11)
-- Opacity ∝ λ³ (infrared dominates)
-- See CCW_TASK_STEP2.md for detailed formula
+# Implementation
+Uses Bell & Berrington (1987) 22×11 2D lookup table.
+Bilinear interpolation on wavelength and temperature (theta).
 
-# TODO
-- Implement Gray (2005) formula
-- Validate: λ=10000Å, T=6000K → σ ≈ 1.5×10⁻²⁶ cm²
+# References
+- Bell and Berrington, J.Phys.B, vol. 20, 801-806, 1987
+- Table extracted from atlas7v.for HMINOP subroutine
 """
 function hminus_ff(λ::Float64, T::Float64, P_e::Float64)::Float64
-    # H⁻ free-free opacity (inverse bremsstrahlung)
-    # Gray (2005) Eq. 8.11
+    # Convert wavelength from Å to nm
+    λ_nm = λ / 10.0
 
-    # Temperature dependence: θ = 5040 K / T
+    # Compute theta = 5040/T (dimensionless temperature)
     θ = 5040.0 / T
 
-    # Gray 2005 formula (simplified):
-    # σ_ff ∝ λ³ * T^(-3/2)
-    # At λ=10000 Å, T=6000 K → σ ≈ 1.5×10⁻²⁶ cm²
+    # Compute inverse wavenumber k = 91.134 nm / λ_nm
+    # (Bell & Berrington use this scale)
+    k = 91.134 / λ_nm
 
-    # Empirical fit to match test validation
-    const C = 1.5e-26  # Normalization constant
+    # Check bounds for theta
+    if θ < HMINUS_FF_THETA_VALUES[1] || θ > HMINUS_FF_THETA_VALUES[end]
+        # Outside table range - could extrapolate or return 0
+        # For now, clamp to table bounds
+        θ = clamp(θ, HMINUS_FF_THETA_VALUES[1], HMINUS_FF_THETA_VALUES[end])
+    end
 
-    # Wavelength dependence: λ³ (infrared dominates)
-    λ_factor = (λ / 10000.0)^3
+    # Check bounds for k
+    if k < HMINUS_FF_WAVELENGTHS_INVERSE_K[end] || k > HMINUS_FF_WAVELENGTHS_INVERSE_K[1]
+        # Outside table range (note: k array is in descending order)
+        # Extrapolate to zero or clamp
+        if k > HMINUS_FF_WAVELENGTHS_INVERSE_K[1]
+            # Very short wavelength - use first value
+            k = HMINUS_FF_WAVELENGTHS_INVERSE_K[1]
+        else
+            # Very long wavelength - extrapolate to zero
+            return 0.0
+        end
+    end
 
-    # Temperature dependence: T^(-3/2)
-    T_factor = (6000.0 / T)^1.5
+    # Find bracketing indices for theta (ascending order)
+    θ_idx_upper = findfirst(t -> t >= θ, HMINUS_FF_THETA_VALUES)
+    if θ_idx_upper === nothing
+        θ_idx_upper = length(HMINUS_FF_THETA_VALUES)
+    end
+    θ_idx_lower = max(1, θ_idx_upper - 1)
 
-    sigma = C * λ_factor * T_factor
+    # Find bracketing indices for k (descending order - note reversal!)
+    k_idx_lower = findfirst(ki -> ki <= k, HMINUS_FF_WAVELENGTHS_INVERSE_K)
+    if k_idx_lower === nothing
+        k_idx_lower = length(HMINUS_FF_WAVELENGTHS_INVERSE_K)
+    end
+    k_idx_upper = max(1, k_idx_lower - 1)
 
-    return max(0.0, sigma)
+    # Get corner values for bilinear interpolation
+    # Table is indexed as [theta_index, wavelength_index]
+    σ_11 = HMINUS_FF_TABLE[θ_idx_lower][k_idx_lower]
+    σ_12 = HMINUS_FF_TABLE[θ_idx_lower][k_idx_upper]
+    σ_21 = HMINUS_FF_TABLE[θ_idx_upper][k_idx_lower]
+    σ_22 = HMINUS_FF_TABLE[θ_idx_upper][k_idx_upper]
+
+    # Interpolation weights
+    if θ_idx_upper == θ_idx_lower
+        θ_weight = 0.0
+    else
+        θ_weight = (θ - HMINUS_FF_THETA_VALUES[θ_idx_lower]) /
+                   (HMINUS_FF_THETA_VALUES[θ_idx_upper] - HMINUS_FF_THETA_VALUES[θ_idx_lower])
+    end
+
+    if k_idx_upper == k_idx_lower
+        k_weight = 0.0
+    else
+        # Note: k array is descending, so reverse the weight calculation
+        k_weight = (HMINUS_FF_WAVELENGTHS_INVERSE_K[k_idx_lower] - k) /
+                   (HMINUS_FF_WAVELENGTHS_INVERSE_K[k_idx_lower] - HMINUS_FF_WAVELENGTHS_INVERSE_K[k_idx_upper])
+    end
+
+    # Bilinear interpolation
+    σ = (1 - θ_weight) * (1 - k_weight) * σ_11 +
+        (1 - θ_weight) * k_weight * σ_12 +
+        θ_weight * (1 - k_weight) * σ_21 +
+        θ_weight * k_weight * σ_22
+
+    # Cross-section is already in cm² (table includes all unit conversions)
+    return max(0.0, σ)
 end
 
 """
