@@ -225,6 +225,8 @@ Contains electron density, ionization fractions, and convergence information.
 - `number_densities::Dict{Tuple{Int,Int}, Float64}`: (element, ion_stage) → density (cm⁻³)
 - `converged::Bool`: True if iteration converged to tolerance
 - `iterations::Int`: Number of iterations performed
+- `final_error::Float64`: Final relative change |Δn_e/n_e| at last iteration
+- `n_e_history::Vector{Float64}`: Electron density at each iteration (for diagnostics)
 """
 struct PopulationResult
     n_e::Float64
@@ -232,6 +234,8 @@ struct PopulationResult
     number_densities::Dict{Tuple{Int,Int}, Float64}
     converged::Bool
     iterations::Int
+    final_error::Float64
+    n_e_history::Vector{Float64}
 end
 
 """
@@ -316,6 +320,12 @@ function compute_populations(T::Float64, P_gas::Float64,
     ion_fractions = Dict{Tuple{Int,Int}, Float64}()
     number_densities = Dict{Tuple{Int,Int}, Float64}()
 
+    # Track electron density evolution for diagnostics
+    n_e_history = Float64[n_e]  # Initial guess
+
+    # Track final error
+    relative_change = 0.0
+
     for iter in 1:max_iter
         # Clear previous iteration
         empty!(ion_fractions)
@@ -357,15 +367,21 @@ function compute_populations(T::Float64, P_gas::Float64,
 
         if relative_change < tolerance
             # Converged!
-            return PopulationResult(n_e, ion_fractions, number_densities, true, iter)
+            push!(n_e_history, n_e_new)
+            return PopulationResult(n_e_new, ion_fractions, number_densities,
+                                   true, iter, relative_change, n_e_history)
         end
 
         # 4. Damp and iterate
         n_e = n_e + damping * (n_e_new - n_e)
+        push!(n_e_history, n_e)
     end
 
-    # Did not converge
-    return PopulationResult(n_e, ion_fractions, number_densities, false, max_iter)
+    # Did not converge - log warning with diagnostic information
+    @warn "Population solver did not converge after $max_iter iterations" T P_gas final_error=relative_change n_e_initial=n_e_history[1] n_e_final=n_e maxlog=10
+
+    return PopulationResult(n_e, ion_fractions, number_densities,
+                           false, max_iter, relative_change, n_e_history)
 end
 
 """

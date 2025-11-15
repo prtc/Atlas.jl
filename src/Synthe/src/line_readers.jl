@@ -142,6 +142,7 @@ lines = read_gfall_lines("gfall.dat", 4990.0, 5010.0, 10.0)
 """
 function read_gfall_lines(filepath::String, λ_start::Float64, λ_end::Float64, margin::Float64=10.0)::Vector{SpectralLine}
     lines = SpectralLine[]
+    skipped_lines = Tuple{Int, String, String}[]  # (line_number, line_content, error_msg)
 
     # Extended wavelength range with margin
     λ_min = λ_start - margin
@@ -151,8 +152,11 @@ function read_gfall_lines(filepath::String, λ_start::Float64, λ_end::Float64, 
     # Use a standard high-resolution grid (this matches SYNTHE convention)
     n_points = 100000
 
+    line_number = 0
     open(filepath, "r") do file
         for line_str in eachline(file)
+            line_number += 1
+
             # Skip empty lines
             if length(line_str) < 11
                 continue
@@ -190,10 +194,18 @@ function read_gfall_lines(filepath::String, λ_start::Float64, λ_end::Float64, 
                     push!(lines, spectral_line_with_nbuff)
                 end
             catch e
-                # Skip malformed lines
+                # Log parse error with context
+                error_msg = string(e)
+                @warn "Failed to parse gfall line $line_number: $error_msg" maxlog=100
+                push!(skipped_lines, (line_number, line_str, error_msg))
                 continue
             end
         end
+    end
+
+    # Summary of skipped lines
+    if !isempty(skipped_lines)
+        @warn "Skipped $(length(skipped_lines)) malformed lines in $filepath" first(skipped_lines, 5)
     end
 
     return lines
