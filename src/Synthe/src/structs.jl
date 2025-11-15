@@ -67,9 +67,26 @@ SyntheConfig(;
     turbulent_velocity = 2.0,
     vacuum_wavelengths = true,
     nlte = false,
-    cutoff = 0.001
+    cutoff = 0.001,
+    use_fortran_validation = false
 )
 ```
+
+# Validation Mode
+
+When `use_fortran_validation = true`, the pipeline uses Fortran-exact implementations
+for numerical validation:
+
+- **Voigt profile**: 3-regime approximation matching atlas12.for exactly
+- **Radiative transfer**: JOSH algorithm with COEFJ/COEFH tables
+- **Partition functions**: NNN array interpolation with POTION ionization potentials
+
+This mode is intended for:
+1. Validating against Fortran reference outputs
+2. Debugging numerical differences
+3. Ensuring bit-for-bit reproducibility
+
+Default is `false` (use optimized Julia implementations).
 """
 struct SyntheConfig
     wave_start::Float64          # Start wavelength (Å)
@@ -79,6 +96,7 @@ struct SyntheConfig
     vacuum_wavelengths::Bool     # true = vacuum, false = air
     nlte::Bool                   # true = NLTE, false = LTE
     cutoff::Float64              # Line cutoff threshold
+    use_fortran_validation::Bool # true = Fortran-exact mode, false = optimized
 end
 
 # Keyword constructor with sensible defaults
@@ -89,10 +107,11 @@ function SyntheConfig(;
     turbulent_velocity::Float64 = 2.0,
     vacuum_wavelengths::Bool = true,
     nlte::Bool = false,
-    cutoff::Float64 = 0.001
+    cutoff::Float64 = 0.001,
+    use_fortran_validation::Bool = false
 )
     SyntheConfig(wave_start, wave_end, resolving_power, turbulent_velocity,
-                 vacuum_wavelengths, nlte, cutoff)
+                 vacuum_wavelengths, nlte, cutoff, use_fortran_validation)
 end
 
 """

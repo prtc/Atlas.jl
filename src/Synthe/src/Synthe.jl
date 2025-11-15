@@ -49,6 +49,9 @@ include("populations.jl")
 # Fortran-exact partition functions using NNN data
 include("partition_functions_fortran.jl")
 
+# POTION ionization potential array (NIST ASD data)
+include("potion_data.jl")
+
 # Opacity integration (Task 3.2 - Step 3)
 include("opacity_integration.jl")
 

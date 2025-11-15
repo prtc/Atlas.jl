@@ -283,13 +283,21 @@ function partition_function_fortran(element::Int, ion_stage::Int, T::Float64)::F
     nnn100, g = extract_nnn100_and_g(nnn_data[6])
 
     # ================================================================
+    # Step 2b: Get actual ionization potential from POTION array
+    # ================================================================
+
+    # Get actual ionization potential in eV from POTION
+    # This replaces the NNN100 proxy with NIST-accurate values
+    χ_ion_eV = get_ionization_potential(element, ion_stage)
+
+    # ================================================================
     # Step 3: Temperature grid and interpolation
     # ================================================================
 
-    # Characteristic temperature scale: T2000 = NNN100 × 2000 / 11
-    # NNN100 serves as characteristic energy scale (roughly IP in eV)
-    # This gives ~182 K per unit of NNN100
-    t2000 = nnn100 * 2000.0 / 11.0
+    # Characteristic temperature scale: T2000 = χ_ion × 2000 / 11
+    # Uses actual ionization potential from POTION array
+    # This gives ~182 K per eV of ionization energy
+    t2000 = χ_ion_eV * 2000.0 / 11.0
 
     # Temperature bin index (IT ranges from 1 to 9)
     # Fortran: IT = MAX0(1, MIN0(9, INT(T(J)/T2000 - 0.5)))
