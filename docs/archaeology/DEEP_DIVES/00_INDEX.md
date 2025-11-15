@@ -1,13 +1,13 @@
 # Deep Dive Index
 *ATLAS Suite Computational Kernel Analysis - Complete Reference*
 
-**Mission**: Phase 2B-3 Code Archaeology
-**Status**: ✅ COMPLETE - All branches merged into main
+**Mission**: Phase 2B-3 Code Archaeology → Phase 5 Implementation
+**Status**: ✅ ARCHAEOLOGY COMPLETE - Implementation in Progress
 - ATLAS12: 7 of 7 deep dives complete (100%)
-- SYNTHE: 5 of 5 deep dives complete (100%)
+- SYNTHE: 6 of 6 deep dives complete (100%)
 - ATLAS7V: 4 of 4 dependency analysis phases complete (100%)
-**Total Documentation**: 18,231 lines across 12 deep dives + 3 synthesis documents + 4 ATLAS7V analysis phases
-**Date Range**: 2025-11-07 to 2025-11-09
+**Total Documentation**: 19,049 lines across 13 deep dives + 3 synthesis documents + 4 ATLAS7V analysis phases
+**Date Range**: 2025-11-07 to 2025-11-15 (archaeology + Phase 5 implementation)
 
 **Synthesis Documents**:
 - `PHYSICS_PIPELINE_ATLAS12.md` (1,547 lines) - Physics of ATLAS12 iteration (WHAT/WHY)
@@ -41,8 +41,8 @@
 | 10 | XNFPELSYN (Populations) | High | 1,004 | ATLAS7V, Opacities | 🐲✨ Complete |
 | 11 | Broadening | Medium | 760 | Rotation, Convolution | 🐲✨ Complete |
 | 12 | Line Readers | High | 1,379 | Input Formats, Validation | 🐲✨ Complete |
-| 13 | SYNTHE Core | Critical | 700 | Line Opacity Engine | 🐲✨ Complete |
-| **SYNTHE Total** | | | **6,025** | | |
+| 13 | SYNTHE Core | Critical | 818 | Line Opacity Engine | 🐲✨ Complete |
+| **SYNTHE Total** | | | **6,143** | | |
 
 ### ATLAS7V Dependency Analysis (4 Phases)
 
@@ -59,9 +59,9 @@
 | Suite | Deep Dives | Lines | Synthesis Docs | Total |
 |-------|------------|-------|----------------|-------|
 | ATLAS12 | 7 | 6,703 | 1,547 (physics) | 8,250 |
-| SYNTHE | 6 | 6,025 | 2,529 (physics + migration) | 8,554 |
+| SYNTHE | 6 | 6,143 | 2,529 (physics + migration) | 8,672 |
 | ATLAS7V | - | 2,127 | - | 2,127 |
-| **TOTAL** | **13** | **14,855** | **4,076** | **18,931** |
+| **TOTAL** | **13** | **14,973** | **4,076** | **19,049** |
 
 **Note**: Risk ranks for ATLAS12 from ARCHITECTURE_INSIGHTS.md Section 6.7 (top 10 migration risks)
 
@@ -342,9 +342,10 @@
 ---
 
 ### 13: SYNTHE Core - Line Opacity Engine
-**File**: `DEEP_DIVES/13_SYNTHE_CORE.md` (700 lines)
+**File**: `DEEP_DIVES/13_SYNTHE_CORE.md` (818 lines)
 **Code**: synthe.for (2,993 lines) - main synthesis program
 **Focus**: XLINOP NLTE subroutine, H/He Stark profiles, memory management, LTE line loop
+**Note**: Created for Phase 5 implementation kickstart (2025-11-11)
 
 **Key Findings**:
 - **synthe.for is STANDALONE** - no atlas7v linkage (unlike xnfpelsyn/spectrv)

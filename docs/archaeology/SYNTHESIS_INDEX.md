@@ -494,6 +494,46 @@
 
 ---
 
+## Phase 5 Migration Documents (2025-11-13 to 2025-11-15)
+
+**Phase 5 successfully transitioned from archaeological documentation to working Julia implementation!**
+
+### Implementation Guides
+- **PHASE5_STATUS.md** (comprehensive status): Steps 1-5 complete, 1100+ tests passing
+- **PHASE5_MIGRATION_PLAN.md** (original roadmap): TDD approach with atlas7v Fortran ccall fallback
+- **PURE_JULIA_MIGRATION_ROADMAP.md**: Pivoted approach for pure Julia implementation
+- **HANDOFF_TO_PAULA.md**: Instructions for local testing and continuation
+- **HANDOFF_BRIEFING_2025-11-13.md**: Week 1 completion summary (201/201 tests passing)
+
+### Technical Documentation
+- **FORTRAN_VALIDATION_MODE.md**: Fortran-exact validation mode documentation
+- **INTEGRATION_GUIDE.md** (467 lines): Pipeline integration guide for all 3 dispatch points
+- **VOIGT_PROFILE_ANALYSIS.md**: SYNTHE vs ATLAS12 Voigt differences analysis
+- **KURUCZ_BUG_FIXES.md**: Documented bug fixes during implementation
+
+### Progress Tracking
+- **REMAINING_WORK_SUMMARY.md**: Issues #1-8 completion tracking
+- **PAULA_CODE_REVIEW_RESPONSE.md**: Code review responses and fixes
+- **Journal entries** (docs/journal/): Daily progress tracking (2025-11-09 to 2025-11-15)
+
+### Archive Documents
+- **INTEGRATION_RESULTS.md**: Integration test results
+- **PHASE5_SUMMARY.md**: Phase 5 completion summary
+- **PHASE5_TEST_RESULTS.md**: Test execution results
+
+### Source Code → Documentation Mapping
+- **src/Synthe/src/voigt.jl** ← DD01 (Voigt Profile), PHYSICS_PIPELINE_ATLAS12
+- **src/Synthe/src/populations.jl** ← DD02 (Populations), DD10 (XNFPELSYN)
+- **src/Synthe/src/line_opacity_utils.jl** ← DD03 (Line Opacity Summation)
+- **src/Synthe/src/line_readers.jl** ← DD04 (Binary I/O), DD12 (Line Readers)
+- **src/Synthe/src/radiative_transfer_fortran_exact.jl** ← DD05 (JOSH/RT)
+- **src/Synthe/src/continuum_opacity.jl** ← DD10 (XNFPELSYN/KAPP)
+- **src/Synthe/src/broadening.jl** ← DD11 (Broadening)
+- **src/Synthe/src/partition_functions_fortran.jl** ← DD02, atlas12.for lines 3168-3690
+- **src/Synthe/src/potion_data.jl** ← DD02, rgfall.for ionization potentials
+
+---
+
 ## Potential Synthesis Opportunities
 
 ### Binary I/O Comprehensive Guide
@@ -576,18 +616,19 @@
 ## Source → Synthesis Mapping
 
 ### Deep Dives → Synthesis
-- DD01 (Voigt) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
-- DD02 (Populations) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, ARCHITECTURE_INSIGHTS (Decision V.4)
-- DD03 (Line Opacity) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
-- DD04 (Binary I/O) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
-- DD05 (RT/JOSH) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
+- DD01 (Voigt) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, src/Synthe/src/voigt.jl (implemented)
+- DD02 (Populations) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, ARCHITECTURE_INSIGHTS (Decision V.4), src/Synthe/src/populations.jl (implemented)
+- DD03 (Line Opacity) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, src/Synthe/src/line_opacity_utils.jl (implemented)
+- DD04 (Binary I/O) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, src/Synthe/src/line_readers.jl (implemented)
+- DD05 (RT/JOSH) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX, src/Synthe/src/radiative_transfer_fortran_exact.jl (implemented)
 - DD06 (Damping) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
 - DD07 (Convection) → PHYSICS_PIPELINE_ATLAS12, 00_INDEX
 - DD08 (SPECTRV) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX
 - DD09 (Line Accum) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX
-- DD10 (XNFPELSYN) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX
-- DD11 (Broadening) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX
-- DD12 (Line Readers) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX
+- DD10 (XNFPELSYN) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX, src/Synthe/src/populations.jl + continuum_opacity.jl (implemented)
+- DD11 (Broadening) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX, src/Synthe/src/broadening.jl (implemented)
+- DD12 (Line Readers) → PHYSICS_PIPELINE_SYNTHE, SYNTHE_SUMMARY, 00_INDEX, src/Synthe/src/line_readers.jl + line_readers_molecular.jl (implemented)
+- DD13 (SYNTHE Core) → 00_INDEX, PHASE5_STATUS (Phase 5 implementation foundation)
 
 ### Atlas7v Phases → Synthesis
 - Phase 1 (Dependencies) → SYNTHE_SUMMARY, 00_INDEX
@@ -604,9 +645,10 @@
 
 ### Well-Synthesized Topics
 - ✅ ATLAS12 physics pipeline (7 deep dives → 1 synthesis)
-- ✅ SYNTHE physics pipeline (5 deep dives + Atlas7v → 1 synthesis)
-- ✅ SYNTHE migration roadmap (5 deep dives + Atlas7v → 1 summary)
-- ✅ Deep dive index and organization (12 deep dives → 1 index)
+- ✅ SYNTHE physics pipeline (6 deep dives + Atlas7v → 1 synthesis)
+- ✅ SYNTHE migration roadmap (6 deep dives + Atlas7v → 1 summary)
+- ✅ Deep dive index and organization (13 deep dives → 1 index)
+- ✅ Phase 5 implementation (Archaeological docs → Working Julia code in src/Synthe/)
 
 ### Gaps Requiring Synthesis
 - ⚠️ Binary I/O formats (scattered across DD04, DD09, DD12)
@@ -636,6 +678,12 @@
 
 ---
 
-**Document Status**: Created during deep clean session (2025-11-09)
-**Version**: 1.0
-**Next Review**: After Phase 4 completion or when 3+ new deep dives created
+**Document Status**: Updated during house cleaning session (2025-11-15)
+**Version**: 1.1
+**Changes in v1.1**:
+- Added Deep Dive 13 (SYNTHE_CORE)
+- Added Phase 5 Migration Documents section (implementation guides, technical docs, progress tracking)
+- Added source code → documentation mapping for src/Synthe/
+- Updated deep dive counts (12 → 13)
+- Cross-referenced archaeology docs with actual Julia implementation
+**Next Review**: After Phase 5 completion or when implementation progresses to next milestone
