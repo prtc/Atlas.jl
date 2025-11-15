@@ -1,9 +1,11 @@
 # House Cleaning Protocol
-*Quality assurance for documentation sprints*
+*Quality assurance for documentation and implementation work*
 
-**Purpose**: After rapid documentation work, pause to review with "fresh eyes" and ensure quality, consistency, and completeness.
+**Purpose**: After rapid documentation or implementation work, pause to review with "fresh eyes" and ensure quality, consistency, and completeness.
 
-**When to use**: After completing major documentation deliverables, deep dives, or multi-hour work sessions. Think of this as a "code review" but for documentation.
+**When to use**: After completing major documentation deliverables, deep dives, implementation milestones, or multi-hour work sessions. Think of this as a "code review" for both documentation AND code.
+
+**Scope**: Project-wide protocol (archaeology + implementation phases)
 
 **Created**: 2025-11-08 (Phase 2B post-completion review)
 
@@ -13,26 +15,40 @@
 
 ### What is this project?
 
-**ATLAS Suite Code Archaeology Mission**: Documenting 487K lines of Fortran 77 stellar atmosphere modeling code (ATLAS12, SYNTHE, and related tools) to guide future Julia migration.
+**ATLAS Suite Mission**: Migrating 487K lines of Fortran 77 stellar atmosphere modeling code (ATLAS12, SYNTHE, and related tools) to Pure Julia.
 
-**Key documentation files** (as of Phase 3 completion):
-- `MISSION.md` - Project roadmap and task tracking
-- `docs/archaeology/CENSUS_REPORT.md` - Initial code survey
-- `docs/archaeology/ARCHITECTURE_DETAILS.md` - Comprehensive code catalog
-- `docs/archaeology/ARCHITECTURE_INSIGHTS.md` - Julia migration guidance (PRIMARY)
-- `docs/archaeology/DEEP_DIVES/` - Detailed analysis of high-risk code sections
-- `docs/archaeology/SYNTHESIS_INDEX.md` - Track synthesis documents, avoid duplication
+**Project Status** (as of 2025-11-15): Phase 5 Foundation Complete
+- **Archaeology Phases 1-4**: ✅ Complete (58 documents, 54,500 lines)
+- **Phase 5 Implementation**: ✅ Steps 1-5 Complete (20 Julia modules, 1100+ tests passing)
+- **Phase 6 Archaeology**: ✅ Complete (ATLAS9 + ODF documentation)
+
+**Key navigation files**:
+- `DOCUMENTATION_INDEX.md` (root) - Master index for ALL project documents
+- `MISSION.md` (root) - Project roadmap and task tracking
+- `docs/archaeology/SYNTHESIS_INDEX.md` - Synthesis document tracking (archaeology-specific)
+- `docs/archaeology/DEEP_DIVES/00_INDEX.md` - Deep dive navigation guide
+- `src/Synthe/src/` - Julia implementation (Steps 1-5 complete)
+- `test/synthe/` - Comprehensive test suite (1100+ tests passing)
 
 ### Why house cleaning matters
 
-Fast documentation work can create:
+Fast documentation OR implementation work can create:
+
+**Documentation issues**:
 - **Inconsistencies**: Document A says X, Document B says Y
 - **Unresolved references**: "See Section 5" but Section 5 says "TODO"
 - **Missed connections**: Deep dive answers a question from earlier but no cross-reference
 - **Redundancy**: Same information repeated in multiple places
 - **Stale TODOs**: Questions that were answered but flags not updated
 
-House cleaning finds and fixes these issues before they confuse future readers (including Paula and future-you).
+**Implementation issues**:
+- **Documentation lag**: Docs describe old design, code has evolved
+- **Test count drift**: MISSION.md says "201 tests" but actually 1100+ tests passing
+- **Missing cross-references**: Julia module implemented but archaeology docs not linked
+- **Status mismatches**: Index says "In Progress", actual status is "Complete"
+- **Outdated metrics**: Line counts, file counts, statistics become stale
+
+House cleaning finds and fixes these issues before they confuse future readers/developers (including Paula and future-you).
 
 ---
 
@@ -381,6 +397,105 @@ See detailed tracking below for which sources fed into which synthesis...
 
 ---
 
+### Task 12: Implementation-Documentation Sync (Phase 5+)
+
+**Goal**: Ensure implementation status matches documentation claims
+
+**What to look for**:
+- MISSION.md implementation status vs actual code state
+- DOCUMENTATION_INDEX.md module counts vs actual src/ directory
+- Test counts in docs vs actual test suite
+- Line count estimates vs measured reality
+- "In Progress" vs "Complete" status mismatches
+
+**How to do it**:
+1. Read MISSION.md Phase 5 section - note claimed status
+2. Count actual Julia modules: `ls src/Synthe/src/*.jl | wc -l`
+3. Run tests and count: actual passing tests vs documented counts
+4. Check DOCUMENTATION_INDEX.md statistics match reality
+5. Update any drift discovered
+
+**Example from 2025-11-15**:
+- MISSION.md showed "Days 1-4 complete, 157 tests"
+- Reality: Steps 1-5 complete, 1100+ tests passing
+- Fixed: Updated MISSION.md with complete status
+
+---
+
+### Task 13: Source Code → Documentation Cross-References
+
+**Goal**: Link implemented Julia modules back to their archaeology sources
+
+**What to look for**:
+- Julia modules in src/Synthe/src/ that implement deep dive algorithms
+- Deep dives that now have working Julia implementations
+- SYNTHESIS_INDEX.md "Deep Dives → Synthesis" mappings
+- Missing bidirectional links (code → docs and docs → code)
+
+**How to do it**:
+1. List all src/Synthe/src/*.jl files
+2. For each module, identify source deep dive(s)
+3. Update SYNTHESIS_INDEX.md with implementation references
+4. Add comments in Julia code referencing archaeology docs
+5. Update deep dive docs with "✅ IMPLEMENTED" status where appropriate
+
+**Example from 2025-11-15**:
+- Added "(implemented)" tags to Deep Dives → Synthesis mapping
+- Cross-referenced voigt.jl ← DD01, populations.jl ← DD02+DD10, etc.
+- Source code mapping shows archaeology → working Julia code
+
+---
+
+### Task 14: Test Coverage Verification
+
+**Goal**: Ensure test claims match reality
+
+**What to look for**:
+- Claimed test counts in documentation
+- Actual test files and test counts
+- "100% coverage" claims vs actual module coverage
+- Test status (passing/failing) vs documentation claims
+
+**How to do it**:
+1. Grep documentation for test count claims: `grep -r "tests passing" docs/ MISSION.md`
+2. Run Julia test suite and count actual tests
+3. Check for untested modules
+4. Update documentation with accurate counts
+5. Flag any coverage gaps discovered
+
+**Example patterns**:
+- "201 tests passing" (Step 1) - verify with `julia test/synthe/test_*.jl`
+- "1100+ tests passing" (Steps 1-5) - count total across all test files
+- "100% coverage" - ensure all modules have corresponding test files
+
+---
+
+### Task 15: Index Synchronization
+
+**Goal**: Ensure master indices reflect actual document state
+
+**What to look for**:
+- DOCUMENTATION_INDEX.md document counts vs actual files
+- SYNTHESIS_INDEX.md synthesis doc counts vs reality
+- Missing recently-created documents
+- Stale line counts (>10% drift from reality)
+- Orphaned references to moved/renamed files
+
+**How to do it**:
+1. Count actual documents: `find docs/ -name "*.md" | wc -l`
+2. Compare to DOCUMENTATION_INDEX.md totals
+3. Use `wc -l` to verify line counts for major documents
+4. Update indices with accurate counts
+5. Add any missing documents discovered
+
+**Example from 2025-11-15**:
+- DOCUMENTATION_INDEX.md showed 52 docs, actually 58
+- Updated Phase 5 from "10 docs" to "15+ docs"
+- Added Phase 5 Documentation section with 15 documents listed
+- Updated grand totals: 56,665 → 66,500+ lines
+
+---
+
 ## House Cleaning Checklist
 
 Use this as a systematic walkthrough:
@@ -391,7 +506,7 @@ Use this as a systematic walkthrough:
 - [ ] List all documents created since last house cleaning
 - [ ] Note any major decisions or findings from recent work
 
-### Systematic review
+### Systematic review (Documentation)
 - [ ] **Cross-references**: Search for answered questions, add links
 - [ ] **TODOs**: Grep for flags, update resolved items
 - [ ] **Consistency**: Pick 5 key facts, verify across docs
@@ -402,6 +517,12 @@ Use this as a systematic walkthrough:
 - [ ] **Status tables**: Update decision/risk/progress tracking tables
 - [ ] **Manuscript processing** (if applicable): Update PDF processing status, add cross-references
 - [ ] **Synthesis index**: Update SYNTHESIS_INDEX.md with new synthesis docs, flag opportunities
+
+### Systematic review (Implementation - Phase 5+)
+- [ ] **Implementation-documentation sync**: Verify claimed status matches actual code state
+- [ ] **Source code cross-references**: Link Julia modules to archaeology docs
+- [ ] **Test coverage verification**: Verify test count claims match reality
+- [ ] **Index synchronization**: Ensure DOCUMENTATION_INDEX.md reflects actual files
 
 ### Commit and document
 - [ ] Commit changes with descriptive message
@@ -576,13 +697,29 @@ House cleaning is for **quality assurance after major work**, not micro-optimizi
 
 ---
 
-**Version**: 1.3 (2025-11-09)
+**Version**: 1.4 (2025-11-15) - MAJOR UPDATE
+**Location**: Moved from docs/archaeology/ to root (now project-wide protocol)
+
+**Changes in v1.4** (Implementation Phase Extension):
+- Moved to root directory (archaeology → archaeology + implementation)
+- Updated "Core Context" with Phase 5 implementation status
+- Added Tasks 12-15 for implementation-specific house cleaning:
+  - Task 12: Implementation-Documentation Sync
+  - Task 13: Source Code → Documentation Cross-References
+  - Task 14: Test Coverage Verification
+  - Task 15: Index Synchronization
+- Updated "Why house cleaning matters" with implementation issues
+- Split checklist into Documentation + Implementation sections
+- Updated navigation files (DOCUMENTATION_INDEX.md is now master index)
+
 **Changes in v1.3**:
 - Added Task 11: Synthesis Index Maintenance (track synthesis docs, avoid duplication)
 - Added synthesis opportunity triggers to protocol
 - Updated checklist to include synthesis index maintenance
+
 **Changes in v1.2**:
 - Removed time estimates (inaccurate and not helpful)
 - Added Task 9: Merge Conflict Detection (critical pre-flight check)
 - Added Task 10: Manuscript/PDF Processing (academic papers, manuals)
-**Next review**: After Phase 4 completion or next major documentation sprint
+
+**Next review**: When Phase 6+ implementation begins or new implementation patterns emerge
