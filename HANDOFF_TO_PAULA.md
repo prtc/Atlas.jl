@@ -702,12 +702,15 @@ Exported validation functions:
 - ✅ **Step 3**: NNN partition array decoded
 - ✅ **Step 4**: COEFJ/COEFH matrix mode implemented
 
+**COMPLETED (Session 2025-11-15)**:
+- ✅ **Issue #3**: POTION Array Extraction - 999 ionization potentials (commit 1ea27e8)
+- ✅ **Issue #1**: Integration Infrastructure - Config flag + guide (commit 1ea27e8)
+
 **REMAINING**:
-- [ ] **Issue #1 (CRITICAL)**: Integration - Connect Fortran modes to main pipeline
-- [ ] **Issue #3 (CRITICAL)**: Validation - Compile drivers, generate CSVs, run tests
+- [ ] **Issue #1 (80% done)**: Wire validation mode dispatch wrappers (Task 6)
+- [ ] **Issue #3**: Validation - Compile drivers, generate CSVs, run tests
 - [ ] **Issue #4 (HIGH)**: Atmosphere reader robustness (test with ATLAS12, Castelli)
 - [ ] **Issue #6 (HIGH)**: Document Voigt magic constants (research origin)
-- [ ] Extract POTION array (ionization potentials for all ions)
 - [ ] Implement Regime 3 exact polynomial (Voigt transition region)
 
 ---
@@ -747,9 +750,10 @@ Generates 3 CSV files in test/reference/:
    - Impact: May have larger errors in transition region (0.2 ≤ a ≤ 1.4)
    - Fix: Extract exact formula from atlas12.for lines 16010-16017
 
-2. **POTION array**: Not yet extracted
-   - Impact: partition_function_fortran() uses NNN100 as proxy for IP
-   - Fix: Extract 999-element POTION array from atlas7v.for
+2. **POTION array**: ✅ EXTRACTED (2025-11-15, commit 1ea27e8)
+   - 999 ionization potentials from rgfall.for
+   - Integrated with partition_function_fortran()
+   - TDD tests: test/unit/test_potion.jl
 
 3. **Special elements**: Fe group (20-28) needs PFIRON subroutine
    - Impact: partition_function_fortran() skips these

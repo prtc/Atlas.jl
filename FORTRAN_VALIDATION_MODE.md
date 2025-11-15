@@ -1650,7 +1650,7 @@ end
 - `extract_nnn100_and_g()` - Extract energy scale and degeneracy
 
 **Coverage**: All 99 elements, 365 ions
-**Note**: POTION array (ionization potentials) not yet extracted - using NNN100 as proxy
+**Note**: POTION array (999 ionization potentials) ✅ EXTRACTED (2025-11-15) in potion_data.jl
 
 ---
 
@@ -1813,16 +1813,18 @@ end
    - Document tolerance discrepancies
    - Fix Regime 3 Voigt if needed
 
-3. **Extract POTION array** - (1 day)
-   - 999-element ionization potential table
-   - Replaces NNN100 proxy in partition functions
-   - Required for accurate element ionization energies
+3. **Extract POTION array** - ✅ COMPLETE (2025-11-15, commit 1ea27e8)
+   - 999-element ionization potential table extracted
+   - Integrated with partition_function_fortran()
+   - TDD tests written (test_potion.jl)
+   - See: potion_data.jl (~700 lines)
 
 #### HIGH (Needed for production) 🟡
-4. **Pipeline integration** - (2-3 days)
-   - Add use_fortran_validation flag to config
-   - Wire up all 3 validation modes
-   - Test full spectrum synthesis
+4. **Pipeline integration** - 🔄 80% COMPLETE (2025-11-15, commit 1ea27e8)
+   - ✅ Added use_fortran_validation flag to SyntheConfig struct
+   - ✅ Complete integration guide (INTEGRATION_GUIDE.md - 467 lines)
+   - ⏳ Wire dispatch wrappers (pending Task 6)
+   - ⏳ Integration tests (pending)
 
 5. **Regime 3 Voigt polynomial** - (1-2 days)
    - Extract exact formula from atlas12.for
@@ -1854,7 +1856,7 @@ end
 | Voigt Profile | ✅ Implemented | rtol < 1e-5 | Regime 3 simplified |
 | H⁻ Opacity | ✅ Complete | rtol < 0.01 | Already Fortran-exact |
 | JOSH | ✅ Implemented | rtol < 1e-5 | Ready for validation |
-| POPS | ✅ Implemented | rtol < 1e-4 | Missing POTION array |
+| POPS | ✅ Complete | rtol < 1e-4 | ✅ POTION array extracted! |
 
 **Tier 2: Spectrum Validation** - Not yet tested
 **Tier 3: Physical Validation** - Not yet tested
