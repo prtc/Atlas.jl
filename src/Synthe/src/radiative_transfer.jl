@@ -169,21 +169,18 @@ function source_function_lte(λ::Float64, T::Float64)::Float64
 
     # Planck function in wavelength units
     # B_λ(T) = (2hc²/λ⁵) / [exp(hc/λkT) - 1]
-
-    const h = h_cgs       # 6.62607015e-27 erg·s
-    const c = c_cgs       # 2.99792458e10 cm/s
-    const k = k_B_cgs     # 1.380649e-16 erg/K
+    # Physical constants from constants.jl: h_cgs, c_cgs, k_B_cgs
 
     # Exponent: x = hc/(λkT)
-    x = (h * c) / (λ_cm * k * T)
+    x = (h_cgs * c_cgs) / (λ_cm * k_B_cgs * T)
 
     # Check for overflow in exp(x)
     if x > 100.0
         # Wien limit: exp(-x) dominates
-        return (2.0 * h * c^2 / λ_cm^5) * exp(-x)
+        return (2.0 * h_cgs * c_cgs^2 / λ_cm^5) * exp(-x)
     else
         # Full Planck function
-        return (2.0 * h * c^2 / λ_cm^5) / (exp(x) - 1.0)
+        return (2.0 * h_cgs * c_cgs^2 / λ_cm^5) / (exp(x) - 1.0)
     end
 end
 

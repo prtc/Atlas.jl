@@ -20,6 +20,9 @@ Author: Claude (Local), Paula Coelho
 Date: 2025-11-14
 """
 
+# Load physical constants
+include("constants.jl")
+
 """
     read_atlas9_model(filepath::String) -> AtmosphereModel
 
@@ -64,13 +67,12 @@ function read_atlas9_model(filepath::String)
     # where μ = mean molecular weight ≈ 1.3 for solar composition
     # ρ = P * μ * m_H / (k_B * T)
 
-    const k_B = 1.380649e-16  # erg/K (Boltzmann constant)
-    const m_H = 1.673557e-24  # g (proton mass)
+    # Physical constants from constants.jl
     const μ_solar = 1.3       # Mean molecular weight (solar composition)
 
     density = similar(pressure)
     for i in 1:n_depths
-        density[i] = pressure[i] * μ_solar * m_H / (k_B * temperature[i])
+        density[i] = pressure[i] * μ_solar * m_H_cgs / (k_B_cgs * temperature[i])
     end
 
     # Create AtmosphereModel struct (matching exact struct definition in structs.jl)
@@ -129,10 +131,11 @@ function parse_atlas9_header(lines::Vector{String})
             # Skip "ABUNDANCE" and "CHANGE"
             i = 3
             while i < length(parts)
-                elem_num = tryparse(Int, parts[i])
-                if elem_num !== nothing && i + 1 <= length(parts)
-                    abund = tryparse(Float64, parts[i+1])
-                    if abund !== nothing && elem_num <= 99
+                # Use something() to avoid type instability (Union{Int, Nothing})
+                elem_num = something(tryparse(Int, parts[i]), 0)
+                if elem_num > 0 && i + 1 <= length(parts)
+                    abund = something(tryparse(Float64, parts[i+1]), -99.0)
+                    if abund > -99.0 && elem_num <= 99
                         abundances[elem_num] = abund
                     end
                     i += 2
