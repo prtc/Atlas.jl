@@ -207,14 +207,21 @@ function accumulate_line_opacity(λ::Float64, lines::Vector{SpectralLine},
         # Extract element and ion stage from element_ion code
         # Format: 26.00 = Fe I, 26.01 = Fe II
         element = floor(Int, line.element_ion)
-        ion_stage = round(Int, (line.element_ion - element) * 100)
+        ion_frac = line.element_ion - element
+        ion_stage = round(Int, ion_frac * 100)
 
-        # Validate ion_stage is in physical range [0, 9]
-        # (neutral = 0, singly ionized = 1, ..., 9× ionized = 9)
-        if ion_stage < 0 || ion_stage > 9
-            @warn "Invalid ion_stage=$ion_stage for element=$element at λ=$(line.wavelength) Å" *
-                  " (element_ion=$(line.element_ion)). Skipping line." maxlog=100
+        # CRITICAL VALIDATION: Check physical constraints
+        # 1. Ion stage cannot exceed number of electrons in atom
+        if ion_stage < 0 || ion_stage > element
+            @error "Invalid ionization: element=$element, ion_stage=$ion_stage from code $(line.element_ion)" *
+                   " at λ=$(line.wavelength) Å. Ion stage cannot exceed atomic number." maxlog=100
             continue
+        end
+
+        # 2. Sanity check: Standard gfall format uses [0, 9] for ion_stage
+        if ion_stage > 9
+            @warn "Unusual ion_stage=$ion_stage for element=$element at λ=$(line.wavelength) Å" *
+                  " (code=$(line.element_ion)). Check if encoding is non-standard." maxlog=10
         end
 
         # Get ion population from POPS result

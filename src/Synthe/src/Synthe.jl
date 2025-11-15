@@ -46,11 +46,23 @@ include("continuum_opacity.jl")
 # Population solver (Task 3.1 - Step 3)
 include("populations.jl")
 
+# Fortran-exact partition functions using NNN data
+include("partition_functions_fortran.jl")
+
+# POTION ionization potential array (NIST ASD data)
+include("potion_data.jl")
+
 # Opacity integration (Task 3.2 - Step 3)
 include("opacity_integration.jl")
 
 # Radiative transfer (Task 4 - Step 4)
 include("radiative_transfer.jl")
+
+# Fortran-exact radiative transfer using COEFJ/COEFH (Validation mode)
+include("radiative_transfer_fortran_exact.jl")
+
+# Fortran-exact Voigt profile (Validation mode)
+include("voigt_fortran_exact.jl")
 
 # Atmosphere model reader (Task 5.1)
 include("atmosphere_reader.jl")
@@ -134,6 +146,10 @@ export
     compute_populations,
     PopulationResult,
 
+    # Fortran-exact partition functions (Validation mode)
+    partition_function_fortran,
+    partition_function_fortran_available,
+
     # Opacity integration (Step 3 Task 3.2)
     continuum_opacity_total,
     total_opacity,
@@ -148,6 +164,14 @@ export
     compute_limb_darkening,
     limb_darkening_coefficient,
     synthesize_spectrum_full,
+
+    # Fortran-exact radiative transfer (Validation mode)
+    solve_radiative_transfer_josh,
+    josh_fortran_mode_available,
+
+    # Fortran-exact Voigt profile (Validation mode)
+    voigt_profile_fortran_exact,
+    voigt_fortran_mode_available,
 
     # Atmosphere reader (Task 5.1)
     read_atlas9_model,

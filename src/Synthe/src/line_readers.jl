@@ -141,6 +141,11 @@ lines = read_gfall_lines("gfall.dat", 4990.0, 5010.0, 10.0)
 ```
 """
 function read_gfall_lines(filepath::String, λ_start::Float64, λ_end::Float64, margin::Float64=10.0)::Vector{SpectralLine}
+    # Validate file exists
+    if !isfile(filepath)
+        throw(ArgumentError("gfall file not found: $filepath"))
+    end
+
     lines = SpectralLine[]
     skipped_lines = Tuple{Int, String, String}[]  # (line_number, line_content, error_msg)
 
