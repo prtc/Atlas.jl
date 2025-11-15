@@ -2,7 +2,7 @@
 **For AI assistants working in this interface**
 
 **Created**: 2025-11-10
-**Purpose**: Technical instructions and lessons learned from ATLAS.jl code archaeology project
+**Purpose**: Technical instructions and lessons learned from ATLAS.jl code project
 **Audience**: Future Claude Code Web sessions
 
 ---
