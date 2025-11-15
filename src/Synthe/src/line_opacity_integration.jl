@@ -209,6 +209,14 @@ function accumulate_line_opacity(λ::Float64, lines::Vector{SpectralLine},
         element = floor(Int, line.element_ion)
         ion_stage = round(Int, (line.element_ion - element) * 100)
 
+        # Validate ion_stage is in physical range [0, 9]
+        # (neutral = 0, singly ionized = 1, ..., 9× ionized = 9)
+        if ion_stage < 0 || ion_stage > 9
+            @warn "Invalid ion_stage=$ion_stage for element=$element at λ=$(line.wavelength) Å" *
+                  " (element_ion=$(line.element_ion)). Skipping line." maxlog=100
+            continue
+        end
+
         # Get ion population from POPS result
         if !haskey(pops.number_densities, (element, ion_stage))
             continue  # This ion not present
