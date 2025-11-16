@@ -23,10 +23,6 @@ Each module has corresponding tests in test/phase5_minimal_synthe/
 """
 module Synthe
 
-using SpecialFunctions  # erf, erfc for Voigt profile
-using Interpolations    # Continuum opacity interpolation
-using FFTW              # Gaussian broadening (FFT-based)
-
 # Core data structures
 include("structs.jl")
 

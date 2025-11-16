@@ -1,6 +1,9 @@
 # ATLAS Suite Documentation Index
-**Last Updated**: 2025-11-13
+**Last Updated**: 2025-11-15
 **Purpose**: Master index of all documentation created during archaeology and migration phases
+**Scope**: Complete navigation guide for ALL project documents (archaeology + implementation)
+
+**See Also**: `docs/archaeology/SYNTHESIS_INDEX.md` for synthesis document tracking (archaeology-specific)
 
 ---
 
@@ -13,7 +16,7 @@
 | [Phase 2: Architecture](#phase-2-architecture-mapping) | 7 | ~10,000 | ✅ Complete |
 | [Phase 3: Deep Dives](#phase-3-deep-dives) | 12 | ~10,000 | ✅ Complete |
 | [Phase 4: Migration](#phase-4-migration-planning) | 6 | ~7,000 | ✅ Complete |
-| [Phase 5: Julia Implementation](#phase-5-julia-implementation) | 10 | ~6,300 | 🔄 In Progress |
+| [Phase 5: Julia Implementation](#phase-5-pure-julia-synthe-implementation) | 15+ | ~10,000 | ✅ Foundation Complete |
 | [Phase 6: ATLAS9 + ODF](#phase-6-atlas9--odf) | 2 | ~3,100 | ✅ Complete |
 | [Methodology](#methodology) | 2 | ~900 | ✅ Complete |
 | **TOTAL** | **52** | **~46,000** | |
@@ -477,27 +480,128 @@
 
 ---
 
-## Phase 5: Julia Implementation
+## Phase 5: Pure Julia SYNTHE Implementation
 
-**Directories**: `/`, `src/Synthe/src/`, `test/synthe/`, `tools/line_lists/`, `docs/`
-**Total**: 10 major documents + code, ~6,300 lines documentation
-**Status**: 🔄 In Progress (Days 1-4 complete)
+**Directories**: `/`, `src/Synthe/src/`, `test/synthe/`, `docs/migration/`, `docs/archive/`, `docs/journal/`
+**Total**: 15+ documents + 20 Julia modules + 1100+ tests
+**Status**: ✅ FOUNDATION COMPLETE (Steps 1-5, 2025-11-15)
+**Achievement**: Archaeological documentation → Working Julia implementation with comprehensive test suite
 
-### Julia Code (Days 1-4)
+### Implementation Summary
 
-**Implementation** (1,255 lines):
-- src/Synthe/src/constants.jl (191 lines)
-- src/Synthe/src/units.jl (344 lines)
-- src/Synthe/src/physics.jl (360 lines)
-- src/Synthe/src/voigt.jl (360 lines)
+**Total Implementation**: 20 Julia modules, ~8,000+ lines of code + tests
+**Test Status**: 1100+ tests passing (100% coverage)
+**Dependencies**: ZERO (pure Julia stdlib only)
+**Credit Usage**: ~$94-125 total (within budget)
 
-**Tests** (1,000 lines):
-- test/synthe/test_constants.jl (280 lines)
-- test/synthe/test_units.jl (250 lines)
-- test/synthe/test_physics.jl (400 lines)
-- test/synthe/test_voigt.jl (370 lines)
+**Key Achievements**:
+- Voigt profile: 14.9 ns/call, zero allocations, type-stable
+- Saha-Boltzmann solver: Full populations validated against solar atmosphere
+- Radiative transfer: Feautrier method with O(n) tridiagonal solver
+- POTION array: 999 ionization potentials extracted and NIST-verified
+- Fortran-exact validation modes: Bit-for-bit comparison capability
 
-**Status**: 157/157 tests passing (100%)
+### Step 1: Foundation Modules (Week 1, Days 1-5)
+
+**Location**: `src/Synthe/src/`
+**Tests**: 201/201 passing
+**Credit**: ~$45-65
+
+**Modules**:
+- **constants.jl** (191 lines): 13 CGS constants, 7 derived functions
+- **units.jl** (365 lines): Wavelength/frequency/energy/Doppler conversions, air↔vacuum
+- **physics.jl** (411 lines): Blackbody, line broadening, Saha-Boltzmann, ideal gas, scale height
+- **voigt.jl** (360 lines): 4-regime algorithm matching atlas12.for, 14.9 ns/call
+- **line_opacity_utils.jl** (390 lines): Complete line opacity calculation pipeline
+
+### Step 2: Line Readers & Continuum Opacity
+
+**Tests**: 50+ passing
+**Credit**: ~$13-20
+
+**Modules**:
+- **line_readers.jl**: Kurucz gfall format parser (atomic lines)
+- **line_readers_molecular.jl**: 9 molecular species (CH, CN, CO, NH, OH, MgH, SiH, CaH, FeH)
+- **continuum_opacity.jl**: 20+ opacity sources (H⁻, H, He, metals, molecules)
+- **continuum_opacity_data.jl**: Continuum edge wavelengths and parameters
+
+### Step 3: Populations & Opacity Integration
+
+**Tests**: 400+ passing (Saha validation, partition functions, POTION array)
+**Credit**: ~$13-20
+
+**Modules**:
+- **populations.jl**: Saha-Boltzmann solver (POPS equivalent), pure Julia
+- **partition_functions_fortran.jl**: NNN array decoder (atlas12.for lines 3168-3690)
+- **potion_data.jl**: 999 ionization potentials from rgfall.for
+- **opacity_integration.jl**: KAPP dispatcher (20 IFOP flags)
+
+### Step 4: Radiative Transfer
+
+**Tests**: 400+ passing
+**Credit**: ~$23-30
+
+**Modules**:
+- **radiative_transfer_fortran_exact.jl**: Feautrier RT solver (JOSH equivalent)
+- **COEFJ/COEFH matrix**: Pretabulated integration weights from atlas12.for
+- **Tridiagonal solver**: O(n) algorithm, validated against Fortran
+
+### Step 5: Fortran-Exact Validation Modes
+
+**Tests**: Comprehensive validation across all modules
+**Credit**: ~$15-25
+
+**Components**:
+- **voigt_fortran_exact.jl**: Exact atlas12.for Voigt reproduction (4 regimes, magic constants)
+- **Fortran driver programs**: test/fortran_drivers/ for cross-validation
+- **Integration infrastructure**: SyntheConfig.use_fortran_validation flag
+- **Code review fixes**: Issues #1-8 complete (element parsing, constants, type stability, file checks)
+
+### Code Review & Bug Fixes (2025-11-15)
+
+**Issues Resolved**:
+- ✅ Issue #2 (CRITICAL): Element parsing bug fixed
+- ✅ Issue #5 (HIGH): Physical constants consolidated
+- ✅ Issue #7 (MEDIUM): Type instability fixed
+- ✅ Issue #8 (MEDIUM): File existence checks added
+- ✅ Issue #3: POTION array extraction complete (TDD methodology)
+- ✅ Issue #1: Pipeline integration infrastructure ready
+
+---
+
+### Phase 5 Documentation (15+ documents)
+
+**Implementation Guides**:
+- **PHASE5_STATUS.md** (`docs/migration/`): Comprehensive status - Steps 1-5 complete, 1100+ tests
+- **PURE_JULIA_MIGRATION_ROADMAP.md** (root): Pivoted approach for pure Julia implementation
+- **PHASE5_MIGRATION_PLAN.md** (`docs/archaeology/`): Original TDD roadmap with atlas7v ccall fallback
+- **HANDOFF_TO_PAULA.md** (`docs/migration/`): Local testing instructions and continuation guide
+- **HANDOFF_BRIEFING_2025-11-13.md** (`docs/archive/`): Week 1 completion summary (201/201 tests)
+
+**Technical Documentation**:
+- **FORTRAN_VALIDATION_MODE.md** (`docs/migration/`): Fortran-exact validation mode documentation
+- **INTEGRATION_GUIDE.md** (`docs/migration/`, 467 lines): Pipeline integration for 3 dispatch points
+- **VOIGT_PROFILE_ANALYSIS.md** (`docs/migration/`): SYNTHE vs ATLAS12 Voigt differences
+- **KURUCZ_BUG_FIXES.md** (`docs/migration/`): Bug catalog and fixes during implementation
+
+**Progress Tracking**:
+- **REMAINING_WORK_SUMMARY.md** (`docs/migration/`): Issues #1-8 completion tracking
+- **PAULA_CODE_REVIEW_RESPONSE.md** (`docs/migration/`): Code review responses and fixes
+- **Journal entries** (`docs/journal/`): Daily progress (2025-11-09 to 2025-11-15)
+  - 2025-11-09: Atlas7v dependency analysis, Phase 2B completion
+  - 2025-11-09: Cross-referencing and efficiency improvements
+  - 2025-11-09: Manuscript sprint and house cleaning
+  - 2025-11-09: Phase 4 completion
+  - 2025-11-09: Physics pipeline SYNTHE and final integration
+  - 2025-11-10: Phase 4 SYNTHE completion
+  - 2025-11-11: Phase 5 preflight DD13 and consistency fixes
+  - 2025-11-12: Binary format docs and HDF5 strategy
+  - 2025-11-13: Step 1 complete
+
+**Archive Documents** (`docs/archive/`):
+- **INTEGRATION_RESULTS.md**: Integration test results
+- **PHASE5_SUMMARY.md**: Phase 5 completion summary
+- **PHASE5_TEST_RESULTS.md**: Test execution results
 
 ---
 
@@ -677,28 +781,30 @@
 ```
 Phase 1: Repository Census          7 docs    ~2,500 lines
 Phase 2: Architecture Mapping        7 docs   ~10,000 lines
-Phase 3: Deep Dives                 12 docs   ~10,000 lines
+Phase 3: Deep Dives                 13 docs   ~15,000 lines (updated with DD13)
 Phase 4: Migration Planning          6 docs    ~7,000 lines
-Phase 5: Julia Implementation       10 docs    ~6,300 lines
+Phase 5: Julia Implementation       15 docs   ~10,000 lines (FOUNDATION COMPLETE)
 Phase 6: ATLAS9 + ODF                2 docs    ~3,100 lines
 Methodology                          2 docs      ~900 lines
 Mission & Planning                   6 docs    ~6,000 lines
 ────────────────────────────────────────────────────────────
-TOTAL                               52 docs   ~46,000 lines
+TOTAL                               58 docs   ~54,500 lines
 ```
 
 ### Code by Phase
 
 ```
-Phase 5 Julia (Days 1-4):
-  - Implementation: 1,255 lines (constants, units, physics, voigt)
-  - Tests: 1,000 lines (157 tests, 100% passing)
-  - Total: 2,255 lines pure Julia
+Phase 5 Julia Implementation (Steps 1-5 COMPLETE):
+  - 20 Julia modules: ~8,000+ lines (implementation + tests)
+  - Tests: 1100+ passing (100% coverage)
+  - Zero external dependencies (pure Julia stdlib)
 
-Phase 5 Original (Tasks 0-4):
-  - Implementation: ~2,124 lines (synbeg, readers, atlas7v interface)
-  - Tests: ~808 lines (39 tests, 100% passing)
-  - Total: ~2,932 lines
+  Breakdown by step:
+  - Step 1 Foundation: 1,717 lines (modules + tests) - 201 tests
+  - Step 2 Line Readers: ~1,500 lines - 50+ tests
+  - Step 3 Populations: ~2,000 lines - 400+ tests
+  - Step 4 Radiative Transfer: ~1,500 lines - 400+ tests
+  - Step 5 Validation Modes: ~1,283 lines - comprehensive validation
 
 Phase 5 Python Tools:
   - Tools: ~2,570 lines (5 HDF5 converters)
@@ -706,17 +812,17 @@ Phase 5 Python Tools:
   - Total: ~3,670 lines
 
 ────────────────────────────────────────────────────────────
-TOTAL CODE: ~8,857 lines (all tested and working)
+TOTAL CODE: ~12,000+ lines (all tested and working)
 ```
 
 ### Grand Total
 
 ```
-Documentation: ~46,000 lines
-Code: ~8,857 lines
-Tests: ~1,808 lines (196 tests, 100% passing)
+Documentation: ~54,500 lines
+Code: ~12,000+ lines
+Tests: 1100+ passing (100% coverage)
 ────────────────────────────────────────────────────────────
-GRAND TOTAL: ~56,665 lines of deliverables
+GRAND TOTAL: ~66,500+ lines of deliverables
 ```
 
 ---
@@ -821,16 +927,25 @@ GRAND TOTAL: ~56,665 lines of deliverables
 - When document line counts change significantly (>10%)
 - At minimum: weekly during active development
 
-**Last comprehensive update**: 2025-11-13 (Phase 6 complete, Phase 5 summary added)
+**Last comprehensive update**: 2025-11-15 (House cleaning: Phase 5 Steps 1-5 complete, DD13 added, reorganized index structure)
+
+**Changes in this update**:
+- Updated Phase 5 section with complete Steps 1-5 implementation (1100+ tests passing)
+- Added Phase 5 Documentation section (15+ documents across docs/migration/, docs/archive/, docs/journal/)
+- Updated statistics: 52 → 58 documents, 46,000 → 54,500 lines documentation
+- Updated code statistics: ~8,857 → ~12,000+ lines (20 Julia modules complete)
+- Added Deep Dive 13 to Phase 3 count
+- Added cross-reference to SYNTHESIS_INDEX.md (archaeology-specific)
+- Clarified scope: Master index for ALL project documents (archaeology + implementation)
 
 **Next update triggers**:
-- Phase 5 Day 5+ completion
-- Additional archaeology work
-- New Deep Dives created
-- Documentation reorganization
+- Phase 5 continuation (Steps 6+)
+- Additional implementation work
+- New documentation created
+- Major reorganization
 
 ---
 
 *End of Documentation Index*
-*Total: 52 documents, ~56,665 lines of deliverables*
-*Status: Comprehensive, current as of 2025-11-13*
+*Total: 58 documents, ~66,500+ lines of deliverables*
+*Status: Comprehensive, current as of 2025-11-15*
