@@ -19,11 +19,11 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 ---
 
-## Project Status: Phase 5 Foundation Complete ✅
+## Project Status: Phase 5 Foundation Complete ✅, Next phase = Validation against Fortran outputs
 
 **Phase 1: Repository Census** (Complete) - Complete census of 231 Fortran files (487,000 lines) across Kurucz and Castelli repositories. Identified ATLAS12 (23K lines, 72 subroutines) and SYNTHE (11-program pipeline) as primary migration targets with complete dependency mapping.
 
-**Phase 2: Architecture Mapping** (Complete) - Comprehensive architectural documentation across 20 major deliverables including 13 deep dives (19,049 lines total) analyzing highest-risk code sections. Complete Atlas7v dependency analysis (32 subroutines across 4 phases) and Julia migration strategy documented in docs/archaeology/.
+**Phase 2: Architecture Mapping** (Complete) - Comprehensive architectural documentation for ATLAS12 and SYNTHE across 20 major deliverables including 13 deep dives (19,049 lines total) analyzing highest-risk code sections. Complete Atlas7v dependency analysis (32 subroutines across 4 phases) and Julia migration strategy documented in `docs/archaeology/`.
 
 **Phase 3: Physics Pipeline Documentation** (Complete) - Two comprehensive physics synthesis documents (3,154 lines) capturing complete computational workflows for ATLAS12 iteration and SYNTHE spectrum synthesis. Total archaeology documentation: 19,049 lines across deep dives, dependency analyses, and synthesis documents.
 
@@ -31,7 +31,7 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 **Phase 5: Pure Julia SYNTHE Implementation** (Foundation Complete) - Foundation complete with 20 Julia modules (~8,000 lines) implementing Steps 1-5: Atlas7v interface, wavelength grids, line readers, continuum opacity, populations, and atmosphere preparation. 1100+ tests passing with zero external dependencies (pure Julia stdlib only).
 
-**Phase 6: ATLAS9 + ODF Integration** (Planned) - Planned integration of ATLAS9 opacity distribution functions and atmospheric structure computation. Will complete the full ATLAS-SYNTHE pipeline for end-to-end stellar spectrum synthesis.
+**Phase 6: ATLAS9 + ODF Integration** (First phase complete) - Breadth-first documentation of ATLAS9 and opacity distribution functions codes for atmospheric structure computation. 
 
 ---
 
