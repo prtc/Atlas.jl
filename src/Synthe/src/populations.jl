@@ -23,7 +23,6 @@ Date: 2025-11-14
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     partition_function(element::Int, ion_stage::Int, T::Float64) -> Float64
@@ -81,9 +80,9 @@ function partition_function(element::Int, ion_stage::Int, T::Float64)::Float64
 
             # Simplified formula: Z = 2 (ground only)
             # For better accuracy, include first few levels
-            const E_2 = 10.2  # eV (n=2 excitation)
-            const g_1 = 2.0   # Ground state degeneracy
-            const g_2 = 8.0   # n=2 degeneracy (2s + 2p: 2 + 6)
+            E_2 = 10.2  # eV (n=2 excitation)
+            g_1 = 2.0   # Ground state degeneracy
+            g_2 = 8.0   # n=2 degeneracy (2s + 2p: 2 + 6)
 
             # Boltzmann factor for n=2
             boltz_2 = exp(-E_2 * eV_cgs / (k_B_cgs * T))
@@ -104,8 +103,8 @@ function partition_function(element::Int, ion_stage::Int, T::Float64)::Float64
         if ion_stage == 0
             # He I: Ground state 1s² (g=1)
             # First excited 2s (E ≈ 19.8 eV)
-            const E_exc = 19.8  # eV
-            const g_0 = 1.0
+            E_exc = 19.8  # eV
+            g_0 = 1.0
 
             # At low T: Z ≈ 1 (only ground state)
             # At high T: excited states contribute
@@ -116,9 +115,9 @@ function partition_function(element::Int, ion_stage::Int, T::Float64)::Float64
         elseif ion_stage == 1
             # He II: Hydrogenic (like H I but Z=2)
             # Ground state 1s (g=2)
-            const E_2 = 40.8  # eV (n=2, higher than H due to Z=2)
-            const g_1 = 2.0
-            const g_2 = 8.0
+            E_2 = 40.8  # eV (n=2, higher than H due to Z=2)
+            g_1 = 2.0
+            g_2 = 8.0
 
             boltz_2 = exp(-E_2 * eV_cgs / (k_B_cgs * T))
             Z = g_1 + g_2 * boltz_2
@@ -195,7 +194,7 @@ function saha_ionization_ratio(element::Int, ion_stage::Int, T::Float64,
     Z_j1 = partition_function(element, ion_stage + 1, T)
 
     # Saha constant: (2π m_e k T / h²)^(3/2)
-    const factor_const = 2π * m_e_cgs * k_B_cgs / h_cgs^2
+    factor_const = 2π * m_e_cgs * k_B_cgs / h_cgs^2
     saha_const = factor_const^1.5 * T^1.5
 
     # Partition function ratio
@@ -297,13 +296,13 @@ function compute_populations(T::Float64, P_gas::Float64,
     n_e = 1.0e14  # cm⁻³ (typical solar photosphere)
 
     # Iteration parameters (same as ATLAS12)
-    const damping = 0.3
-    const max_iter = 100
-    const tolerance = 1.0e-4
+    damping = 0.3
+    max_iter = 100
+    tolerance = 1.0e-4
 
     # Ionization potentials (eV) for first ionization
     # Index: atomic number
-    const χ_table = [
+    χ_table = [
         13.598,   # H
         24.587,   # He
         5.391,    # Li (placeholder - not used yet)

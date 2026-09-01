@@ -24,7 +24,6 @@ that accumulates contributions from thousands to millions of spectral lines.
 """
 
 # Load required modules
-include("constants.jl")
 include("physics.jl")
 include("voigt.jl")
 

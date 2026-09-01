@@ -22,7 +22,6 @@ Date: 2025-11-14
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     continuum_opacity_total(λ::Float64, T::Float64, P_e::Float64,

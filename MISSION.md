@@ -6,6 +6,8 @@
 **Last Updated**: 2025-11-13 (Phase 6 ATLAS9+ODF docs complete, Phase 5 Julia implementation ongoing)
 **Days Remaining**: 5 (credits expire November 18, 11:59 PM PT)
 
+> **Naming note (added 2026-09-01, Sonnet 5):** "Phase 6" means ATLAS9 + ODF integration/documentation, consistently, across this file, `README.md`, and `DOCUMENTATION_INDEX.md` — that's the canonical usage. One git commit message from Nov 15, 2025 (`Merge Phase 6: POTION array extraction and validation infrastructure`) mislabeled a piece of what this file tracks as **Phase 5 Extended Work** — see line below. Don't rewrite that commit message (it's shared history); just don't trust it as a phase label if you come across it.
+
 ---
 
 ## Mission Objective

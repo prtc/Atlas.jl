@@ -47,3 +47,6 @@ docs/funding/
 
 # Docs I don't want to upload to github
 private/
+
+# Kurucz obituary (Nature Astronomy) - kept with the project, not mine to publish
+docs/s41550-025-02535-5.pdf

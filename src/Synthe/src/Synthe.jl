@@ -23,6 +23,16 @@ Each module has corresponding tests in test/phase5_minimal_synthe/
 """
 module Synthe
 
+# Physical constants - loaded once here. Several files below (populations.jl,
+# opacity_integration.jl, radiative_transfer.jl, atmosphere_reader.jl,
+# line_opacity_integration.jl, physics.jl, units.jl, voigt.jl,
+# line_opacity_utils.jl) were written to be testable standalone during the
+# Nov 2025 TDD sprint and each carried its own `include("constants.jl")`.
+# Under Julia 1.12's stricter precompilation that made every one of them a
+# fatal method-redefinition error rather than a warning; loading it once here
+# is the fix. (Found + fixed 2026-09-01.)
+include("constants.jl")
+
 # Core data structures
 include("structs.jl")
 

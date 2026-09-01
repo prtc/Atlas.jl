@@ -205,7 +205,7 @@ function compute_potion_index(element::Int, ion_stage::Int)::Int
     end
 
     # EQUIVALENCE indices from Fortran (1-indexed)
-    const EQUIV_INDICES = [
+    EQUIV_INDICES = [
         1,   # H
         3,   # He
         6,   # Li

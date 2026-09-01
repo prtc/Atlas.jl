@@ -26,7 +26,6 @@ Date: 2025-11-14
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     solve_tridiagonal(a, b, c, d) -> Vector{Float64}
@@ -419,7 +418,6 @@ function compute_emergent_spectrum(wavelengths::Vector{Float64}, heights::Vector
     end
 
     return I_emergent
-end
 end
 
 """

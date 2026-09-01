@@ -11,7 +11,6 @@ Handles conversions between:
 All conversions validated with round-trip tests.
 """
 
-include("constants.jl")
 
 # =============================================================================
 # Wavelength Unit Conversions

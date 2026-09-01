@@ -47,7 +47,7 @@ function hminus_bf(λ::Float64, T::Float64, P_e::Float64)::Float64
     λ_nm = λ / 10.0
 
     # H⁻ photodetachment threshold at 1643.91 nm (from table)
-    const λ_threshold = HMINUS_BF_WAVELENGTHS[end]
+    λ_threshold = HMINUS_BF_WAVELENGTHS[end]
 
     # Beyond threshold → zero opacity
     if λ_nm >= λ_threshold
@@ -233,7 +233,7 @@ function hydrogen_bf(λ::Float64, T::Float64, n_level::Int)::Float64
 
     # Hydrogenic cross-section at threshold (Kramers formula)
     # σ_0(n) = 7.9×10⁻¹⁸ * n⁵ / (Z²) cm² for Z=1 (hydrogen)
-    const sigma_base = 7.9e-18  # cm² (for n=1, at threshold)
+    sigma_base = 7.9e-18  # cm² (for n=1, at threshold)
     sigma_0 = sigma_base * n_level^5
 
     # Wavelength dependence: σ(λ) = σ_0 * (λ/λ_0)³
@@ -273,7 +273,7 @@ where σ_thomson = 6.6524587×10⁻²⁵ cm² (CODATA 2018)
 """
 function electron_scattering(n_e::Float64)::Float64
     # Thomson scattering cross-section (CODATA 2018)
-    const sigma_thomson = 6.6524587321e-25  # cm²
+    sigma_thomson = 6.6524587321e-25  # cm²
 
     # Opacity = density × cross-section
     return n_e * sigma_thomson

@@ -23,7 +23,6 @@ Date: 2025-11-15
 include("partition_function_data.jl")
 
 # Load physical constants
-include("constants.jl")
 
 """
     decode_nnn_entry(nnn_value::Int32) -> (k1::Int, k3::Int, kscale::Int)
@@ -86,7 +85,7 @@ Matches Fortran SCALE array: DATA SCALE/.001,.01,.1,1./
 - `Float64`: Scale multiplier
 """
 function get_scale_factor(kscale::Int)::Float64
-    const scale_table = [0.001, 0.01, 0.1, 1.0]
+    scale_table = [0.001, 0.01, 0.1, 1.0]
 
     # Kscale is 1-indexed in Fortran convention (values 0-3 → indices 1-4)
     index = kscale + 1
@@ -224,7 +223,7 @@ function partition_function_fortran(element::Int, ion_stage::Int, T::Float64)::F
     # ================================================================
 
     # Fortran LOCZ array for elements 1-28
-    const locz = [
+    locz = [
         1,   # H  (element 1)
         3,   # He (element 2)
         6,   # Li

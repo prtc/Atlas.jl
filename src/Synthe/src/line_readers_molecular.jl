@@ -10,8 +10,10 @@ Functions:
 - `read_molecular_lines(filepath, molecule, λ_start, λ_end, margin)` - Read and filter
 """
 
-# Import compute_nbuff from atomic reader
-include("line_readers.jl")
+# compute_nbuff comes from the atomic reader (line_readers.jl), included
+# just before this file in Synthe.jl's load order. Not re-included here:
+# Synthe.jl's precompilation (Julia 1.12+) treats a repeated include as a
+# fatal method redefinition, not just a warning.
 
 """
     iso_to_nelion(iso_code::Int, molecule::String) -> Int

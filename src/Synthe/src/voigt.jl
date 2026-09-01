@@ -26,7 +26,6 @@ When high-precision tables become available, Regime 1 can be upgraded.
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     voigt_profile(v::Float64, a::Float64)

@@ -21,7 +21,6 @@ Date: 2025-11-14
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     read_atlas9_model(filepath::String) -> AtmosphereModel
@@ -68,7 +67,7 @@ function read_atlas9_model(filepath::String)
     # ρ = P * μ * m_H / (k_B * T)
 
     # Physical constants from constants.jl
-    const μ_solar = 1.3       # Mean molecular weight (solar composition)
+    μ_solar = 1.3       # Mean molecular weight (solar composition)
 
     density = similar(pressure)
     for i in 1:n_depths

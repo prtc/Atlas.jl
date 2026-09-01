@@ -36,7 +36,7 @@ gfortran -shared -fPIC -O2 -o libaslave7v.so atlas7v.for
 ```
 """
 const ATLAS7V_LIBRARY = joinpath(
-    dirname(dirname(@__DIR__)),
+    dirname(dirname(dirname(@__DIR__))),
     "lib", "atlas7v.so"
 )
 

@@ -13,7 +13,6 @@ All formulas match ATLAS12/SYNTHE Fortran implementations.
 """
 
 # Load constants
-include("constants.jl")
 
 """
     thermal_velocity(T::Float64, mass::Float64)

@@ -150,7 +150,7 @@ function regime_2_wing(v::Float64, a::Float64)::Float64
     # Lorentzian profile (far wing approximation)
     # VOIGT = A / (PI * (V*V + A*A))
 
-    const sqrt_pi = 1.772453850905516  # √π
+    sqrt_pi = 1.772453850905516  # √π
 
     denominator = v * v + a * a
     if denominator < 1.0e-10
@@ -176,10 +176,10 @@ function regime_3_transition(v::Float64, a::Float64)::Float64
     # These are coefficients of a polynomial fit to exact Voigt function
     # Source: Probably from Auer-Mihalas (1969) or similar
 
-    const C1 = 0.122727278
-    const C2 = 0.532770573
-    const C3 = -0.96284325
-    const C4 = 0.979895032
+    C1 = 0.122727278
+    C2 = 0.532770573
+    C3 = -0.96284325
+    C4 = 0.979895032
 
     # Polynomial approximation (from atlas12.for)
     # This is a simplified version - full Fortran uses more complex logic

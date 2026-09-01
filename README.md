@@ -19,7 +19,7 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 ---
 
-## Project Status: Phase 5 Foundation Complete ✅, Next phase = Validation against Fortran outputs
+## Project Status: Phase 5 Foundation Built, Re-Validation In Progress (resumed Sept 2026)
 
 **Phase 1: Repository Census** (Complete) - Complete census of 231 Fortran files (487,000 lines) across Kurucz and Castelli repositories. Identified ATLAS12 (23K lines, 72 subroutines) and SYNTHE (11-program pipeline) as primary migration targets with complete dependency mapping.
 
@@ -29,7 +29,7 @@ The suite represents approximately **487,000 lines of Fortran 77 code** spanning
 
 **Phase 4: Migration Complexity Assessment** (Complete) - COMMON block dependency mapping complete with subroutine classification and risk assessment. Migration roadmap development completed, informing pure Julia implementation strategy.
 
-**Phase 5: Pure Julia SYNTHE Implementation** (Foundation Complete) - Foundation complete with 20 Julia modules (~8,000 lines) implementing Steps 1-5: Atlas7v interface, wavelength grids, line readers, continuum opacity, populations, and atmosphere preparation. 1100+ tests passing with zero external dependencies (pure Julia stdlib only).
+**Phase 5: Pure Julia SYNTHE Implementation** (Foundation built, re-validation in progress) - 28 Julia modules (~9,500 lines) implementing Steps 1-5: Atlas7v interface, wavelength grids, line readers, continuum opacity, populations, and atmosphere preparation. Built pure-Julia during a 2025 sandboxed sprint where package installation wasn't available; that constraint no longer applies, and the implementation now uses a small set of standard packages (SpecialFunctions, Interpolations, FFTW). After a nine-month pause, the test suite is being re-validated against the Julia version currently in use — in progress as of September 2026.
 
 **Phase 6: ATLAS9 + ODF Integration** (First phase complete) - Breadth-first documentation of ATLAS9 and opacity distribution functions codes for atmospheric structure computation. 
 
@@ -81,6 +81,8 @@ ATLAS Suite in Julia is licensed under the BSD 3-Clause License. See the [LICENS
 ```
 atlas.jl/
 ├── docs/archaeology/         # Phase 1-4 analysis & documentation
+├── src/Synthe/                # Pure Julia SYNTHE implementation (Phase 5)
+├── test/                     # Unit, integration, and reference-data tests
 ├── upstream/castelli/        # Castelli's original Fortran codes & docs
 ├── upstream/kurucz/          # Kurucz's original Fortran codes & docs
 └── MISSION.md                # Project plan and task tracking

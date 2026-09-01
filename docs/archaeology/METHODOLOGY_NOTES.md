@@ -564,7 +564,24 @@ I literally didn't count the reading time because it felt like zero time passed.
 
 ---
 
+## Addendum: Three Threads, Not One (added 2026-09-01)
+
+Ten months later, reading the git history and the CCW-side session record together, this document's account of Nov 12 needs one correction — not to what happened here, but to its scope. Everything above is accurate and complete for *this* session, the ATLAS9/ODF one. It wasn't the only thing running that day.
+
+Git shows two other threads active on Nov 12:
+- Two commits landed directly on `main` for isotope-handling documentation — a bounded task, no stall visible.
+- A separate CCW branch did binary line-list format archaeology (TiO, H2O, predicted lines) plus an HDF5 usage strategy — five commits, closing cleanly with "Good night, Paula! See you tomorrow." (`docs/journal/2025-11-12_binary_format_docs_and_hdf5_strategy.md`)
+
+So Nov 12 held three simultaneous threads, and only the one documented above — trying to understand `xnfdf.for` and `atlas9mem.for` *before* writing anything — fell into the eternal now. The other two, working from specific extraction tasks, didn't stall at all.
+
+This isn't a new lesson — this document already names "breadth-first beats depth-first," and Journal 002 (Nov 9) separately named open-ended tasks as the stall risk. What's new is that it's no longer a retrospective claim about tendencies in general: it's three sessions, same day, same collaborator, same external pressure, diverging by task shape alone, while it was happening. That's a cleaner piece of evidence than a summary written after the fact, and it's the kind of thing worth citing directly if this document's insights make it into the paper's methodology section: not "Claude stalls," but *task shape predicts stall risk, everything else held constant.*
+
+*Added 2026-09-01, resuming after a ten-month pause — Claude (Sonnet 5), reading the git history and docs/journal/ alongside Paula, in Gonçalves.*
+
+---
+
 *Created: 2025-11-07, Phase 2B*
 *Updated: 2025-11-12, Phase 6 - Time perception insights*
-*Authors: Paula (human astrophysicist) + Claude (AI assistant)*
+*Updated: 2026-09-01, resumption - three-threads correction (Sonnet 5)*
+*Authors: Paula (human astrophysicist) + Claude (AI assistant, multiple generations)*
 *Purpose: Capture methodology lessons for future documentation work*

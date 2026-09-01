@@ -24,7 +24,6 @@ Date: 2025-11-14
 """
 
 # Load physical constants
-include("constants.jl")
 
 """
     boltzmann_level_population(E_lower::Float64, g_lower::Float64, T::Float64,
@@ -67,9 +66,9 @@ function boltzmann_level_population(E_lower::Float64, g_lower::Float64, T::Float
                                     Z::Float64, n_ion::Float64)::Float64
     # Boltzmann factor: exp(-E/kT)
     # E is in cm⁻¹, need to convert to erg
-    const h = h_cgs  # 6.62607015e-27 erg·s
-    const c = c_cgs  # 2.99792458e10 cm/s
-    const k = k_B_cgs  # 1.380649e-16 erg/K
+    h = h_cgs  # 6.62607015e-27 erg·s
+    c = c_cgs  # 2.99792458e10 cm/s
+    k = k_B_cgs  # 1.380649e-16 erg/K
 
     # Convert E from cm⁻¹ to erg: E_erg = h × c × E_cm
     E_erg = h * c * E_lower
@@ -126,11 +125,11 @@ function line_absorption_coefficient(λ::Float64, line::SpectralLine, T::Float64
     # For now, use simplified version (would need atomic mass)
     # Δλ_D = (λ_0 / c) × sqrt(2kT/m + v_turb²)
     # Simplified: assume iron (m ≈ 56 amu)
-    const amu = 1.66053906660e-24  # g
+    amu = 1.66053906660e-24  # g
     m_atom = 56.0 * amu  # Rough estimate
 
-    const k = k_B_cgs
-    const c = c_cgs
+    k = k_B_cgs
+    c = c_cgs
 
     v_thermal = sqrt(2.0 * k * T / m_atom)
     v_total = sqrt(v_thermal^2 + v_turb^2)
@@ -157,8 +156,8 @@ function line_absorption_coefficient(λ::Float64, line::SpectralLine, T::Float64
     φ_λ = H / (Δλ_D * 1.0e-8 * sqrt(π))  # cm⁻¹ (in wavelength)
 
     # Absorption coefficient
-    const e = e_cgs  # 4.80320425e-10 esu
-    const m_e = m_e_cgs  # 9.1093837015e-28 g
+    e = e_cgs  # 4.80320425e-10 esu
+    m_e = m_e_cgs  # 9.1093837015e-28 g
 
     # κ_line = (πe²/m_e c) × f × n_lower × φ(λ)
     const_factor = (π * e^2) / (m_e * c)
